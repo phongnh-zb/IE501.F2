@@ -1,0 +1,13 @@
+# Bỏ qua dữ liệu
+data/
+*.csv
+*.parquet
+*.venv
+
+# Bỏ qua file hệ thống Mac
+.DS_Store
+
+# Bỏ qua file biên dịch Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
