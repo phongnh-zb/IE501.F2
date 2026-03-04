@@ -3,7 +3,7 @@
 # Local data directory path (relative to this script)
 LOCAL_DATA_DIR="$(cd "$(dirname "$0")/../data/raw" && pwd)"
 # Destination path on HDFS
-HDFS_DEST_DIR="/user/ie400/oulad_raw"
+HDFS_DEST_DIR="/user/ie501/oulad_raw"
 
 # Create directory on HDFS
 echo ">>> Creating HDFS directory: $HDFS_DEST_DIR"

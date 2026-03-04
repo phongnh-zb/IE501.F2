@@ -40,7 +40,7 @@ Before running the project, you must download the dataset and place it in the co
     Create a `data/` folder in the project root and extract the files there. You need these 3 specific files:
 
     ```text
-    IE400.F13/
+    IE501.F2/
     ├── data/
     │   ├── processed/             # Empty folder for intermediate results
     │   └── raw/                   # Place your CSV files here
@@ -60,8 +60,8 @@ Before running the project, you must download the dataset and place it in the co
 1.  **Clone the Repository:**
 
 ```bash
-git clone git@github.com:phongnh-zb/IE400.F13.git
-cd IE400.F13
+git clone git@github.com:phongnh-zb/IE501.F2.git
+cd IE501.F2
 ```
 
 2.  **Install Python Dependencies:**
@@ -77,7 +77,7 @@ pip install -r requirements.txt
 ## Project Structure
 
 ```text
-IE400.F13/
+IE501.F2/
 ├── main.py                   # MASTER SCRIPT (Runs the entire pipeline)
 ├── README.md                 # Project Documentation
 ├── requirements.txt          # Python dependencies

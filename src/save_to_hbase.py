@@ -37,6 +37,18 @@ def main():
     
     try:
         connection = happybase.Connection('localhost', port=9090, timeout=10000)
+        
+        existing_tables = connection.tables()
+        
+        if b'student_predictions' not in existing_tables:
+            print(">>> [HBASE] Table 'student_predictions' does not exist. Creating new table...")
+            # Create table with 2 Column Families: 'info' and 'prediction'
+            connection.create_table(
+                'student_predictions',
+                {'info': dict(), 'prediction': dict()}
+            )
+            print(">>> [HBASE] Table created successfully!")
+            
         table = connection.table('student_predictions')
         
         print(f">>> [HBASE] Starting to write {total_count} rows to table 'student_predictions'...")
