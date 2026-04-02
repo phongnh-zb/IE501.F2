@@ -1,5 +1,3 @@
-JAVA_17_HOME = "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
-
 HDFS_NAMENODE = "hdfs://localhost:9000"
 HDFS_BASE_PATH = f"{HDFS_NAMENODE}/user/ie501/oulad_raw/"
 HDFS_OUTPUT_PATH = f"{HDFS_NAMENODE}/user/ie501/oulad_processed/"

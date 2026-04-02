@@ -2,6 +2,7 @@ import logging
 
 from flask import Flask
 
+from configs.config import FLASK_PORT
 from webapp.routes.api import api_bp
 from webapp.routes.dashboard import dashboard_bp
 from webapp.routes.students import students_bp
@@ -24,4 +25,4 @@ app = create_app()
 
 if __name__ == "__main__":
     start_background_scheduler()
-    app.run(debug=True, port=5001, use_reloader=False)
+    app.run(debug=True, port=FLASK_PORT, use_reloader=False)
