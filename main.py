@@ -75,7 +75,7 @@ def main():
     # `from configs import config` and `from src.*` resolve correctly.
     from src.etl_job import main as run_etl
     from src.save_to_hbase import main as run_hbase
-    from src.train_model import main as run_train
+    from src.train_job import main as run_train
 
     total_start = time.time()
     print(f"{YELLOW}>>> STARTING STUDENT DROPOUT PREDICTION PIPELINE PROCESS{RESET}")

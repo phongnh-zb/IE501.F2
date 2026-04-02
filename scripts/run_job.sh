@@ -27,10 +27,10 @@ run_etl() {
 }
 
 run_train() {
-    step_header "TRAINING — spark-submit src/train_model.py"
+    step_header "TRAINING — spark-submit src/train_job.py"
     spark-submit \
         --master "$SPARK_MASTER" \
-        "$PROJECT_ROOT/src/train_model.py"
+        "$PROJECT_ROOT/src/train_job.py"
     [ $? -eq 0 ] && step_ok "Training complete" || step_fail "Training failed"
 }
 
