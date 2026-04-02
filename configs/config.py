@@ -13,6 +13,9 @@ HDFS_BASE_PATH = f"{HDFS_NAMENODE}/user/ie501/oulad_raw/"
 # Output Path (Where etl_job.py will save processed files)
 HDFS_OUTPUT_PATH = f"{HDFS_NAMENODE}/user/ie501/oulad_processed/"
 
+# Model Path (Where trained models are saved/loaded)
+HDFS_MODEL_PATH = f"{HDFS_NAMENODE}/user/ie501/models/"
+
 # File Names
 FILE_STUDENT_INFO = "studentInfo.csv"
 FILE_STUDENT_VLE = "studentVle.csv"
