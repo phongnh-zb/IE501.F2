@@ -1,5 +1,8 @@
 #!/bin/bash
 
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+. "$PROJECT_ROOT/configs/config.sh"
+
 # Hadoop takes a while to start, so we only start it if it's not running
 if ! jps | grep -q "NameNode"; then
     echo ">>> [START] Starting Hadoop (HDFS)..."
@@ -24,11 +27,11 @@ echo ">>> [RESET] Refreshing HBase Thrift Server..."
 jps | grep ThriftServer | awk '{print $1}' | xargs -r kill -9 2>/dev/null
 
 # Wait for OS to release the port (important)
-echo "-> Waiting for port 9090 release..."
+echo "-> Waiting for port $HBASE_PORT release..."
 sleep 2
 
 # Restart
-echo ">>> [START] Starting new Thrift Server (Port 9090)..."
-hbase thrift start -p 9090 --infoport 9095 > /dev/null 2>&1 &
+echo ">>> [START] Starting new Thrift Server (Port $HBASE_PORT)..."
+hbase thrift start -p "$HBASE_PORT" --infoport "$HBASE_THRIFT_INFO_PORT" > /dev/null 2>&1 &
 
 echo "✔ Thrift start command sent."

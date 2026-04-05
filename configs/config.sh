@@ -11,6 +11,7 @@ MASTER="local[*]"
 
 HBASE_HOST="localhost"
 HBASE_PORT=9090
+HBASE_THRIFT_INFO_PORT=9095
 TABLE_NAME="student_predictions"
 CACHE_INTERVAL=600
 
