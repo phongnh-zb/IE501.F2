@@ -1,6 +1,10 @@
 # Shell mirror of configs/config.py.
 # When a value changes in config.py it must be updated here too.
 # Usage: . "$(cd "$(dirname "$0")/.." && pwd)/configs/config.sh"
+#
+# Python-only constants (not mirrored here):
+#   FILE_*   — individual CSV filenames read by PySpark; no shell script needs them
+#   APP_NAME — Spark session name; shell scripts never create a SparkSession
 
 HDFS_NAMENODE="hdfs://localhost:9000"
 HDFS_BASE_PATH="${HDFS_NAMENODE}/user/ie501/oulad_raw"

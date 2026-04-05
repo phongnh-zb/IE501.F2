@@ -5,3 +5,4 @@ flask>=3.0.0
 werkzeug>=3.0.1
 happybase>=1.2.0
 thrift>=0.16.0
+reportlab>=4.0.0

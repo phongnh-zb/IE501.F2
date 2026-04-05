@@ -14,17 +14,17 @@ def main():
     spark = get_spark_session(config.APP_NAME, config.MASTER)
     spark.sparkContext.setLogLevel("ERROR")
 
-    # Extract
-    raw_frames = extract_raw_data(spark, config)
+    raw = extract_raw_data(spark, config)
 
-    # Transform
     df_final = transform_data(
-        df_info=raw_frames["student_info"],
-        df_vle=raw_frames["student_vle"],
-        df_assess=raw_frames["student_assessment"],
+        df_info=raw["student_info"],
+        df_vle=raw["student_vle"],
+        df_student_assess=raw["student_assessment"],
+        df_assessments=raw["assessments"],
+        df_reg=raw["student_registration"],
+        df_vle_info=raw["vle"],
     )
 
-    # Load
     load_to_hdfs(df_final, config.HDFS_OUTPUT_PATH)
 
     spark.stop()

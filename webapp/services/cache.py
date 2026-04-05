@@ -5,7 +5,7 @@ import time
 
 import happybase
 
-from configs.config import HBASE_HOST, HBASE_PORT, TABLE_NAME, CACHE_INTERVAL
+from configs.config import CACHE_INTERVAL, HBASE_HOST, HBASE_PORT, TABLE_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +14,22 @@ SYSTEM_CACHE = {
     "last_updated": None,
     "is_ready": False,
 }
+
+
+def _safe_float(value_dict, key, default=0.0):
+    raw = value_dict.get(key, str(default).encode())
+    try:
+        return float(raw)
+    except (ValueError, TypeError):
+        return default
+
+
+def _safe_int(value_dict, key, default=0):
+    raw = value_dict.get(key, str(default).encode())
+    try:
+        return int(float(raw))
+    except (ValueError, TypeError):
+        return default
 
 
 def fetch_all_data_from_hbase():
@@ -31,10 +47,24 @@ def fetch_all_data_from_hbase():
         for key, value in table.scan():
             try:
                 data_buffer.append({
-                    "id": key.decode("utf-8"),
-                    "clicks": float(value.get(b"info:clicks", b"0")),
-                    "score": float(value.get(b"info:avg_score", b"0")),
-                    "risk": int(value.get(b"prediction:risk_label", b"0")),
+                    "id":               key.decode("utf-8"),
+                    # VLE engagement
+                    "clicks":           _safe_float(value, b"info:total_clicks"),
+                    "active_days":      _safe_int(value,   b"info:active_days"),
+                    "forum_clicks":     _safe_float(value, b"info:forum_clicks"),
+                    "quiz_clicks":      _safe_float(value, b"info:quiz_clicks"),
+                    "resource_clicks":  _safe_float(value, b"info:resource_clicks"),
+                    # Academic
+                    "score":            _safe_float(value, b"info:avg_score"),
+                    "weighted_score":   _safe_float(value, b"info:weighted_avg_score"),
+                    "submission_rate":  _safe_float(value, b"info:submission_rate"),
+                    "avg_days_early":   _safe_float(value, b"info:avg_days_early"),
+                    # Registration
+                    "withdrew_early":   _safe_int(value,   b"info:withdrew_early"),
+                    # Demographic
+                    "num_prev_attempts": _safe_int(value,  b"info:num_prev_attempts"),
+                    # Prediction
+                    "risk":             _safe_int(value,   b"prediction:risk_label"),
                 })
             except Exception:
                 continue
@@ -45,12 +75,12 @@ def fetch_all_data_from_hbase():
 
         duration = time.time() - start_time
         logger.info(
-            f">>> [CACHE] ✅ Synchronization complete. "
+            f">>> [CACHE] Synchronization complete. "
             f"Loaded {len(data_buffer)} records in {duration:.2f}s."
         )
 
     except Exception as e:
-        logger.error(f">>> [CACHE] ❌ Sync Error: {e}")
+        logger.error(f">>> [CACHE] Sync Error: {e}")
     finally:
         if connection:
             connection.close()
@@ -89,16 +119,11 @@ def get_data_from_memory(page=1, page_size=50, search_query="", sort_by="id", or
     total_records = len(filtered_data)
     total_pages = math.ceil(total_records / page_size) if total_records > 0 else 1
 
-    if page < 1:
-        page = 1
-    if page > total_pages:
-        page = total_pages
-
+    page = max(1, min(page, total_pages))
     start = (page - 1) * page_size
-    end = start + page_size
 
     return {
-        "data": filtered_data[start:end],
+        "data": filtered_data[start: start + page_size],
         "page": page,
         "total_pages": total_pages,
         "total_records": total_records,

@@ -7,10 +7,8 @@ from configs import config
 from src.models.evaluate import run_evaluation
 from src.models.explain import extract_feature_importance
 from src.models.registry import save_model
-from src.models.train import get_classifiers, prepare_features
+from src.models.train import FEATURE_COLS, get_classifiers, prepare_features
 from src.utils import get_spark_session
-
-FEATURE_COLS = ["total_clicks", "avg_score"]
 
 
 def main():

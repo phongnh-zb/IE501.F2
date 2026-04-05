@@ -1,12 +1,11 @@
 import logging
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, send_file
 
-from webapp.services.cache import (
-    SYSTEM_CACHE,
-    fetch_all_data_from_hbase,
-    get_student_by_id,
-)
+from webapp.services.cache import (SYSTEM_CACHE, fetch_all_data_from_hbase,
+                                   get_student_by_id)
+from webapp.services.pdf_export import (generate_cohort_report_pdf,
+                                        generate_student_report_pdf)
 from webapp.services.recommendations import generate_smart_recommendations
 
 logger = logging.getLogger(__name__)
@@ -21,8 +20,8 @@ def realtime_data():
 
     data_sample = SYSTEM_CACHE["data"]
     total = len(data_sample)
-    risk = sum(1 for x in data_sample if x["risk"] == 1)
-    safe = total - risk
+    risk  = sum(1 for x in data_sample if x["risk"] == 1)
+    safe  = total - risk
 
     return jsonify({
         "raw_data": data_sample,
@@ -38,13 +37,43 @@ def realtime_data():
 @api_bp.route("/student/<student_id>")
 def student_detail(student_id):
     student = get_student_by_id(student_id)
-
     if not student:
         return jsonify({"error": "Not found"}), 404
 
     recommendations = generate_smart_recommendations(student)
-
     return jsonify({"info": student, "recommendations": recommendations})
+
+
+@api_bp.route("/student/<student_id>/report")
+def student_report(student_id):
+    student = get_student_by_id(student_id)
+    if not student:
+        return jsonify({"error": "Not found"}), 404
+
+    recommendations = generate_smart_recommendations(student)
+    buffer = generate_student_report_pdf(student, recommendations)
+
+    return send_file(
+        buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"student_{student_id}_report.pdf",
+    )
+
+
+@api_bp.route("/cohort/report")
+def cohort_report():
+    if not SYSTEM_CACHE["is_ready"]:
+        return jsonify({"error": "Data not ready — run the pipeline first"}), 503
+
+    buffer = generate_cohort_report_pdf(SYSTEM_CACHE["data"])
+
+    return send_file(
+        buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name="cohort_risk_report.pdf",
+    )
 
 
 @api_bp.route("/refresh-cache", methods=["POST"])
