@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from configs import config
-from models.explain import extract_feature_importance, importance_to_json
+from src.models.explain import extract_feature_importance, importance_to_json
 from common.hbase_client import ensure_table, hbase_connection
 
 

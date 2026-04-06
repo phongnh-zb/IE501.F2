@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
 from configs import config
 from common.hbase_client import ensure_table, hbase_connection
-from utils import get_spark_session
+from src.utils import get_spark_session
 
 RISK_SAFE     = 0
 RISK_WATCH    = 1

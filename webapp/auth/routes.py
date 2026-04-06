@@ -2,7 +2,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required, login_user, logout_user
 from werkzeug.security import check_password_hash
 
-from webapp.auth.db import get_user_by_username
+from webapp.auth.db import get_user_by_username, update_last_login
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -20,6 +20,7 @@ def login():
             return render_template("login.html"), 401
 
         login_user(user, remember=False)
+        update_last_login(user.id)
         next_page = request.args.get("next") or url_for("dashboard.index")
         return redirect(next_page)
 

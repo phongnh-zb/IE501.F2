@@ -1,0 +1,7 @@
+services:
+
+  webapp:
+    volumes:
+      # Production: only persist users.db.
+      # Templates, CSS, and JS are baked into the image.
+      - ./data/auth:/app/data/auth

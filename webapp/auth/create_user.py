@@ -3,11 +3,17 @@
 Create a user in the SQLite users database.
 
 Usage (run from project root):
-  python3 webapp/auth/create_user.py --username admin --password secret --role admin
-  python3 webapp/auth/create_user.py --username lecturer --password secret --role lecturer --modules AAA,BBB
+  python3 webapp/auth/create_user.py \\
+    --username 24410335 \\
+    --password secret \\
+    --role lecturer \\
+    --full-name "Phong Nguyen" \\
+    --email "24410335@ms.uit.edu.vn" \\
+    --modules AAA,BBB,CCC
 """
 import argparse
 import os
+import re
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -17,16 +23,27 @@ from werkzeug.security import generate_password_hash
 from webapp.auth.db import create_user, get_user_by_username, init_db
 
 
+def _valid_email(value):
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
+        raise argparse.ArgumentTypeError(f"'{value}' is not a valid email address.")
+    return value
+
+
 def main():
     parser = argparse.ArgumentParser(description="Create a user account.")
-    parser.add_argument("--username", required=True)
-    parser.add_argument("--password", required=True)
-    parser.add_argument("--role",     default="lecturer", choices=["admin", "lecturer"])
-    parser.add_argument(
-        "--modules",
-        default="",
-        help="Comma-separated module codes for lecturers, e.g. AAA,BBB. Empty means all modules.",
-    )
+    parser.add_argument("--username",  required=True,
+                        help="Login username (unique)")
+    parser.add_argument("--password",  required=True,
+                        help="Login password")
+    parser.add_argument("--role",      default="lecturer", choices=["admin", "lecturer"],
+                        help="Account role: admin or lecturer (default: lecturer)")
+    parser.add_argument("--full-name", required=True, dest="full_name",
+                        help="Full display name, e.g. 'Nguyễn Hoàng Phong'")
+    parser.add_argument("--email",     required=True, type=_valid_email,
+                        help="Institutional email address")
+    parser.add_argument("--modules",   default="",
+                        help="Comma-separated module codes for lecturers, e.g. AAA,BBB. "
+                             "Empty means access to all modules.")
     args = parser.parse_args()
 
     init_db()
@@ -39,9 +56,27 @@ def main():
     modules = [m.strip() for m in args.modules.split(",") if m.strip()] if args.modules else []
     pw_hash = generate_password_hash(args.password)
 
-    create_user(args.username, pw_hash, args.role, modules)
+    try:
+        create_user(
+            username      = args.username,
+            password_hash = pw_hash,
+            role          = args.role,
+            modules       = modules,
+            full_name     = args.full_name,
+            email         = args.email,
+            created_by    = "cli",
+        )
+    except ValueError as e:
+        print(f"ERROR: {e}")
+        sys.exit(1)
 
-    print(f"Created user '{args.username}'  role={args.role}  modules={modules or 'all'}")
+    print(
+        f"Created: '{args.username}' ({args.full_name})"
+        f"  role={args.role}"
+        f"  modules={modules or 'all'}"
+        f"  full_name={args.full_name}"
+        f"  email={args.email}"
+    )
 
 
 if __name__ == "__main__":

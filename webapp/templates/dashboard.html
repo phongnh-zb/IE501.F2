@@ -24,62 +24,70 @@
   </div>
 
   <div class="stat-strip">
-
     <div class="stat-block stat-block-total">
       <span class="stat-label">Total students</span>
       <span class="stat-num mono" id="stat-total">—</span>
       <span class="stat-note">across all enrollments</span>
     </div>
-
     <div class="stat-divider"></div>
-
     <div class="stat-block">
       <span class="stat-label">Safe</span>
       <span class="stat-num mono" id="stat-safe" style="color:var(--safe);">—</span>
       <span class="stat-note">no action needed</span>
     </div>
-
     <div class="stat-divider"></div>
-
     <div class="stat-block">
       <span class="stat-label">Watch</span>
       <span class="stat-num mono" id="stat-watch" style="color:var(--watch);">—</span>
       <span class="stat-note">early warning signals</span>
     </div>
-
     <div class="stat-divider"></div>
-
     <div class="stat-block">
       <span class="stat-label">High risk</span>
       <span class="stat-num mono" id="stat-high" style="color:var(--high);">—</span>
       <span class="stat-note">active support needed</span>
     </div>
-
     <div class="stat-divider"></div>
-
     <div class="stat-block stat-block-crit">
       <span class="stat-label">Critical</span>
       <span class="stat-num mono" id="stat-crit" style="color:var(--crit);">—</span>
       <span class="stat-note">urgent outreach required</span>
     </div>
-
   </div>
 </div>
 
 <!-- ── Main grid ─────────────────────────────────────────────────────── -->
 <div class="dash-grid">
 
-  <!-- Scatter — large, left -->
-  <div class="card dash-scatter-card">
-    <div class="card-head">
-      <h3><i class="fas fa-circle-dot"></i> Score vs engagement</h3>
-      <span class="text-xs text-3">Coloured by risk tier &middot; <span id="scatter-count">—</span> students</span>
-    </div>
-    <div class="card-body">
-      <div class="chart-wrap" style="height:340px;">
-        <div id="chart-scatter" style="height:100%;"></div>
+  <!-- Left column -->
+  <div class="dash-left">
+
+    <!-- Scatter -->
+    <div class="card">
+      <div class="card-head">
+        <h3><i class="fas fa-circle-dot"></i> Score vs engagement</h3>
+        <span class="text-xs text-3">Coloured by risk tier &middot; <span id="scatter-count">—</span> students</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap" style="height:320px;">
+          <div id="chart-scatter" style="height:100%;"></div>
+        </div>
       </div>
     </div>
+
+    <!-- Per-module risk breakdown -->
+    <div class="card">
+      <div class="card-head">
+        <h3><i class="fas fa-layer-group"></i> Risk by module</h3>
+        <span class="text-xs text-3">Critical + High count per module</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap" style="height:220px;">
+          <div id="chart-module" style="height:100%;"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Right column -->
@@ -91,17 +99,17 @@
         <h3><i class="fas fa-chart-pie"></i> Distribution</h3>
       </div>
       <div class="card-body" style="padding:.75rem 1rem;">
-        <div class="chart-wrap" style="height:220px;">
+        <div class="chart-wrap" style="height:210px;">
           <div id="chart-donut" style="height:100%;"></div>
         </div>
       </div>
     </div>
 
-    <!-- Attention list -->
+    <!-- Requires attention -->
     <div class="card">
       <div class="card-head">
         <h3><i class="fas fa-triangle-exclamation"></i> Requires attention</h3>
-        <span class="text-xs text-3">Top by severity</span>
+        <span class="text-xs text-3">Sorted by severity</span>
       </div>
       <div id="attention-list" class="attention-list">
         <div class="attention-empty text-3 text-sm">Loading...</div>

@@ -1,0 +1,38 @@
+{% if current_user.is_authenticated %}
+<div class="nav-account" id="nav-account">
+
+  <button class="nav-account-btn" onclick="NavAccount.toggle()" aria-haspopup="true">
+    <span class="nav-account-icon"><i class="fas fa-circle-user"></i></span>
+    <span class="nav-account-name">{{ current_user.display_name }}</span>
+    <span class="nav-account-role nav-role-{{ current_user.role }}">{{ current_user.role }}</span>
+    <i class="fas fa-chevron-down nav-account-caret"></i>
+  </button>
+
+  <div class="nav-dropdown" id="nav-dropdown" aria-hidden="true">
+
+    <div class="nav-dropdown-head">
+      <span class="nav-dropdown-username">{{ current_user.display_name }}</span>
+      <span class="nav-dropdown-email">
+        {{ current_user.email }}
+      </span>
+    </div>
+
+    <div class="nav-dropdown-body">
+      <a href="/profile" class="nav-dropdown-item">
+        <i class="fas fa-id-card"></i> My profile
+      </a>
+      {% if current_user.is_admin %}
+      <div class="nav-dropdown-divider"></div>
+      <a href="/pipeline" class="nav-dropdown-item">
+        <i class="fas fa-server"></i> Pipeline
+      </a>
+      {% endif %}
+      <div class="nav-dropdown-divider"></div>
+      <a href="/logout" class="nav-dropdown-item nav-dropdown-item-danger">
+        <i class="fas fa-right-from-bracket"></i> Sign out
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endif %}

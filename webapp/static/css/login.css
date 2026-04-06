@@ -44,17 +44,6 @@
 	letter-spacing: -.01em;
   }
   
-  .login-brand-course {
-	font-size: .75rem;
-	font-weight: 500;
-	color: var(--tx-3);
-	background: var(--surface);
-	border: 1px solid var(--bd);
-	border-radius: 999px;
-	padding: .15rem .5rem;
-	font-family: var(--font-mono);
-  }
-  
   /* ── Card ────────────────────────────────────────────────────────────────── */
   
   .login-card {
@@ -187,6 +176,8 @@
   
   .login-btn:hover  { background: var(--navy-mid); }
   .login-btn:active { transform: scale(.99); }
+  
+  .login-btn i { font-size: .8125rem; }
   
   /* ── Footer ──────────────────────────────────────────────────────────────── */
   

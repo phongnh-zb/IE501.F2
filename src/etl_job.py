@@ -4,10 +4,10 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from configs import config
-from etl.extract import extract_raw_data
-from etl.load import load_to_hdfs
-from etl.transform import transform_data
-from utils import get_spark_session
+from src.etl.extract import extract_raw_data
+from src.etl.load import load_to_hdfs
+from src.etl.transform import transform_data
+from src.utils import get_spark_session
 
 
 def main():
