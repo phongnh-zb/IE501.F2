@@ -5,11 +5,11 @@ from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from configs import config
-from src.models.evaluate import run_evaluation
-from src.models.registry import save_model
-from src.models.train import FEATURE_COLS, get_classifiers, prepare_features
-from src.storage.model_results_writer import write_model_results
-from src.utils import get_spark_session
+from models.evaluate import run_evaluation
+from models.registry import save_model
+from models.train import FEATURE_COLS, get_classifiers, prepare_features
+from storage.model_results_writer import write_model_results
+from utils import get_spark_session
 
 
 def main():

@@ -16,7 +16,7 @@ FILE_COURSES              = "courses.csv"
 APP_NAME = "OULAD_Pipeline"
 MASTER   = "local[*]"
 
-HBASE_HOST          = "localhost"
+HBASE_HOST          = os.environ.get("HBASE_HOST", "localhost")
 HBASE_PORT          = 9090
 TABLE_NAME          = "student_predictions"
 MODEL_RESULTS_TABLE = "model_evaluations"

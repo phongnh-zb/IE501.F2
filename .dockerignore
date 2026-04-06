@@ -1,0 +1,40 @@
+# Pipeline source — not needed in the webapp image
+src/
+scripts/
+main.py
+create_user.py
+
+# Data — never bake data into the image
+data/
+
+# Python artefacts
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# Dev and test
+requirements-dev.txt
+requirements.txt
+tests/
+notebooks/
+benchmarks/
+
+# Spark / Hadoop
+*.jar
+spark-warehouse/
+
+# Secrets and local config
+.env
+*.env.*
+
+# Version control and editor
+.git/
+.gitignore
+.idea/
+.vscode/
+*.md
+
+# macOS
+.DS_Store

@@ -1,14 +1,10 @@
-import os
-import sys
 from contextlib import contextmanager
 
 import happybase
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
-
 from configs import config
 
-DEFAULT_TIMEOUT = 10_000   # ms — writes, reads, model results
+DEFAULT_TIMEOUT = 10_000   # ms — point reads and model result queries
 SCAN_TIMEOUT    = 60_000   # ms — full-table scans (student cache sync)
 
 

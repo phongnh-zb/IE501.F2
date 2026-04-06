@@ -5,7 +5,7 @@ import threading
 import time
 
 from configs.config import CACHE_INTERVAL, MODEL_RESULTS_TABLE, TABLE_NAME
-from src.storage.hbase_client import SCAN_TIMEOUT, hbase_connection
+from common.hbase_client import SCAN_TIMEOUT, hbase_connection
 
 logger = logging.getLogger(__name__)
 

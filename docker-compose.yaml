@@ -1,0 +1,42 @@
+services:
+
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ie501-dropout-webapp:latest
+    container_name: ie501-webapp
+
+    ports:
+      - "5001:5001"
+
+    environment:
+      # Override SECRET_KEY with a real value in production.
+      # Generate one with: python3 -c "import secrets; print(secrets.token_hex(32))"
+      SECRET_KEY: ${SECRET_KEY:-dev-key-change-before-production}
+
+      # HBase Thrift and HDFS run on the host, not inside Docker.
+      # host.docker.internal resolves to the host machine on Mac/Windows.
+      # On Linux, use the gateway IP (set via extra_hosts below).
+      HBASE_HOST: ${HBASE_HOST:-host.docker.internal}
+
+    extra_hosts:
+      # Allows the container to reach localhost services on the host (Linux).
+      # On Mac/Windows, host.docker.internal is set automatically by Docker Desktop.
+      - "host.docker.internal:host-gateway"
+
+    volumes:
+      # Persist users.db across container restarts and rebuilds.
+      # Create the directory on the host before first run:
+      #   mkdir -p ./data/auth
+      - ./data/auth:/app/data/auth
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:5001/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
