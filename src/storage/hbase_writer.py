@@ -2,11 +2,10 @@ import os
 import sys
 import time
 
-import happybase
-
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
 from configs import config
+from src.storage.hbase_client import ensure_table, hbase_connection
 from src.utils import get_spark_session
 
 RISK_SAFE     = 0
@@ -31,7 +30,6 @@ def _apply_risk_tier(
             return RISK_CRITICAL
         return RISK_HIGH
 
-    # label == 0 — model predicts safe, check for watch signals
     if score < 60.0 or submission_rate < 0.6 or avg_days_early < -7:
         return RISK_WATCH
 
@@ -85,16 +83,6 @@ def write_predictions(rows, connection):
     print(f">>> [HBASE] Done in {duration:.2f}s.")
 
 
-def _ensure_table(connection):
-    if config.TABLE_NAME.encode() not in connection.tables():
-        print(f">>> [HBASE] Table not found — creating '{config.TABLE_NAME}'...")
-        connection.create_table(
-            config.TABLE_NAME,
-            {"info": dict(), "prediction": dict()},
-        )
-        print(">>> [HBASE] Table created.")
-
-
 def main():
     spark = get_spark_session("Save_To_HBase_Full", config.MASTER)
     spark.sparkContext.setLogLevel("ERROR")
@@ -118,18 +106,6 @@ def main():
         spark.stop()
 
     print(">>> [HBASE] Connecting via Thrift...")
-    connection = None
-    try:
-        connection = happybase.Connection(
-            host=config.HBASE_HOST,
-            port=config.HBASE_PORT,
-            timeout=10000,
-        )
-        _ensure_table(connection)
-        write_predictions(all_rows, connection)
-    except Exception as e:
-        print(f">>> [HBASE] Connection/write error: {e}")
-        raise e
-    finally:
-        if connection:
-            connection.close()
+    with hbase_connection() as conn:
+        ensure_table(conn, config.TABLE_NAME, ["info", "prediction"])
+        write_predictions(all_rows, conn)

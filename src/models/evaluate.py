@@ -41,12 +41,24 @@ def evaluate_model(model, test_data, label_col="label"):
         print(f">>> [EVAL] AUC skipped ({type(model).__name__}): {e}")
         auc = 0.0
 
-    acc_evaluator = MulticlassClassificationEvaluator(
-        labelCol=label_col, predictionCol="prediction", metricName="accuracy"
-    )
-    accuracy = acc_evaluator.evaluate(predictions)
+    def _mc_metric(metric_name):
+        return MulticlassClassificationEvaluator(
+            labelCol=label_col, predictionCol="prediction", metricName=metric_name
+        ).evaluate(predictions)
 
-    return {"auc": auc, "accuracy": accuracy, "predictions": predictions}
+    accuracy  = _mc_metric("accuracy")
+    precision = _mc_metric("weightedPrecision")
+    recall    = _mc_metric("weightedRecall")
+    f1        = _mc_metric("weightedFMeasure")
+
+    return {
+        "auc":       auc,
+        "accuracy":  accuracy,
+        "precision": precision,
+        "recall":    recall,
+        "f1":        f1,
+        "predictions": predictions,
+    }
 
 
 def cross_validate(classifier, train_data, label_col="label", num_folds=3):
@@ -104,10 +116,13 @@ def run_evaluation(classifiers, train_data, test_data, num_cv_folds=3):
         metrics["cv_auc"]       = cv_auc
         metrics["training_time"] = round(train_time, 2)
 
-        print(f"    AUC:      {metrics['auc']:.4f}")
-        print(f"    CV AUC:   {metrics['cv_auc']:.4f}")
-        print(f"    Accuracy: {metrics['accuracy']:.4f}")
-        print(f"    Train:    {train_time:.2f}s")
+        print(f"    AUC:       {metrics['auc']:.4f}")
+        print(f"    CV AUC:    {metrics['cv_auc']:.4f}")
+        print(f"    Accuracy:  {metrics['accuracy']:.4f}")
+        print(f"    Precision: {metrics['precision']:.4f}")
+        print(f"    Recall:    {metrics['recall']:.4f}")
+        print(f"    F1:        {metrics['f1']:.4f}")
+        print(f"    Train:     {train_time:.2f}s")
 
         results[name] = {"model": model, "metrics": metrics}
 

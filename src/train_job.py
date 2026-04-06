@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -27,7 +28,10 @@ def main():
     results = run_evaluation(classifiers, train_data, test_data)
 
     save_model(results["best_model"], results["best_name"])
-    write_model_results(results["all_results"], results["best_name"], FEATURE_COLS)
+
+    run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    write_model_results(results["all_results"], results["best_name"], FEATURE_COLS, run_id)
+    print(f">>> [TRAIN] Run ID: {run_id}")
 
     spark.stop()
 

@@ -4,10 +4,8 @@ import math
 import threading
 import time
 
-import happybase
-
-from configs.config import (CACHE_INTERVAL, HBASE_HOST, HBASE_PORT,
-                            MODEL_RESULTS_TABLE, TABLE_NAME)
+from configs.config import TABLE_NAME, MODEL_RESULTS_TABLE, CACHE_INTERVAL
+from src.storage.hbase_client import SCAN_TIMEOUT, hbase_connection
 
 logger = logging.getLogger(__name__)
 
@@ -37,38 +35,35 @@ def _safe_int(value_dict, key, default=0):
 
 
 def fetch_all_data_from_hbase():
-    connection = None
     data_buffer = []
 
     try:
         logger.info(">>> [CACHE] Starting data synchronization from HBase...")
         start_time = time.time()
 
-        connection = happybase.Connection(host=HBASE_HOST, port=HBASE_PORT, timeout=60000)
-        connection.open()
-        table = connection.table(TABLE_NAME)
-
-        for key, value in table.scan():
-            try:
-                risk_tier = _safe_int(value, b"prediction:risk_tier")
-                data_buffer.append({
-                    "id":               key.decode("utf-8"),
-                    "clicks":           _safe_float(value, b"info:total_clicks"),
-                    "active_days":      _safe_int(value,   b"info:active_days"),
-                    "forum_clicks":     _safe_float(value, b"info:forum_clicks"),
-                    "quiz_clicks":      _safe_float(value, b"info:quiz_clicks"),
-                    "resource_clicks":  _safe_float(value, b"info:resource_clicks"),
-                    "score":            _safe_float(value, b"info:avg_score"),
-                    "weighted_score":   _safe_float(value, b"info:weighted_avg_score"),
-                    "submission_rate":  _safe_float(value, b"info:submission_rate"),
-                    "avg_days_early":   _safe_float(value, b"info:avg_days_early"),
-                    "withdrew_early":   _safe_int(value,   b"info:withdrew_early"),
-                    "num_prev_attempts": _safe_int(value,  b"info:num_prev_attempts"),
-                    "risk":             risk_tier,
-                    "risk_label":       RISK_LABELS.get(risk_tier, "Unknown"),
-                })
-            except Exception:
-                continue
+        with hbase_connection(timeout=SCAN_TIMEOUT) as conn:
+            table = conn.table(TABLE_NAME)
+            for key, value in table.scan():
+                try:
+                    risk_tier = _safe_int(value, b"prediction:risk_tier")
+                    data_buffer.append({
+                        "id":                key.decode("utf-8"),
+                        "clicks":            _safe_float(value, b"info:total_clicks"),
+                        "active_days":       _safe_int(value,   b"info:active_days"),
+                        "forum_clicks":      _safe_float(value, b"info:forum_clicks"),
+                        "quiz_clicks":       _safe_float(value, b"info:quiz_clicks"),
+                        "resource_clicks":   _safe_float(value, b"info:resource_clicks"),
+                        "score":             _safe_float(value, b"info:avg_score"),
+                        "weighted_score":    _safe_float(value, b"info:weighted_avg_score"),
+                        "submission_rate":   _safe_float(value, b"info:submission_rate"),
+                        "avg_days_early":    _safe_float(value, b"info:avg_days_early"),
+                        "withdrew_early":    _safe_int(value,   b"info:withdrew_early"),
+                        "num_prev_attempts": _safe_int(value,   b"info:num_prev_attempts"),
+                        "risk":              risk_tier,
+                        "risk_label":        RISK_LABELS.get(risk_tier, "Unknown"),
+                    })
+                except Exception:
+                    continue
 
         SYSTEM_CACHE["data"] = data_buffer
         SYSTEM_CACHE["last_updated"] = time.strftime("%H:%M:%S")
@@ -82,9 +77,6 @@ def fetch_all_data_from_hbase():
 
     except Exception as e:
         logger.error(f">>> [CACHE] Sync Error: {e}")
-    finally:
-        if connection:
-            connection.close()
 
 
 def background_scheduler():
@@ -118,15 +110,15 @@ def get_data_from_memory(page=1, page_size=50, search_query="", sort_by="id", or
         logger.error(f"Sort Error: {e}")
 
     total_records = len(filtered_data)
-    total_pages = math.ceil(total_records / page_size) if total_records > 0 else 1
+    total_pages   = math.ceil(total_records / page_size) if total_records > 0 else 1
 
-    page = max(1, min(page, total_pages))
+    page  = max(1, min(page, total_pages))
     start = (page - 1) * page_size
 
     return {
-        "data": filtered_data[start: start + page_size],
-        "page": page,
-        "total_pages": total_pages,
+        "data":          filtered_data[start: start + page_size],
+        "page":          page,
+        "total_pages":   total_pages,
         "total_records": total_records,
     }
 
@@ -140,33 +132,66 @@ def get_student_by_id(student_id):
     return None
 
 
+def _parse_model_row(key, value):
+    raw_key = key.decode("utf-8")
+    if "|" in raw_key:
+        model_key, run_id = raw_key.rsplit("|", 1)
+    else:
+        model_key, run_id = raw_key, "00000000_000000"
+    return {
+        "name":          model_key.replace("_", " "),
+        "run_id":        run_id,
+        "auc":           _safe_float(value, b"metrics:auc"),
+        "accuracy":      _safe_float(value, b"metrics:accuracy"),
+        "precision":     _safe_float(value, b"metrics:precision"),
+        "recall":        _safe_float(value, b"metrics:recall"),
+        "f1":            _safe_float(value, b"metrics:f1"),
+        "cv_auc":        _safe_float(value, b"metrics:cv_auc"),
+        "training_time": _safe_float(value, b"metrics:training_time"),
+        "is_best":       value.get(b"info:is_best", b"false").decode() == "true",
+        "timestamp":     value.get(b"info:timestamp", b"").decode(),
+        "importance":    json.loads(value.get(b"importance:json", b"[]").decode()),
+    }
+
+
 def get_model_results_from_hbase():
-    connection = None
-    results = []
+    all_rows = []
     try:
-        connection = happybase.Connection(host=HBASE_HOST, port=HBASE_PORT, timeout=10000)
-        connection.open()
-        table = connection.table(MODEL_RESULTS_TABLE)
-
-        for key, value in table.scan():
-            name = key.decode("utf-8").replace("_", " ")
-            results.append({
-                "name":          name,
-                "auc":           _safe_float(value, b"metrics:auc"),
-                "accuracy":      _safe_float(value, b"metrics:accuracy"),
-                "cv_auc":        _safe_float(value, b"metrics:cv_auc"),
-                "training_time": _safe_float(value, b"metrics:training_time"),
-                "is_best":       value.get(b"info:is_best", b"false").decode() == "true",
-                "timestamp":     value.get(b"info:timestamp", b"").decode(),
-                "importance":    json.loads(value.get(b"importance:json", b"[]").decode()),
-            })
-
-        results.sort(key=lambda x: x["auc"], reverse=True)
-
+        with hbase_connection() as conn:
+            table = conn.table(MODEL_RESULTS_TABLE)
+            for key, value in table.scan():
+                all_rows.append(_parse_model_row(key, value))
     except Exception as e:
         logger.error(f">>> [CACHE] Model results fetch error: {e}")
-    finally:
-        if connection:
-            connection.close()
+        return []
 
-    return results
+    latest = {}
+    for row in all_rows:
+        name = row["name"]
+        if name not in latest or row["run_id"] > latest[name]["run_id"]:
+            latest[name] = row
+
+    return sorted(latest.values(), key=lambda x: x["auc"], reverse=True)
+
+
+def get_model_history_from_hbase():
+    all_rows = []
+    try:
+        with hbase_connection() as conn:
+            table = conn.table(MODEL_RESULTS_TABLE)
+            for key, value in table.scan():
+                row = _parse_model_row(key, value)
+                row.pop("importance", None)
+                all_rows.append(row)
+    except Exception as e:
+        logger.error(f">>> [CACHE] Model history fetch error: {e}")
+        return {}
+
+    history = {}
+    for row in all_rows:
+        history.setdefault(row["name"], []).append(row)
+
+    for runs in history.values():
+        runs.sort(key=lambda x: x["run_id"])
+
+    return history

@@ -1,399 +1,231 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
+<head>
+    <meta charset="UTF-8">
     <title>Student List</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-      rel="stylesheet"
-    />
-    <style>
-      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
-      body {
-        font-family: "Inter", sans-serif;
-      }
-    </style>
-  </head>
-  <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
-    {% set active_page = 'students' %} {% include 'navbar.html' %}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+
+    {% set active_page = 'students' %}
+    {% include 'navbar.html' %}
 
     <main class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full">
-      <div
-        class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6"
-      >
-        <div
-          class="flex flex-col md:flex-row justify-between items-center gap-4"
-        >
-          <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-4">
-              <h2 class="text-2xl font-bold text-gray-800">
-                Student Management
-              </h2>
-              <button
-                id="refreshBtn"
-                onclick="triggerManualRefresh()"
-                class="flex items-center gap-2 px-3 py-1 bg-white border border-gray-300 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition shadow-sm"
-              >
-                <i class="fas fa-sync-alt" id="refreshIcon"></i> Refresh Data
-              </button>
-            </div>
-            <p class="text-sm text-gray-500">
-              Last updated:
-              <span class="font-bold text-blue-600">{{ last_updated }}</span> |
-              Total: <span class="font-bold">{{ total_records }}</span> records
-            </p>
-          </div>
 
-          <form
-            action="/students"
-            method="GET"
-            class="flex gap-2 w-full md:w-auto"
-          >
-            <input type="hidden" name="page_size" value="{{ page_size }}" />
-            <input type="hidden" name="sort_by" value="{{ sort_by }}" />
-            <input type="hidden" name="order" value="{{ order }}" />
-            <div class="relative w-full">
-              <input
-                type="text"
-                name="search"
-                value="{{ search }}"
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="Search Student ID..."
-              />
-              <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-            </div>
-            <button
-              type="submit"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Search
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <div
-        class="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200"
-      >
-        <div class="overflow-x-auto min-h-[400px]">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-100 border-b border-gray-200">
-              <tr>
-                <th
-                  class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition group"
-                  onclick="window.location.href='/students?page=1&page_size={{ page_size }}&search={{ search }}&sort_by=id&order={{ 'desc' if sort_by == 'id' and order == 'asc' else 'asc' }}'"
-                >
-                  <div class="flex items-center gap-2">
-                    Student ID {% if sort_by == 'id' %}<i
-                      class="fas fa-sort-{{ 'down' if order == 'desc' else 'up' }} text-blue-600"
-                    ></i>
-                    {% else %}<i
-                      class="fas fa-sort text-gray-300 opacity-0 group-hover:opacity-100 transition"
-                    ></i
-                    >{% endif %}
-                  </div>
-                </th>
-                <th
-                  class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition group"
-                  onclick="window.location.href='/students?page=1&page_size={{ page_size }}&search={{ search }}&sort_by=clicks&order={{ 'desc' if sort_by == 'clicks' and order == 'asc' else 'asc' }}'"
-                >
-                  <div class="flex items-center justify-center gap-2">
-                    Engagement (Clicks) {% if sort_by == 'clicks' %}<i
-                      class="fas fa-sort-{{ 'down' if order == 'desc' else 'up' }} text-blue-600"
-                    ></i>
-                    {% else %}<i
-                      class="fas fa-sort text-gray-300 opacity-0 group-hover:opacity-100 transition"
-                    ></i
-                    >{% endif %}
-                  </div>
-                </th>
-                <th
-                  class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition group"
-                  onclick="window.location.href='/students?page=1&page_size={{ page_size }}&search={{ search }}&sort_by=score&order={{ 'desc' if sort_by == 'score' and order == 'asc' else 'asc' }}'"
-                >
-                  <div class="flex items-center justify-center gap-2">
-                    Average Score {% if sort_by == 'score' %}<i
-                      class="fas fa-sort-{{ 'down' if order == 'desc' else 'up' }} text-blue-600"
-                    ></i>
-                    {% else %}<i
-                      class="fas fa-sort text-gray-300 opacity-0 group-hover:opacity-100 transition"
-                    ></i
-                    >{% endif %}
-                  </div>
-                </th>
-                <th
-                  class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition group"
-                  onclick="window.location.href='/students?page=1&page_size={{ page_size }}&search={{ search }}&sort_by=risk&order={{ 'desc' if sort_by == 'risk' and order == 'asc' else 'asc' }}'"
-                >
-                  <div class="flex items-center justify-center gap-2">
-                    Risk Status {% if sort_by == 'risk' %}<i
-                      class="fas fa-sort-{{ 'down' if order == 'desc' else 'up' }} text-blue-600"
-                    ></i>
-                    {% else %}<i
-                      class="fas fa-sort text-gray-300 opacity-0 group-hover:opacity-100 transition"
-                    ></i
-                    >{% endif %}
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              {% for st in students %}
-              <tr class="hover:bg-blue-50 transition">
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-sm font-semibold font-mono"
-                >
-                  <a
-                    href="javascript:void(0)"
-                    onclick="openStudentModal('{{ st.id }}')"
-                    class="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-2 cursor-pointer"
-                  >
-                    {{ st.id }}
-                  </a>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                  {{ st.clicks | int }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap align-middle">
-                  <div class="w-full">
-                    <div class="flex justify-between text-xs mb-1">
-                      <span class="font-bold">{{ st.score | round(1) }}</span>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-4">
+                        <h2 class="text-2xl font-bold text-gray-800">Student Management</h2>
+                        <button id="refreshBtn" onclick="triggerManualRefresh()"
+                                class="flex items-center gap-2 px-3 py-1 bg-white border border-gray-300 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition shadow-sm">
+                            <i class="fas fa-sync-alt" id="refreshIcon"></i> Refresh Data
+                        </button>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-1.5">
-                      <div
-                        class="{{ 'bg-red-500' if st.score < 40 else ('bg-yellow-400' if st.score < 70 else 'bg-green-500') }} h-1.5 rounded-full"
-                        style="width: {{ st.score }}%"
-                      ></div>
+                    <p class="text-sm text-gray-500">
+                        Last updated: <span class="font-bold text-blue-600">{{ last_updated }}</span>
+                        | Total: <span class="font-bold">{{ total_records }}</span> records
+                    </p>
+                </div>
+
+                <form action="/students" method="GET" class="flex gap-2 w-full md:w-auto">
+                    <input type="hidden" name="page_size" value="{{ page_size }}">
+                    <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                    <input type="hidden" name="order" value="{{ order }}">
+                    <div class="relative w-full">
+                        <input type="text" name="search" value="{{ search }}"
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                               placeholder="Search Student ID...">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                     </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  {% if st.risk == 3 %}
-                  <span
-                    class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-300"
-                  >
-                    <i class="fas fa-user-slash mr-1"></i>Critical
-                  </span>
-                  {% elif st.risk == 2 %}
-                  <span
-                    class="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 border border-orange-300"
-                  >
-                    <i class="fas fa-exclamation-triangle mr-1"></i>High Risk
-                  </span>
-                  {% elif st.risk == 1 %}
-                  <span
-                    class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-300"
-                  >
-                    <i class="fas fa-eye mr-1"></i>Watch
-                  </span>
-                  {% else %}
-                  <span
-                    class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200"
-                  >
-                    <i class="fas fa-check-circle mr-1"></i>Safe
-                  </span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% else %}
-              <tr>
-                <td colspan="4" class="px-6 py-10 text-center text-gray-500">
-                  No data found matching your criteria.
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Search</button>
+                </form>
+            </div>
         </div>
 
-        <div
-          class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4"
-        >
-          <div class="flex items-center text-sm text-gray-700">
-            <span class="mr-2">Show</span>
-            <select
-              onchange="changeParams('page_size', this.value)"
-              class="border-gray-300 border rounded py-1 px-2 cursor-pointer focus:outline-none bg-white"
-            >
-              <option value="10" {% if page_size="" ="10" %}selected{% endif %}>
-                10
-              </option>
-              <option value="20" {% if page_size="" ="20" %}selected{% endif %}>
-                20
-              </option>
-              <option value="50" {% if page_size="" ="50" %}selected{% endif %}>
-                50
-              </option>
-              <option
-                value="100"
-                {%
-                if
-                page_size=""
-                ="100"
-                %}selected{%
-                endif
-                %}
-              >
-                100
-              </option>
-            </select>
-          </div>
-          <span class="text-sm text-gray-600">
-            Page <span class="font-bold text-gray-900">{{ page }}</span> of
-            <span class="font-bold text-gray-900">{{ total_pages }}</span>
-          </span>
-          <div class="inline-flex rounded-md shadow-sm isolate">
-            <a
-              href="{{ '/students?page=1&page_size=' ~ page_size ~ '&search=' ~ search ~ '&sort_by=' ~ sort_by ~ '&order=' ~ order }}"
-              class="relative inline-flex items-center px-3 py-2 text-gray-400 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if page == 1 }}"
-            >
-              <i class="fas fa-angle-double-left"></i>
-            </a>
-            <a
-              href="{{ '/students?page=' ~ (page - 1) ~ '&page_size=' ~ page_size ~ '&search=' ~ search ~ '&sort_by=' ~ sort_by ~ '&order=' ~ order }}"
-              class="relative inline-flex items-center px-3 py-2 text-gray-700 bg-white border-t border-b border-r border-gray-300 hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if page == 1 }}"
-            >
-              Prev
-            </a>
-            <a
-              href="{{ '/students?page=' ~ (page + 1) ~ '&page_size=' ~ page_size ~ '&search=' ~ search ~ '&sort_by=' ~ sort_by ~ '&order=' ~ order }}"
-              class="relative inline-flex items-center px-3 py-2 text-gray-700 bg-white border-t border-b border-l border-gray-300 hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if page == total_pages }}"
-            >
-              Next
-            </a>
-            <a
-              href="{{ '/students?page=' ~ total_pages ~ '&page_size=' ~ page_size ~ '&search=' ~ search ~ '&sort_by=' ~ sort_by ~ '&order=' ~ order }}"
-              class="relative inline-flex items-center px-3 py-2 text-gray-400 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if page == total_pages }}"
-            >
-              <i class="fas fa-angle-double-right"></i>
-            </a>
-          </div>
+        <div class="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
+            <div class="overflow-x-auto min-h-[400px]">
+                <table class="min-w-full divide-y divide-gray-200">
+                   <thead class="bg-gray-100 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition group"
+                                onclick="window.location.href='/students?page=1&page_size={{ page_size }}&search={{ search }}&sort_by=id&order={{ 'desc' if sort_by == 'id' and order == 'asc' else 'asc' }}'">
+                                <div class="flex items-center gap-2">
+                                    Student ID
+                                    {% if sort_by == 'id' %}<i class="fas fa-sort-{{ 'down' if order == 'desc' else 'up' }} text-blue-600"></i>
+                                    {% else %}<i class="fas fa-sort text-gray-300 opacity-0 group-hover:opacity-100 transition"></i>{% endif %}
+                                </div>
+                            </th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition group"
+                                onclick="window.location.href='/students?page=1&page_size={{ page_size }}&search={{ search }}&sort_by=clicks&order={{ 'desc' if sort_by == 'clicks' and order == 'asc' else 'asc' }}'">
+                                <div class="flex items-center justify-center gap-2">
+                                    Engagement (Clicks)
+                                    {% if sort_by == 'clicks' %}<i class="fas fa-sort-{{ 'down' if order == 'desc' else 'up' }} text-blue-600"></i>
+                                    {% else %}<i class="fas fa-sort text-gray-300 opacity-0 group-hover:opacity-100 transition"></i>{% endif %}
+                                </div>
+                            </th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition group"
+                                onclick="window.location.href='/students?page=1&page_size={{ page_size }}&search={{ search }}&sort_by=score&order={{ 'desc' if sort_by == 'score' and order == 'asc' else 'asc' }}'">
+                                <div class="flex items-center justify-center gap-2">
+                                    Average Score
+                                    {% if sort_by == 'score' %}<i class="fas fa-sort-{{ 'down' if order == 'desc' else 'up' }} text-blue-600"></i>
+                                    {% else %}<i class="fas fa-sort text-gray-300 opacity-0 group-hover:opacity-100 transition"></i>{% endif %}
+                                </div>
+                            </th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition group"
+                                onclick="window.location.href='/students?page=1&page_size={{ page_size }}&search={{ search }}&sort_by=risk&order={{ 'desc' if sort_by == 'risk' and order == 'asc' else 'asc' }}'">
+                                <div class="flex items-center justify-center gap-2">
+                                    Risk Status
+                                    {% if sort_by == 'risk' %}<i class="fas fa-sort-{{ 'down' if order == 'desc' else 'up' }} text-blue-600"></i>
+                                    {% else %}<i class="fas fa-sort text-gray-300 opacity-0 group-hover:opacity-100 transition"></i>{% endif %}
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for st in students %}
+                        <tr class="hover:bg-blue-50 transition">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold font-mono">
+                                <a href="javascript:void(0)"
+                                   onclick="openStudentModal('{{ st.id }}')"
+                                   class="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-2 cursor-pointer">
+                                    {{ st.id }}
+                                </a>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-center">{{ st.clicks | int }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap align-middle">
+                                <div class="w-full">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="font-bold">{{ st.score | round(1) }}</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                        <div class="{{ 'bg-red-500' if st.score < 40 else ('bg-yellow-400' if st.score < 70 else 'bg-green-500') }} h-1.5 rounded-full"
+                                             style="width: {{ st.score }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                {% if st.risk == 3 %}
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-300">
+                                        <i class="fas fa-user-slash mr-1"></i>Critical
+                                    </span>
+                                {% elif st.risk == 2 %}
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 border border-orange-300">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>High Risk
+                                    </span>
+                                {% elif st.risk == 1 %}
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-300">
+                                        <i class="fas fa-eye mr-1"></i>Watch
+                                    </span>
+                                {% else %}
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
+                                        <i class="fas fa-check-circle mr-1"></i>Safe
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-10 text-center text-gray-500">No data found matching your criteria.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center text-sm text-gray-700">
+                    <span class="mr-2">Show</span>
+                    <select onchange="changeParams('page_size', this.value)" class="border-gray-300 border rounded py-1 px-2 cursor-pointer focus:outline-none bg-white">
+                        <option value="10" {% if page_size == 10 %}selected{% endif %}>10</option>
+                        <option value="20" {% if page_size == 20 %}selected{% endif %}>20</option>
+                        <option value="50" {% if page_size == 50 %}selected{% endif %}>50</option>
+                        <option value="100" {% if page_size == 100 %}selected{% endif %}>100</option>
+                    </select>
+                </div>
+                <span class="text-sm text-gray-600">
+                    Page <span class="font-bold text-gray-900">{{ page }}</span> of <span class="font-bold text-gray-900">{{ total_pages }}</span>
+                </span>
+                <div class="inline-flex rounded-md shadow-sm isolate">
+                    <a href="{{ '/students?page=1&page_size=' ~ page_size ~ '&search=' ~ search ~ '&sort_by=' ~ sort_by ~ '&order=' ~ order }}"
+                       class="relative inline-flex items-center px-3 py-2 text-gray-400 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if page == 1 }}">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="{{ '/students?page=' ~ (page - 1) ~ '&page_size=' ~ page_size ~ '&search=' ~ search ~ '&sort_by=' ~ sort_by ~ '&order=' ~ order }}"
+                       class="relative inline-flex items-center px-3 py-2 text-gray-700 bg-white border-t border-b border-r border-gray-300 hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if page == 1 }}">
+                        Prev
+                    </a>
+                    <a href="{{ '/students?page=' ~ (page + 1) ~ '&page_size=' ~ page_size ~ '&search=' ~ search ~ '&sort_by=' ~ sort_by ~ '&order=' ~ order }}"
+                       class="relative inline-flex items-center px-3 py-2 text-gray-700 bg-white border-t border-b border-l border-gray-300 hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if page == total_pages }}">
+                        Next
+                    </a>
+                    <a href="{{ '/students?page=' ~ total_pages ~ '&page_size=' ~ page_size ~ '&search=' ~ search ~ '&sort_by=' ~ sort_by ~ '&order=' ~ order }}"
+                       class="relative inline-flex items-center px-3 py-2 text-gray-400 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if page == total_pages }}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </div>
+            </div>
         </div>
-      </div>
     </main>
 
     {% include 'footer.html' %}
 
-    <div
-      id="studentModal"
-      class="fixed inset-0 z-[100] hidden"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-        onclick="closeModal()"
-      ></div>
-      <div
-        id="modalOverlay"
-        class="fixed inset-0 z-10 w-screen overflow-y-auto"
-      >
-        <div class="flex min-h-full items-center justify-center p-4 sm:p-0">
-          <div
-            class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg"
-          >
-            <div
-              id="modalHeader"
-              class="h-24 relative transition-colors duration-300"
-            >
-              <h3
-                class="absolute top-4 left-6 text-white font-bold text-lg tracking-wide"
-              >
-                Student Details
-              </h3>
-              <button
-                onclick="closeModal()"
-                class="absolute top-4 right-4 text-white hover:text-gray-200 focus:outline-none transition-transform hover:rotate-90"
-              >
-                <i class="fas fa-times text-xl"></i>
-              </button>
-              <div class="absolute -bottom-10 left-6">
-                <div class="h-20 w-20 rounded-full bg-white p-1 shadow-md">
-                  <img
-                    id="modalAvatar"
-                    src=""
-                    class="h-full w-full rounded-full object-cover"
-                    alt="Student Avatar"
-                  />
+    <div id="studentModal" class="fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeModal()"></div>
+        <div id="modalOverlay" class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <div id="modalHeader" class="h-24 relative transition-colors duration-300">
+                        <h3 class="absolute top-4 left-6 text-white font-bold text-lg tracking-wide">Student Details</h3>
+                        <button onclick="closeModal()" class="absolute top-4 right-4 text-white hover:text-gray-200 focus:outline-none transition-transform hover:rotate-90">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                        <div class="absolute -bottom-10 left-6">
+                            <div class="h-20 w-20 rounded-full bg-white p-1 shadow-md">
+                                <img id="modalAvatar" src="" class="h-full w-full rounded-full object-cover" alt="Student Avatar">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 pt-12 pb-6">
+                        <div class="flex justify-between items-start">
+                            <h3 class="text-2xl font-bold text-gray-900" id="modalId">Student ID</h3>
+                            <span id="modalStatusBadge" class="px-3 py-1 rounded-full text-xs font-bold border">Loading...</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Average Score</p>
+                                <p class="text-2xl font-bold text-gray-800" id="modalScore">0</p>
+                                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                                    <div id="modalProgressBar" class="bg-blue-500 h-1.5 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Engagement (Clicks)</p>
+                                <p class="text-2xl font-bold text-gray-800" id="modalClicks">0</p>
+                                <p class="text-xs text-gray-400 mt-2">interactions recorded</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 border-t border-gray-100 pt-5">
+                            <h4 class="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3 uppercase tracking-wide">
+                                <i class="fas fa-clipboard-check text-indigo-600"></i> Risk Analysis & Action Plan
+                            </h4>
+                            <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                                <ul id="modalRecs" class="text-sm text-gray-700 space-y-2 list-disc pl-5"></ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" onclick="closeModal()"
+                            class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
+                            Close
+                        </button>
+                    </div>
                 </div>
-              </div>
             </div>
-            <div class="px-6 pt-12 pb-6">
-              <div class="flex justify-between items-start">
-                <h3 class="text-2xl font-bold text-gray-900" id="modalId">
-                  Student ID
-                </h3>
-                <span
-                  id="modalStatusBadge"
-                  class="px-3 py-1 rounded-full text-xs font-bold border"
-                  >Loading...</span
-                >
-              </div>
-              <div class="grid grid-cols-2 gap-4 mt-6">
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                  <p
-                    class="text-xs text-gray-500 uppercase font-bold tracking-wider"
-                  >
-                    Average Score
-                  </p>
-                  <p class="text-2xl font-bold text-gray-800" id="modalScore">
-                    0
-                  </p>
-                  <div
-                    class="w-full bg-gray-200 rounded-full h-1.5 mt-2 overflow-hidden"
-                  >
-                    <div
-                      id="modalProgressBar"
-                      class="bg-blue-500 h-1.5 rounded-full"
-                      style="width: 0%"
-                    ></div>
-                  </div>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                  <p
-                    class="text-xs text-gray-500 uppercase font-bold tracking-wider"
-                  >
-                    Engagement (Clicks)
-                  </p>
-                  <p class="text-2xl font-bold text-gray-800" id="modalClicks">
-                    0
-                  </p>
-                  <p class="text-xs text-gray-400 mt-2">
-                    interactions recorded
-                  </p>
-                </div>
-              </div>
-              <div class="mt-6 border-t border-gray-100 pt-5">
-                <h4
-                  class="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3 uppercase tracking-wide"
-                >
-                  <i class="fas fa-clipboard-check text-indigo-600"></i> Risk
-                  Analysis & Action Plan
-                </h4>
-                <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                  <ul
-                    id="modalRecs"
-                    class="text-sm text-gray-700 space-y-2 list-disc pl-5"
-                  ></ul>
-                </div>
-              </div>
-            </div>
-            <div
-              class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6"
-            >
-              <button
-                type="button"
-                onclick="closeModal()"
-                class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-              >
-                Close
-              </button>
-            </div>
-          </div>
         </div>
-      </div>
     </div>
     <script src="{{ url_for('static', filename='js/students.js') }}"></script>
-  </body>
+</body>
 </html>
