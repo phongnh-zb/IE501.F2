@@ -340,3 +340,100 @@ img, svg { display: block; }
 @media (max-width: 640px) {
   .page-content { padding: 1.25rem 0 2rem; }
 }
+
+/* ── Nav user widget ─────────────────────────────────────────────────────── */
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .25rem .5rem .25rem .375rem;
+  border-radius: var(--r-lg);
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.nav-user-icon { font-size: .875rem; color: rgba(255,255,255,.5); }
+
+.nav-user-name {
+  font-size: .75rem;
+  font-weight: 500;
+  color: rgba(255,255,255,.85);
+}
+
+.nav-user-role {
+  font-size: .6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: .15rem .4rem;
+  border-radius: 999px;
+}
+
+.nav-user-role-admin   { background: rgba(239,68,68,.25);  color: #fca5a5; }
+.nav-user-role-lecturer { background: rgba(59,130,246,.25); color: #93c5fd; }
+
+.nav-logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-sm);
+  color: rgba(255,255,255,.4);
+  font-size: .75rem;
+  transition: color var(--ease), background var(--ease);
+  text-decoration: none;
+}
+
+.nav-logout:hover { color: #fca5a5; background: rgba(239,68,68,.15); text-decoration: none; }
+
+/* ── 403 page ────────────────────────────────────────────────────────────── */
+.error-wrap {
+  min-height: calc(100vh - 56px - 52px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+.error-card {
+  background: var(--surface);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-md);
+  padding: 3rem 2.5rem;
+  text-align: center;
+  max-width: 420px;
+  width: 100%;
+}
+
+.error-code {
+  font-size: 4rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--bd-2);
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.error-title { font-size: 1.125rem; margin-bottom: .5rem; }
+.error-sub   { font-size: .875rem; color: var(--tx-2); }
+
+/* ── Flash messages ──────────────────────────────────────────────────────── */
+.flash {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  border-radius: var(--r-md);
+  font-size: .8125rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  border: 1px solid;
+}
+
+.flash i { font-size: .8125rem; flex-shrink: 0; }
+
+.flash-error   { background: var(--crit-bg);  border-color: var(--crit-bd);  color: var(--crit-tx); }
+.flash-info    { background: var(--accent-dim); border-color: #93c5fd;        color: #1e40af; }
+.flash-success { background: var(--safe-bg);  border-color: var(--safe-bd);  color: var(--safe-tx); }

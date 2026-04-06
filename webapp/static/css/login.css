@@ -1,0 +1,197 @@
+.login-body {
+	min-height: 100vh;
+	background: var(--bg);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1.5rem;
+  }
+  
+  .login-wrap {
+	width: 100%;
+	max-width: 400px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1.5rem;
+  }
+  
+  /* ── Brand ───────────────────────────────────────────────────────────────── */
+  
+  .login-brand {
+	display: flex;
+	align-items: center;
+	gap: .625rem;
+  }
+  
+  .login-brand-mark {
+	width: 36px;
+	height: 36px;
+	background: var(--navy);
+	border-radius: var(--r-lg);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1rem;
+	color: #fff;
+	flex-shrink: 0;
+  }
+  
+  .login-brand-name {
+	font-size: .9375rem;
+	font-weight: 700;
+	color: var(--tx-1);
+	letter-spacing: -.01em;
+  }
+  
+  .login-brand-course {
+	font-size: .75rem;
+	font-weight: 500;
+	color: var(--tx-3);
+	background: var(--surface);
+	border: 1px solid var(--bd);
+	border-radius: 999px;
+	padding: .15rem .5rem;
+	font-family: var(--font-mono);
+  }
+  
+  /* ── Card ────────────────────────────────────────────────────────────────── */
+  
+  .login-card {
+	width: 100%;
+	background: var(--surface);
+	border: 1px solid var(--bd);
+	border-radius: var(--r-xl);
+	box-shadow: var(--sh-md);
+	overflow: hidden;
+  }
+  
+  .login-card-head {
+	background: var(--navy);
+	padding: 1.75rem 1.75rem 1.5rem;
+  }
+  
+  .login-title {
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: #fff;
+	letter-spacing: -.02em;
+  }
+  
+  .login-sub {
+	font-size: .8125rem;
+	color: rgba(255,255,255,.5);
+	margin-top: .3rem;
+  }
+  
+  /* ── Alert ───────────────────────────────────────────────────────────────── */
+  
+  .login-alert {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	font-size: .8125rem;
+	padding: .75rem 1.75rem;
+	border-bottom: 1px solid var(--bd);
+  }
+  
+  .login-alert i { font-size: .8125rem; flex-shrink: 0; }
+  
+  .login-alert-error {
+	background: var(--crit-bg);
+	color: var(--crit-tx);
+	border-left: 3px solid var(--crit);
+  }
+  
+  .login-alert-info {
+	background: var(--accent-dim);
+	color: #1e40af;
+  }
+  
+  /* ── Form ────────────────────────────────────────────────────────────────── */
+  
+  .login-form {
+	padding: 1.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1.125rem;
+  }
+  
+  .login-field {
+	display: flex;
+	flex-direction: column;
+	gap: .4rem;
+  }
+  
+  .login-field label {
+	font-size: .8125rem;
+	font-weight: 600;
+	color: var(--tx-2);
+  }
+  
+  .login-input-wrap {
+	position: relative;
+  }
+  
+  .login-input-icon {
+	position: absolute;
+	left: .875rem;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: .8125rem;
+	color: var(--tx-3);
+	pointer-events: none;
+  }
+  
+  .login-input-wrap input {
+	width: 100%;
+	padding: .625rem .875rem .625rem 2.375rem;
+	font-size: .9375rem;
+	font-family: var(--font);
+	color: var(--tx-1);
+	background: var(--surface-2);
+	border: 1px solid var(--bd);
+	border-radius: var(--r-md);
+	outline: none;
+	transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+  
+  .login-input-wrap input:focus {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+	background: var(--surface);
+  }
+  
+  .login-input-wrap input::placeholder { color: var(--tx-3); }
+  
+  /* ── Submit ──────────────────────────────────────────────────────────────── */
+  
+  .login-btn {
+	margin-top: .375rem;
+	width: 100%;
+	padding: .6875rem 1rem;
+	background: var(--navy);
+	color: #fff;
+	border: none;
+	border-radius: var(--r-md);
+	font-size: .9375rem;
+	font-weight: 600;
+	font-family: var(--font);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: .5rem;
+	cursor: pointer;
+	transition: background 150ms ease, transform 100ms ease;
+  }
+  
+  .login-btn:hover  { background: var(--navy-mid); }
+  .login-btn:active { transform: scale(.99); }
+  
+  /* ── Footer ──────────────────────────────────────────────────────────────── */
+  
+  .login-footer {
+	font-size: .6875rem;
+	color: var(--tx-3);
+	text-align: center;
+  }

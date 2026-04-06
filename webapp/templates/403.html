@@ -1,0 +1,20 @@
+{% extends 'base.html' %} {% block title %}Access Denied{% endblock %} {% block
+content %}
+<div class="error-wrap">
+  <div class="error-card">
+    <div class="error-code">403</div>
+    <h2 class="error-title">Access denied</h2>
+    <p class="error-sub">
+      This page requires administrator privileges.<br />Contact your system
+      administrator if you need access.
+    </p>
+    <a
+      href="/"
+      class="btn btn-outline mt-4"
+      style="margin: 1.5rem auto 0; width: fit-content"
+    >
+      <i class="fas fa-arrow-left"></i> Back to dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}

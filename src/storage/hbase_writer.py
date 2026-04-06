@@ -63,6 +63,8 @@ def write_predictions(rows, connection):
         batch.put(
             str(row["id_student"]).encode(),
             {
+                b"info:code_module":        str(row["code_module"]).encode(),
+                b"info:code_presentation":  str(row["code_presentation"]).encode(),
                 b"info:total_clicks":       str(clicks).encode(),
                 b"info:active_days":        str(active_days).encode(),
                 b"info:forum_clicks":       str(forum_clicks).encode(),
@@ -93,6 +95,7 @@ def main():
         print(f">>> [INFO] {df.count()} rows found.")
         all_rows = df.select(
             "id_student",
+            "code_module", "code_presentation",
             "total_clicks", "active_days",
             "forum_clicks", "quiz_clicks", "resource_clicks",
             "avg_score", "weighted_avg_score", "submission_rate", "avg_days_early",

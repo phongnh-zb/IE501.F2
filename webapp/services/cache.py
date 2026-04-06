@@ -4,7 +4,7 @@ import math
 import threading
 import time
 
-from configs.config import TABLE_NAME, MODEL_RESULTS_TABLE, CACHE_INTERVAL
+from configs.config import CACHE_INTERVAL, MODEL_RESULTS_TABLE, TABLE_NAME
 from src.storage.hbase_client import SCAN_TIMEOUT, hbase_connection
 
 logger = logging.getLogger(__name__)
@@ -48,6 +48,8 @@ def fetch_all_data_from_hbase():
                     risk_tier = _safe_int(value, b"prediction:risk_tier")
                     data_buffer.append({
                         "id":                key.decode("utf-8"),
+                        "code_module":       value.get(b"info:code_module", b"").decode("utf-8"),
+                        "code_presentation": value.get(b"info:code_presentation", b"").decode("utf-8"),
                         "clicks":            _safe_float(value, b"info:total_clicks"),
                         "active_days":       _safe_int(value,   b"info:active_days"),
                         "forum_clicks":      _safe_float(value, b"info:forum_clicks"),
@@ -91,11 +93,15 @@ def start_background_scheduler():
     t.start()
 
 
-def get_data_from_memory(page=1, page_size=50, search_query="", sort_by="id", order="asc"):
+def get_data_from_memory(page=1, page_size=50, search_query="", sort_by="id", order="asc", modules=None):
     if not SYSTEM_CACHE["is_ready"]:
         return {"data": [], "total_pages": 0, "total_records": 0, "page": 1}
 
     all_data = SYSTEM_CACHE["data"]
+
+    # Module filter for lecturers — None means no restriction (admin)
+    if modules:
+        all_data = [x for x in all_data if x.get("code_module", "") in modules]
 
     if search_query:
         q = search_query.lower()

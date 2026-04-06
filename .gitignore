@@ -1,13 +1,16 @@
-# Bỏ qua dữ liệu
+# Pipeline data
 data/
 *.csv
 *.parquet
-*.venv
 
-# Bỏ qua file hệ thống Mac
-.DS_Store
-
-# Bỏ qua file biên dịch Python
+# Python
+.venv/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Environment
+.env

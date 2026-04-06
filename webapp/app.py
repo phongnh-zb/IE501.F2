@@ -6,7 +6,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from flask import Flask
 
-from configs.config import FLASK_PORT
+from configs.config import FLASK_PORT, SECRET_KEY
+from webapp.auth.db import init_db
+from webapp.auth.manager import login_manager
+from webapp.auth.routes import auth_bp
 from webapp.routes.api import api_bp
 from webapp.routes.dashboard import dashboard_bp
 from webapp.routes.models import models_bp
@@ -18,11 +21,21 @@ logging.basicConfig(level=logging.INFO)
 
 def create_app():
     app = Flask(__name__)
+    app.secret_key = SECRET_KEY
 
+    login_manager.init_app(app)
+    init_db()
+
+    app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(students_bp)
     app.register_blueprint(models_bp)
     app.register_blueprint(api_bp)
+
+    @app.errorhandler(403)
+    def forbidden(_):
+        from flask import render_template
+        return render_template("403.html"), 403
 
     return app
 
