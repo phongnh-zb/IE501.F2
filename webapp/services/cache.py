@@ -66,7 +66,7 @@ def fetch_all_data_from_hbase():
                     continue
 
         SYSTEM_CACHE["data"] = data_buffer
-        SYSTEM_CACHE["last_updated"] = time.strftime("%H:%M:%S")
+        SYSTEM_CACHE["last_updated"] = time.strftime("%H:%M:%S %Y/%m/%d")
         SYSTEM_CACHE["is_ready"] = True
 
         duration = time.time() - start_time
