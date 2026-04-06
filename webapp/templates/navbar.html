@@ -11,21 +11,27 @@
           <i class="fas fa-user-graduate"></i> STUDENT DROPOUT PREDICTION
         </a>
       </div>
-      <div class="flex space-x-4">
+      <div class="flex space-x-2">
         <a
           href="/"
           class="px-3 py-2 rounded-md text-sm font-medium transition
-          {{ 'bg-blue-700 text-white' if active_page == 'dashboard' else 'text-gray-300 hover:text-white hover:bg-white/10' }}"
+           {{ 'bg-blue-700 text-white' if active_page == 'dashboard' else 'text-gray-300 hover:text-white hover:bg-white/10' }}"
         >
           Dashboard
         </a>
-
         <a
           href="/students"
           class="px-3 py-2 rounded-md text-sm font-medium transition
-          {{ 'bg-blue-700 text-white' if active_page == 'students' else 'text-gray-300 hover:text-white hover:bg-white/10' }}"
+           {{ 'bg-blue-700 text-white' if active_page == 'students' else 'text-gray-300 hover:text-white hover:bg-white/10' }}"
         >
           Student List
+        </a>
+        <a
+          href="/models"
+          class="px-3 py-2 rounded-md text-sm font-medium transition
+           {{ 'bg-blue-700 text-white' if active_page == 'models' else 'text-gray-300 hover:text-white hover:bg-white/10' }}"
+        >
+          Models
         </a>
       </div>
     </div>

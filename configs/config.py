@@ -16,7 +16,8 @@ MASTER   = "local[*]"
 
 HBASE_HOST     = "localhost"
 HBASE_PORT     = 9090
-TABLE_NAME     = "student_predictions"
+TABLE_NAME          = "student_predictions"
+MODEL_RESULTS_TABLE = "model_evaluations"
 CACHE_INTERVAL = 600
 
 FLASK_PORT = 5001

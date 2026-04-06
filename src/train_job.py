@@ -5,9 +5,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from configs import config
 from src.models.evaluate import run_evaluation
-from src.models.explain import extract_feature_importance
 from src.models.registry import save_model
 from src.models.train import FEATURE_COLS, get_classifiers, prepare_features
+from src.storage.model_results_writer import write_model_results
 from src.utils import get_spark_session
 
 
@@ -26,8 +26,8 @@ def main():
     classifiers = get_classifiers()
     results = run_evaluation(classifiers, train_data, test_data)
 
-    extract_feature_importance(results["best_model"], FEATURE_COLS)
     save_model(results["best_model"], results["best_name"])
+    write_model_results(results["all_results"], results["best_name"], FEATURE_COLS)
 
     spark.stop()
 

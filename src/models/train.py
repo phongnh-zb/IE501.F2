@@ -1,6 +1,14 @@
-from pyspark.ml.classification import (GBTClassifier, LogisticRegression,
+from pyspark.ml.classification import (GBTClassifier, LinearSVC,
+                                       LogisticRegression,
                                        RandomForestClassifier)
 from pyspark.ml.feature import VectorAssembler
+
+try:
+    from xgboost.spark import SparkXGBClassifier
+    XGBOOST_AVAILABLE = True
+except ImportError:
+    XGBOOST_AVAILABLE = False
+    print(">>> [TRAIN] xgboost not installed — XGBoost will be skipped. Run: pip install xgboost>=2.0.0")
 
 FEATURE_COLS = [
     # VLE engagement (6)
@@ -26,17 +34,31 @@ FEATURE_COLS = [
 
 
 def get_classifiers():
-    return {
+    classifiers = {
         "Logistic Regression": LogisticRegression(
-            labelCol="label", featuresCol="features"
+            labelCol="label", featuresCol="features", maxIter=100,
         ),
         "Random Forest": RandomForestClassifier(
-            labelCol="label", featuresCol="features", numTrees=20
+            labelCol="label", featuresCol="features", numTrees=20, seed=42,
         ),
         "Gradient Boosted Trees": GBTClassifier(
-            labelCol="label", featuresCol="features", maxIter=20, maxDepth=5
+            labelCol="label", featuresCol="features", maxIter=20, maxDepth=5, seed=42,
+        ),
+        "Linear SVC": LinearSVC(
+            labelCol="label", featuresCol="features", maxIter=100,
         ),
     }
+
+    if XGBOOST_AVAILABLE:
+        classifiers["XGBoost"] = SparkXGBClassifier(
+            label_col="label",
+            features_col="features",
+            n_estimators=100,
+            max_depth=6,
+            use_gpu=False,
+        )
+
+    return classifiers
 
 
 def prepare_features(df, feature_cols=None, label_col="label", test_ratio=0.2, seed=42):

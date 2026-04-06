@@ -1,3 +1,4 @@
+import json
 import logging
 import math
 import threading
@@ -5,7 +6,8 @@ import time
 
 import happybase
 
-from configs.config import CACHE_INTERVAL, HBASE_HOST, HBASE_PORT, TABLE_NAME
+from configs.config import (CACHE_INTERVAL, HBASE_HOST, HBASE_PORT,
+                            MODEL_RESULTS_TABLE, TABLE_NAME)
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +16,8 @@ SYSTEM_CACHE = {
     "last_updated": None,
     "is_ready": False,
 }
+
+RISK_LABELS = {0: "Safe", 1: "Watch", 2: "High Risk", 3: "Critical"}
 
 
 def _safe_float(value_dict, key, default=0.0):
@@ -46,25 +50,22 @@ def fetch_all_data_from_hbase():
 
         for key, value in table.scan():
             try:
+                risk_tier = _safe_int(value, b"prediction:risk_tier")
                 data_buffer.append({
                     "id":               key.decode("utf-8"),
-                    # VLE engagement
                     "clicks":           _safe_float(value, b"info:total_clicks"),
                     "active_days":      _safe_int(value,   b"info:active_days"),
                     "forum_clicks":     _safe_float(value, b"info:forum_clicks"),
                     "quiz_clicks":      _safe_float(value, b"info:quiz_clicks"),
                     "resource_clicks":  _safe_float(value, b"info:resource_clicks"),
-                    # Academic
                     "score":            _safe_float(value, b"info:avg_score"),
                     "weighted_score":   _safe_float(value, b"info:weighted_avg_score"),
                     "submission_rate":  _safe_float(value, b"info:submission_rate"),
                     "avg_days_early":   _safe_float(value, b"info:avg_days_early"),
-                    # Registration
                     "withdrew_early":   _safe_int(value,   b"info:withdrew_early"),
-                    # Demographic
                     "num_prev_attempts": _safe_int(value,  b"info:num_prev_attempts"),
-                    # Prediction
-                    "risk":             _safe_int(value,   b"prediction:risk_label"),
+                    "risk":             risk_tier,
+                    "risk_label":       RISK_LABELS.get(risk_tier, "Unknown"),
                 })
             except Exception:
                 continue
@@ -137,3 +138,35 @@ def get_student_by_id(student_id):
         if st["id"] == student_id:
             return st
     return None
+
+
+def get_model_results_from_hbase():
+    connection = None
+    results = []
+    try:
+        connection = happybase.Connection(host=HBASE_HOST, port=HBASE_PORT, timeout=10000)
+        connection.open()
+        table = connection.table(MODEL_RESULTS_TABLE)
+
+        for key, value in table.scan():
+            name = key.decode("utf-8").replace("_", " ")
+            results.append({
+                "name":          name,
+                "auc":           _safe_float(value, b"metrics:auc"),
+                "accuracy":      _safe_float(value, b"metrics:accuracy"),
+                "cv_auc":        _safe_float(value, b"metrics:cv_auc"),
+                "training_time": _safe_float(value, b"metrics:training_time"),
+                "is_best":       value.get(b"info:is_best", b"false").decode() == "true",
+                "timestamp":     value.get(b"info:timestamp", b"").decode(),
+                "importance":    json.loads(value.get(b"importance:json", b"[]").decode()),
+            })
+
+        results.sort(key=lambda x: x["auc"], reverse=True)
+
+    except Exception as e:
+        logger.error(f">>> [CACHE] Model results fetch error: {e}")
+    finally:
+        if connection:
+            connection.close()
+
+    return results

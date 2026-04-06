@@ -16,19 +16,26 @@ api_bp = Blueprint("api", __name__, url_prefix="/api")
 @api_bp.route("/realtime-data")
 def realtime_data():
     if not SYSTEM_CACHE["is_ready"]:
-        return jsonify({"raw_data": [], "summary": {"total": 0, "risk": 0, "safe": 0}})
+        return jsonify({
+            "raw_data": [],
+            "summary": {"total": 0, "safe": 0, "watch": 0, "high_risk": 0, "critical": 0},
+        })
 
-    data_sample = SYSTEM_CACHE["data"]
-    total = len(data_sample)
-    risk  = sum(1 for x in data_sample if x["risk"] == 1)
-    safe  = total - risk
+    data = SYSTEM_CACHE["data"]
+    total    = len(data)
+    safe     = sum(1 for x in data if x["risk"] == 0)
+    watch    = sum(1 for x in data if x["risk"] == 1)
+    high     = sum(1 for x in data if x["risk"] == 2)
+    critical = sum(1 for x in data if x["risk"] == 3)
 
     return jsonify({
-        "raw_data": data_sample,
+        "raw_data": data,
         "summary": {
-            "total": total,
-            "risk": risk,
-            "safe": safe,
+            "total":    total,
+            "safe":     safe,
+            "watch":    watch,
+            "high_risk": high,
+            "critical": critical,
             "last_updated": SYSTEM_CACHE["last_updated"],
         },
     })

@@ -9,21 +9,33 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from configs import config
 from src.utils import get_spark_session
 
+RISK_SAFE     = 0
+RISK_WATCH    = 1
+RISK_HIGH     = 2
+RISK_CRITICAL = 3
 
-def _apply_business_rules(
+
+def _apply_risk_tier(
     score: float,
-    clicks: int,
-    withdrew_early: int,
+    clicks: float,
     submission_rate: float,
-    risk_label: int,
+    avg_days_early: float,
+    withdrew_early: int,
+    label: int,
 ) -> int:
     if withdrew_early == 1:
-        return 1
-    if score >= 90.0 and submission_rate >= 0.8:
-        return 0
-    if score < 40.0 or clicks < 10 or submission_rate < 0.3:
-        return 1
-    return risk_label
+        return RISK_CRITICAL
+
+    if label == 1:
+        if score < 40.0 or submission_rate < 0.25 or clicks < 10:
+            return RISK_CRITICAL
+        return RISK_HIGH
+
+    # label == 0 — model predicts safe, check for watch signals
+    if score < 60.0 or submission_rate < 0.6 or avg_days_early < -7:
+        return RISK_WATCH
+
+    return RISK_SAFE
 
 
 def write_predictions(rows, connection):
@@ -46,8 +58,8 @@ def write_predictions(rows, connection):
         withdrew_early  = int(row["withdrew_early"])
         prev_attempts   = int(row["num_prev_attempts"])
 
-        risk_label = _apply_business_rules(
-            score, clicks, withdrew_early, sub_rate, int(row["label"])
+        risk_tier = _apply_risk_tier(
+            score, clicks, sub_rate, avg_days_early, withdrew_early, int(row["label"])
         )
 
         batch.put(
@@ -64,7 +76,7 @@ def write_predictions(rows, connection):
                 b"info:avg_days_early":     str(avg_days_early).encode(),
                 b"info:withdrew_early":     str(withdrew_early).encode(),
                 b"info:num_prev_attempts":  str(prev_attempts).encode(),
-                b"prediction:risk_label":   str(risk_label).encode(),
+                b"prediction:risk_tier":    str(risk_tier).encode(),
             },
         )
     batch.send()
