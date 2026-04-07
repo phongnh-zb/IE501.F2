@@ -37,6 +37,13 @@ def create_app():
         from flask import render_template
         return render_template("403.html"), 403
 
+    @app.template_filter("format_number")
+    def format_number(value):
+        try:
+            return f"{int(value):,}"
+        except (ValueError, TypeError):
+            return value
+
     return app
 
 

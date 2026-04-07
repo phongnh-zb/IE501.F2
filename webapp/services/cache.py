@@ -4,8 +4,8 @@ import math
 import threading
 import time
 
-from configs.config import CACHE_INTERVAL, MODEL_RESULTS_TABLE, TABLE_NAME
 from common.hbase_client import SCAN_TIMEOUT, hbase_connection
+from configs.config import CACHE_INTERVAL, MODEL_RESULTS_TABLE, TABLE_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +61,9 @@ def fetch_all_data_from_hbase():
                         "avg_days_early":    _safe_float(value, b"info:avg_days_early"),
                         "withdrew_early":    _safe_int(value,   b"info:withdrew_early"),
                         "num_prev_attempts": _safe_int(value,   b"info:num_prev_attempts"),
+                        "imd_band_encoded":  _safe_int(value,   b"info:imd_band_encoded", -1),
+                        "disability_encoded":_safe_int(value,   b"info:disability_encoded", -1),
+                        "days_before_start": _safe_float(value, b"info:days_before_start"),
                         "risk":              risk_tier,
                         "risk_label":        RISK_LABELS.get(risk_tier, "Unknown"),
                     })
@@ -93,39 +96,86 @@ def start_background_scheduler():
     t.start()
 
 
-def get_data_from_memory(page=1, page_size=50, search_query="", sort_by="id", order="asc", modules=None):
+def get_filter_options(modules=None):
+    data = SYSTEM_CACHE.get("data", [])
+    if modules:
+        data = [x for x in data if x.get("code_module", "") in modules]
+    mods  = sorted({x["code_module"]       for x in data if x.get("code_module")})
+    pres  = sorted({x["code_presentation"] for x in data if x.get("code_presentation")})
+    return {"modules": mods, "presentations": pres}
+
+
+def get_data_from_memory(
+    page=1, page_size=50, search_query="",
+    sort_by="risk", order="desc", modules=None,
+    risk_filter=None, module_filter=None,
+    presentation_filter=None, withdrew_filter=None,
+):
     if not SYSTEM_CACHE["is_ready"]:
-        return {"data": [], "total_pages": 0, "total_records": 0, "page": 1}
+        return {"data": [], "total_pages": 0, "total_records": 0,
+                "page": 1, "tier_counts": {}}
 
     all_data = SYSTEM_CACHE["data"]
 
-    # Module filter for lecturers — None means no restriction (admin)
+    # Module filter — lecturer-scoped
     if modules:
         all_data = [x for x in all_data if x.get("code_module", "") in modules]
 
+    # UI module filter — specific module selected from dropdown
+    if module_filter:
+        all_data = [x for x in all_data if x.get("code_module", "") == module_filter]
+
+    # Risk tier filter — accepts a set of tier ints, e.g. {2, 3} for High+Critical
+    if risk_filter:
+        all_data = [x for x in all_data if x["risk"] in risk_filter]
+
+    # Presentation filter
+    if presentation_filter:
+        all_data = [x for x in all_data if x.get("code_presentation") == presentation_filter]
+
+    # Withdrew early filter
+    if withdrew_filter is not None:
+        all_data = [x for x in all_data if x["withdrew_early"] == withdrew_filter]
+
+    # Search by student ID
     if search_query:
         q = search_query.lower()
         filtered_data = [x for x in all_data if q in x["id"].lower()]
     else:
         filtered_data = list(all_data)
 
+    # Tier counts on the fully filtered (pre-pagination) set for summary bar
+    tier_counts = {
+        "safe":     sum(1 for x in filtered_data if x["risk"] == 0),
+        "watch":    sum(1 for x in filtered_data if x["risk"] == 1),
+        "high":     sum(1 for x in filtered_data if x["risk"] == 2),
+        "critical": sum(1 for x in filtered_data if x["risk"] == 3),
+    }
+
+    # Sort — risk sorts by tier desc then score asc within same tier
     reverse = order == "desc"
     try:
-        filtered_data.sort(key=lambda x: x.get(sort_by, 0), reverse=reverse)
+        if sort_by == "risk":
+            filtered_data.sort(
+                key=lambda x: (x["risk"], -x["score"]),
+                reverse=reverse,
+            )
+        else:
+            filtered_data.sort(key=lambda x: x.get(sort_by, 0), reverse=reverse)
     except Exception as e:
         logger.error(f"Sort Error: {e}")
 
     total_records = len(filtered_data)
     total_pages   = math.ceil(total_records / page_size) if total_records > 0 else 1
-
-    page  = max(1, min(page, total_pages))
-    start = (page - 1) * page_size
+    page          = max(1, min(page, total_pages))
+    start         = (page - 1) * page_size
 
     return {
         "data":          filtered_data[start: start + page_size],
         "page":          page,
         "total_pages":   total_pages,
         "total_records": total_records,
+        "tier_counts":   tier_counts,
     }
 
 

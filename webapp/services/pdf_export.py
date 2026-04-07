@@ -187,7 +187,8 @@ def generate_student_report_pdf(student, recommendations):
 
     story.extend(_section("Risk Analysis & Recommended Actions"))
     for rec in recommendations:
-        story.append(Paragraph(f"• {rec}", s["rec"]))
+        text = rec.get("text", rec) if isinstance(rec, dict) else rec
+        story.append(Paragraph(f"• {text}", s["rec"]))
 
     _footer(story)
     doc.build(story)

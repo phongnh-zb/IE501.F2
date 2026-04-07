@@ -4,8 +4,8 @@ import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
-from configs import config
 from common.hbase_client import ensure_table, hbase_connection
+from configs import config
 from src.utils import get_spark_session
 
 RISK_SAFE     = 0
@@ -76,6 +76,9 @@ def write_predictions(rows, connection):
                 b"info:avg_days_early":     str(avg_days_early).encode(),
                 b"info:withdrew_early":     str(withdrew_early).encode(),
                 b"info:num_prev_attempts":  str(prev_attempts).encode(),
+                b"info:imd_band_encoded":   str(int(row["imd_band_encoded"])).encode(),
+                b"info:disability_encoded": str(int(row["disability_encoded"])).encode(),
+                b"info:days_before_start":  str(float(row["days_before_start"])).encode(),
                 b"prediction:risk_tier":    str(risk_tier).encode(),
             },
         )
@@ -100,6 +103,7 @@ def main():
             "forum_clicks", "quiz_clicks", "resource_clicks",
             "avg_score", "weighted_avg_score", "submission_rate", "avg_days_early",
             "withdrew_early", "num_prev_attempts",
+            "imd_band_encoded", "disability_encoded", "days_before_start",
             "label",
         ).collect()
     except Exception as e:

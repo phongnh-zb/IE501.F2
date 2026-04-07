@@ -177,8 +177,6 @@
   .login-btn:hover  { background: var(--navy-mid); }
   .login-btn:active { transform: scale(.99); }
   
-  .login-btn i { font-size: .8125rem; }
-  
   /* ── Footer ──────────────────────────────────────────────────────────────── */
   
   .login-footer {
