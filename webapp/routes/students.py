@@ -84,8 +84,17 @@ def students():
 
     filter_options = get_filter_options(modules=modules)
 
+    _TIER_NAMES = {"3": "Critical", "2": "High Risk", "1": "Watch", "0": "Safe"}
+    _selected   = [r for r in f["risk_raw"].split(",") if r in _TIER_NAMES]
+    if len(_selected) == 0:
+        risk_label = ""
+    elif len(_selected) == 1:
+        risk_label = _TIER_NAMES[_selected[0]]
+    else:
+        risk_label = f"{len(_selected)} tiers selected"
+
     return render_template(
-        "students.html",
+        "students/index.html",
         students                = result["data"],
         page                    = result["page"],
         total_pages             = result["total_pages"],
@@ -97,6 +106,7 @@ def students():
         sort_by                 = f["sort_by"],
         order                   = f["order"],
         risk_filter             = f["risk_raw"],
+        risk_label              = risk_label,
         module_filter           = f["module"],
         presentation            = f["presentation"],
         withdrew                = f["withdrew_raw"],

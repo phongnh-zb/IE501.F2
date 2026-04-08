@@ -2,15 +2,25 @@
 .st-toolbar {
 	display: flex;
 	align-items: center;
-	flex-wrap: wrap;
-	gap: .625rem;
-	padding: .75rem 1rem;
+	gap: .5rem;
+	padding: .625rem 1rem;
 	margin-bottom: .625rem;
+	flex-wrap: nowrap;
+  }
+  
+  /* Left zone: search + filters — scrolls horizontally if needed */
+  .st-toolbar-left {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	flex: 1;
+	min-width: 0;
+	flex-wrap: nowrap;
   }
   
   .st-search-wrap {
 	position: relative;
-	flex: 0 0 220px;
+	flex: 0 0 180px;
   }
   
   .st-search-icon {
@@ -62,12 +72,9 @@
   
   .st-search-clear:hover { color: var(--tx-1); }
   
+  /* Filter dropdowns sit inline in the left zone */
   .st-filters {
-	display: flex;
-	align-items: center;
-	gap: .5rem;
-	flex-wrap: wrap;
-	flex: 1;
+	display: contents; /* children join the flex row directly */
   }
   
   .st-select {
@@ -81,16 +88,18 @@
 	border-radius: var(--r-md);
 	outline: none;
 	cursor: pointer;
+	flex-shrink: 0;
 	transition: border-color var(--ease);
   }
   
   .st-select:focus { border-color: var(--accent); }
   
+  /* Right zone: actions — never shrinks or wraps */
   .st-toolbar-right {
 	display: flex;
 	align-items: center;
 	gap: .5rem;
-	margin-left: auto;
+	flex-shrink: 0;
   }
   
   /* ── Summary bar ─────────────────────────────────────────────────────────── */
@@ -535,15 +544,13 @@
   .st-multiselect.open .st-multiselect-caret { transform: rotate(180deg); }
   
   .st-multiselect-panel {
-	position: absolute;
-	top: calc(100% + 4px);
-	left: 0;
+	position: fixed;
 	min-width: 180px;
 	background: var(--surface);
 	border: 1px solid var(--bd);
 	border-radius: var(--r-lg);
 	box-shadow: var(--sh-md);
-	z-index: 50;
+	z-index: 300;
 	overflow: hidden;
   }
   
@@ -586,3 +593,22 @@
   }
   
   .st-multiselect-clear:hover { color: var(--crit-tx); background: var(--crit-bg); }
+  
+  /* ── Final result badge in panel ─────────────────────────────────────────── */
+  .st-panel-final-result {
+	margin-top: .375rem;
+	font-size: .75rem;
+	font-weight: 600;
+	padding: .25rem .625rem;
+	border-radius: var(--r-sm);
+	border: 1px solid;
+	display: inline-flex;
+	align-items: center;
+	gap: .375rem;
+	width: fit-content;
+  }
+  
+  .result-pass        { background: var(--safe-bg);  border-color: var(--safe-bd);  color: var(--safe-tx); }
+  .result-distinction { background: #eff6ff;          border-color: #93c5fd;         color: #1e40af; }
+  .result-fail        { background: var(--high-bg);  border-color: var(--high-bd);  color: var(--high-tx); }
+  .result-withdrawn   { background: var(--crit-bg);  border-color: var(--crit-bd);  color: var(--crit-tx); }

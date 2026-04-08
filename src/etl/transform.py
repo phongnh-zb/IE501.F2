@@ -118,6 +118,15 @@ def _build_demographic_features(df_info):
             col("num_of_prev_attempts").alias("num_prev_attempts"),
             "imd_band_encoded",
             "disability_encoded",
+            # Display-only fields — stored in HBase for the educator, not passed to VectorAssembler
+            col("gender"),
+            col("region"),
+            col("highest_education"),
+            col("imd_band"),
+            col("age_band"),
+            col("studied_credits"),
+            col("disability"),
+            col("final_result"),
         )
     )
 

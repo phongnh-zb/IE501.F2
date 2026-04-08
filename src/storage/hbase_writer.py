@@ -79,6 +79,15 @@ def write_predictions(rows, connection):
                 b"info:imd_band_encoded":   str(int(row["imd_band_encoded"])).encode(),
                 b"info:disability_encoded": str(int(row["disability_encoded"])).encode(),
                 b"info:days_before_start":  str(float(row["days_before_start"])).encode(),
+                # Display-only demographic fields
+                b"info:gender":             str(row["gender"] or "").encode(),
+                b"info:region":             str(row["region"] or "").encode(),
+                b"info:highest_education":  str(row["highest_education"] or "").encode(),
+                b"info:imd_band":           str(row["imd_band"] or "").encode(),
+                b"info:age_band":           str(row["age_band"] or "").encode(),
+                b"info:studied_credits":    str(int(row["studied_credits"] or 0)).encode(),
+                b"info:disability":         str(row["disability"] or "").encode(),
+                b"info:final_result":       str(row["final_result"] or "").encode(),
                 b"prediction:risk_tier":    str(risk_tier).encode(),
             },
         )
@@ -104,6 +113,10 @@ def main():
             "avg_score", "weighted_avg_score", "submission_rate", "avg_days_early",
             "withdrew_early", "num_prev_attempts",
             "imd_band_encoded", "disability_encoded", "days_before_start",
+            # Display-only demographic fields
+            "gender", "region", "highest_education",
+            "imd_band", "age_band", "studied_credits",
+            "disability", "final_result",
             "label",
         ).collect()
     except Exception as e:

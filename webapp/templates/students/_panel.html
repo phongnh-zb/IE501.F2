@@ -1,0 +1,78 @@
+<div class="st-backdrop" id="st-backdrop" onclick="Students.closePanel()"></div>
+
+<aside class="st-panel" id="st-panel" aria-hidden="true">
+  <div class="st-panel-head" id="panel-head">
+    <div class="st-panel-head-top">
+      <div>
+        <div class="st-panel-id" id="panel-id">—</div>
+        <div class="st-panel-module" id="panel-module"></div>
+      </div>
+      <div class="flex items-c gap-2">
+        <span id="panel-badge"></span>
+        <button class="st-panel-close" onclick="Students.closePanel()">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+    <div id="panel-withdrew" style="display:none;" class="st-panel-withdrew">
+      <i class="fas fa-person-walking-arrow-right"></i> Withdrew early
+    </div>
+    <div id="panel-final-result" style="display:none;" class="st-panel-final-result"></div>
+  </div>
+
+  <div class="st-panel-tabs">
+    <button class="st-panel-tab active" onclick="Students.switchTab(this, 'tab-overview')">
+      Overview
+    </button>
+    <button class="st-panel-tab" onclick="Students.switchTab(this, 'tab-recommendations')">
+      Recommendations
+    </button>
+  </div>
+
+  <div class="st-panel-body">
+
+    <div id="tab-overview">
+      <div class="st-field-group">
+        <div class="st-field-group-label">Academic</div>
+        <div class="st-field-row"><span>Avg score</span><span class="mono" id="pf-score">—</span></div>
+        <div class="st-field-row"><span>Weighted score</span><span class="mono" id="pf-w-score">—</span></div>
+        <div class="st-field-row"><span>Submission rate</span><span class="mono" id="pf-sub-rate">—</span></div>
+        <div class="st-field-row"><span>Avg days early</span><span class="mono" id="pf-days-early">—</span></div>
+      </div>
+      <div class="st-field-group">
+        <div class="st-field-group-label">Engagement</div>
+        <div class="st-field-row"><span>Total clicks</span><span class="mono" id="pf-clicks">—</span></div>
+        <div class="st-field-row"><span>Active days</span><span class="mono" id="pf-active-days">—</span></div>
+        <div class="st-field-row"><span>Clicks / day</span><span class="mono" id="pf-cpd">—</span></div>
+        <div class="st-field-row"><span>Forum clicks</span><span class="mono" id="pf-forum">—</span></div>
+        <div class="st-field-row"><span>Quiz clicks</span><span class="mono" id="pf-quiz">—</span></div>
+        <div class="st-field-row"><span>Resource clicks</span><span class="mono" id="pf-resource">—</span></div>
+      </div>
+      <div class="st-field-group">
+        <div class="st-field-group-label">Background</div>
+        <div class="st-field-row"><span>Gender</span><span class="mono" id="pf-gender">—</span></div>
+        <div class="st-field-row"><span>Age band</span><span class="mono" id="pf-age-band">—</span></div>
+        <div class="st-field-row"><span>Region</span><span id="pf-region">—</span></div>
+        <div class="st-field-row"><span>Highest education</span><span id="pf-edu">—</span></div>
+        <div class="st-field-row"><span>IMD band</span><span class="mono" id="pf-imd">—</span></div>
+        <div class="st-field-row"><span>Disability</span><span class="mono" id="pf-disability">—</span></div>
+        <div class="st-field-row"><span>Studied credits</span><span class="mono" id="pf-credits">—</span></div>
+        <div class="st-field-row"><span>Prev attempts</span><span class="mono" id="pf-attempts">—</span></div>
+        <div class="st-field-row"><span>Days before start</span><span class="mono" id="pf-dbs">—</span></div>
+      </div>
+    </div>
+
+    <div id="tab-recommendations" style="display:none;">
+      <div id="panel-recs" class="st-recs">
+        <div class="st-recs-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="st-panel-foot">
+    <a id="panel-pdf-btn" href="#" class="btn btn-outline btn-sm">
+      <i class="fas fa-file-pdf"></i> Download PDF
+    </a>
+  </div>
+</aside>

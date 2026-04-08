@@ -1,0 +1,34 @@
+{% if total_pages > 1 %}
+{% macro page_url(p) %}/students?page={{ p }}&page_size={{ page_size }}&sort_by={{ sort_by }}&order={{ order }}{% if search %}&search={{ search | urlencode }}{% endif %}{% if risk_filter %}&risk={{ risk_filter | urlencode }}{% endif %}{% if module_filter %}&module={{ module_filter | urlencode }}{% endif %}{% if presentation %}&presentation={{ presentation | urlencode }}{% endif %}{% if withdrew %}&withdrew={{ withdrew }}{% endif %}{% endmacro %}
+
+<div class="st-pagination">
+
+  <a class="st-pg-btn {% if page == 1 %}st-pg-disabled{% endif %}"
+     href="{{ page_url(1) | trim }}"><i class="fas fa-angles-left"></i></a>
+  <a class="st-pg-btn {% if page == 1 %}st-pg-disabled{% endif %}"
+     href="{{ page_url(page - 1) | trim }}"><i class="fas fa-angle-left"></i></a>
+
+  {% for p in page_range %}
+    {% if p is none %}
+      <span class="st-pg-ellipsis">…</span>
+    {% else %}
+      <a class="st-pg-btn {% if p == page %}st-pg-active{% endif %}"
+         href="{{ page_url(p) | trim }}">{{ p }}</a>
+    {% endif %}
+  {% endfor %}
+
+  <a class="st-pg-btn {% if page == total_pages %}st-pg-disabled{% endif %}"
+     href="{{ page_url(page + 1) | trim }}"><i class="fas fa-angle-right"></i></a>
+  <a class="st-pg-btn {% if page == total_pages %}st-pg-disabled{% endif %}"
+     href="{{ page_url(total_pages) | trim }}"><i class="fas fa-angles-right"></i></a>
+
+  <span class="st-pg-info">Page {{ page }} of {{ total_pages }}</span>
+
+  <div class="st-pg-jump">
+    <input type="number" id="jump-input" min="1" max="{{ total_pages }}"
+           placeholder="{{ page }}" onkeydown="Students.jumpPage(event, {{ total_pages }})" />
+    <span class="text-xs text-3">/ {{ total_pages }}</span>
+  </div>
+
+</div>
+{% endif %}

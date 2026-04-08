@@ -18,9 +18,29 @@ const RiskFilter = (() => {
 
   function toggle() {
     const panel = _panel();
+    const btn = document.querySelector(".st-multiselect-btn");
     const open = panel.style.display === "none";
+
+    if (open && btn) {
+      const rect = btn.getBoundingClientRect();
+      panel.style.top = rect.bottom + 4 + "px";
+      panel.style.left = rect.left + "px";
+    }
+
     panel.style.display = open ? "block" : "none";
     _btn().classList.toggle("open", open);
+  }
+
+  function _updateLabel(selected) {
+    const lbl = _label();
+    if (!lbl) return;
+    if (selected.length === 0) {
+      lbl.textContent = "All risk tiers";
+    } else if (selected.length === 1) {
+      lbl.textContent = TIER_NAMES[+selected[0]];
+    } else {
+      lbl.textContent = `${selected.length} tiers selected`;
+    }
   }
 
   function update() {
@@ -28,15 +48,8 @@ const RiskFilter = (() => {
       .filter((c) => c.checked)
       .map((c) => c.value);
 
-    // Update label
-    const lbl = _label();
-    if (selected.length === 0) {
-      lbl.textContent = "All risk tiers";
-    } else {
-      lbl.textContent = selected.map((v) => TIER_NAMES[+v]).join(", ");
-    }
+    _updateLabel(selected);
 
-    // Navigate with comma-separated values in ?risk=
     const p = new URLSearchParams(window.location.search);
     if (selected.length) p.set("risk", selected.join(","));
     else p.delete("risk");
@@ -238,6 +251,30 @@ const Students = (() => {
       withdrewEl.style.display = "none";
     }
 
+    // Final result badge
+    const resultEl = document.getElementById("panel-final-result");
+    if (resultEl && s.final_result) {
+      const RESULT_CLS = {
+        Pass: "result-pass",
+        Distinction: "result-distinction",
+        Fail: "result-fail",
+        Withdrawn: "result-withdrawn",
+      };
+      const RESULT_ICON = {
+        Pass: "fa-circle-check",
+        Distinction: "fa-star",
+        Fail: "fa-circle-xmark",
+        Withdrawn: "fa-person-walking-arrow-right",
+      };
+      const cls = RESULT_CLS[s.final_result] || "result-fail";
+      const icon = RESULT_ICON[s.final_result] || "fa-circle";
+      resultEl.className = `st-panel-final-result ${cls}`;
+      resultEl.innerHTML = `<i class="fas ${icon}"></i> ${s.final_result}`;
+      resultEl.style.display = "inline-flex";
+    } else if (resultEl) {
+      resultEl.style.display = "none";
+    }
+
     // Academic
     const sub = ((s.submission_rate ?? 0) * 100).toFixed(0) + "%";
     _setText("pf-score", (s.score ?? 0).toFixed(2));
@@ -265,20 +302,31 @@ const Students = (() => {
 
     // Background
     const imd =
-      s.imd_band_encoded >= 0
+      s.imd_band ||
+      (s.imd_band_encoded >= 0
         ? IMD_BANDS[s.imd_band_encoded] || "Unknown"
-        : "—";
+        : "—");
     const disability =
-      s.disability_encoded === 1
+      s.disability === "Y"
         ? "Yes"
-        : s.disability_encoded === 0
+        : s.disability === "N"
           ? "No"
-          : "—";
+          : s.disability_encoded === 1
+            ? "Yes"
+            : s.disability_encoded === 0
+              ? "No"
+              : "—";
 
-    _setText("pf-attempts", s.num_prev_attempts ?? 0);
-    _setText("pf-dbs", (s.days_before_start ?? 0).toFixed(0) + " days");
+    const GENDER = { M: "Male", F: "Female" };
+    _setText("pf-gender", GENDER[s.gender] || s.gender || "—");
+    _setText("pf-age-band", s.age_band || "—");
+    _setText("pf-region", s.region || "—");
+    _setText("pf-edu", s.highest_education || "—");
     _setText("pf-imd", imd);
     _setText("pf-disability", disability);
+    _setText("pf-credits", s.studied_credits ?? "—");
+    _setText("pf-attempts", s.num_prev_attempts ?? 0);
+    _setText("pf-dbs", (s.days_before_start ?? 0).toFixed(0) + " days");
   }
 
   function _populateRecommendations(recs) {

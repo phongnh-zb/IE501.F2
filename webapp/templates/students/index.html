@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% set active_page = 'students' %}
+{% block title %}Students{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/students.css') }}" />
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Students</h1>
+    <p class="text-2 text-sm">Dropout risk predictions for all enrolled students</p>
+  </div>
+  {% if last_updated %}
+  <span class="text-xs text-3 mono">Updated {{ last_updated }}</span>
+  {% endif %}
+</div>
+
+{% include 'students/_toolbar.html' %}
+{% include 'students/_summary.html' %}
+{% include 'students/_table.html' %}
+{% include 'students/_panel.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/students.js') }}"></script>
+{% endblock %}

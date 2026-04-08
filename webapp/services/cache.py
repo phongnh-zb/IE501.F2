@@ -64,6 +64,15 @@ def fetch_all_data_from_hbase():
                         "imd_band_encoded":  _safe_int(value,   b"info:imd_band_encoded", -1),
                         "disability_encoded":_safe_int(value,   b"info:disability_encoded", -1),
                         "days_before_start": _safe_float(value, b"info:days_before_start"),
+                        # Display-only demographic fields
+                        "gender":            value.get(b"info:gender",            b"").decode("utf-8"),
+                        "region":            value.get(b"info:region",            b"").decode("utf-8"),
+                        "highest_education": value.get(b"info:highest_education", b"").decode("utf-8"),
+                        "imd_band":          value.get(b"info:imd_band",          b"").decode("utf-8"),
+                        "age_band":          value.get(b"info:age_band",          b"").decode("utf-8"),
+                        "studied_credits":   _safe_int(value,   b"info:studied_credits"),
+                        "disability":        value.get(b"info:disability",        b"").decode("utf-8"),
+                        "final_result":      value.get(b"info:final_result",      b"").decode("utf-8"),
                         "risk":              risk_tier,
                         "risk_label":        RISK_LABELS.get(risk_tier, "Unknown"),
                     })

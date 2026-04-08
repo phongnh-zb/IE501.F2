@@ -123,7 +123,7 @@ def _footer(story):
     story.append(HRFlowable(width=CONTENT_W, thickness=0.3, color=COLOR_BORDER))
     story.append(Spacer(1, 4))
     story.append(Paragraph(
-        f"Student Dropout Prediction System — IE501.F2 &nbsp;|&nbsp; Generated {ts}",
+        f"Student Dropout Prediction System &nbsp;|&nbsp; Generated {ts}",
         s["footer"],
     ))
 
