@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% set active_page = 'dashboard' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+{% endblock %}
+
+{% block content %}
+{% include 'dashboard/_hero.html' %}
+{% include 'dashboard/_donuts.html' %}
+{% include 'dashboard/_action.html' %}
+{% include 'dashboard/_scatter.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

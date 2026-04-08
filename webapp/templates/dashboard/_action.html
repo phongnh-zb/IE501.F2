@@ -1,0 +1,41 @@
+<div class="dash-row dash-action">
+
+	<div class="card dash-attention-card">
+	  <div class="card-head">
+		<h3><i class="fas fa-triangle-exclamation"></i> Requires attention</h3>
+		<span class="text-xs text-3">Sorted by severity</span>
+	  </div>
+	  <div id="attention-list" class="attention-list">
+		<div class="attention-empty text-3 text-sm">Loading...</div>
+	  </div>
+	</div>
+  
+	<div class="dash-action-right">
+  
+	  <div class="card">
+		<div class="card-head">
+		  <h3><i class="fas fa-layer-group"></i> Risk by module</h3>
+		  <span class="text-xs text-3">Critical + High count</span>
+		</div>
+		<div class="card-body">
+		  <div class="chart-wrap" style="height:180px;">
+			<div id="chart-module" style="height:100%;"></div>
+		  </div>
+		</div>
+	  </div>
+  
+	  <div class="card">
+		<div class="card-head">
+		  <h3><i class="fas fa-users"></i> Risk by age band</h3>
+		  <span class="text-xs text-3">All tiers</span>
+		</div>
+		<div class="card-body">
+		  <div class="chart-wrap" style="height:180px;">
+			<div id="chart-ageband" style="height:100%;"></div>
+		  </div>
+		</div>
+	  </div>
+  
+	</div>
+  
+  </div>

@@ -1,12 +1,17 @@
-<nav class="navbar">
+<nav class="navbar" style="position:relative;">
   <div class="container">
+
+    <button class="nav-hamburger" id="nav-hamburger"
+            onclick="NavMenu.toggle()" aria-label="Toggle navigation">
+      <i class="fas fa-bars" id="nav-hamburger-icon"></i>
+    </button>
 
     <a href="/" class="nav-brand">
       <span class="nav-brand-mark"><i class="fas fa-graduation-cap"></i></span>
       Dropout Prediction
     </a>
 
-    <ul class="nav-links">
+    <ul class="nav-links" id="nav-links">
       <li><a href="/"         class="nav-link {% if active_page == 'dashboard' %}active{% endif %}"><i class="fas fa-chart-line"></i>Dashboard</a></li>
       <li><a href="/students" class="nav-link {% if active_page == 'students'  %}active{% endif %}"><i class="fas fa-users"></i>Students</a></li>
       <li><a href="/cohort"   class="nav-link {% if active_page == 'cohort'    %}active{% endif %}"><i class="fas fa-layer-group"></i>Cohort</a></li>
@@ -18,7 +23,30 @@
       {% endif %}
     </ul>
 
-    {% include 'partials/nav_account.html' %}
+    <div class="nav-meta">
+      {% include 'partials/nav_account.html' %}
+    </div>
 
   </div>
 </nav>
+
+<script>
+const NavMenu = (() => {
+  let open = false;
+  function toggle() {
+    const links = document.getElementById('nav-links');
+    const icon  = document.getElementById('nav-hamburger-icon');
+    open = !open;
+    links.classList.toggle('mobile-open', open);
+    icon.className = open ? 'fas fa-xmark' : 'fas fa-bars';
+  }
+  document.addEventListener('click', e => {
+    if (open && !document.querySelector('.navbar').contains(e.target)) {
+      document.getElementById('nav-links').classList.remove('mobile-open');
+      document.getElementById('nav-hamburger-icon').className = 'fas fa-bars';
+      open = false;
+    }
+  });
+  return { toggle };
+})();
+</script>
