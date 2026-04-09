@@ -13,6 +13,7 @@ services:
     environment:
       SECRET_KEY: ${SECRET_KEY:-dev-key-change-before-production}
       HBASE_HOST: ${HBASE_HOST:-host.docker.internal}
+      HADOOP_HOST: ${HADOOP_HOST:-host.docker.internal}
 
     extra_hosts:
       - "host.docker.internal:host-gateway"

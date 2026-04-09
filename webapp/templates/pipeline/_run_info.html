@@ -1,0 +1,93 @@
+<div class="card pipe-run-card pipe-section">
+	<div class="card-head">
+	  <h3><i class="fas fa-terminal"></i> How to run the pipeline</h3>
+	</div>
+	<div class="pipe-run-body">
+  
+	  <!-- ── Native ───────────────────────────────────────────────────────── -->
+	  <div class="pipe-collapse">
+		<button class="pipe-collapse-btn" onclick="Pipeline.toggleSection(this)" aria-expanded="true">
+		  <span class="pipe-run-mode-label">
+			<i class="fas fa-chevron-up pipe-collapse-caret"></i>
+			<i class="fas fa-computer"></i> Native (Python)
+		  </span>
+		</button>
+		<div class="pipe-collapse-body">
+		  <div class="pipe-run-note">
+			<i class="fas fa-circle-info"></i>
+			<p>Requires Hadoop, HBase, and Spark installed locally. Execute from the project root.</p>
+		  </div>
+		  <div class="pipe-steps">
+			<div class="pipe-step">
+			  <div class="pipe-step-num">1</div>
+			  <div class="pipe-step-content">
+				<div class="pipe-step-title">Full pipeline (recommended)</div>
+				<div class="pipe-step-desc">Starts services, ingests data, runs ETL, trains models, writes to HBase.</div>
+				<pre class="pipe-code">python3 main.py</pre>
+			  </div>
+			</div>
+			<div class="pipe-step">
+			  <div class="pipe-step-num">2</div>
+			  <div class="pipe-step-content">
+				<div class="pipe-step-title">Start services only</div>
+				<div class="pipe-step-desc">Starts Hadoop, HBase, and the Thrift server if not already running.</div>
+				<pre class="pipe-code">bash scripts/start_services.sh</pre>
+			  </div>
+			</div>
+			<div class="pipe-step">
+			  <div class="pipe-step-num">3</div>
+			  <div class="pipe-step-content">
+				<div class="pipe-step-title">Check service status</div>
+				<div class="pipe-step-desc">Prints the status of all infrastructure components.</div>
+				<pre class="pipe-code">bash scripts/status.sh</pre>
+			  </div>
+			</div>
+			<div class="pipe-step">
+			  <div class="pipe-step-num">4</div>
+			  <div class="pipe-step-content">
+				<div class="pipe-step-title">Start the web dashboard</div>
+				<div class="pipe-step-desc">Runs the Flask application in a separate terminal.</div>
+				<pre class="pipe-code">python3 webapp/app.py</pre>
+			  </div>
+			</div>
+		  </div>
+		</div>
+	  </div>
+  
+	  <div class="pipe-run-divider"></div>
+  
+	  <!-- ── Docker ───────────────────────────────────────────────────────── -->
+	  <div class="pipe-collapse">
+		<button class="pipe-collapse-btn" onclick="Pipeline.toggleSection(this)" aria-expanded="false">
+		  <span class="pipe-run-mode-label">
+			<i class="fas fa-chevron-down pipe-collapse-caret"></i>
+			<i class="fab fa-docker"></i> Docker
+		  </span>
+		</button>
+		<div class="pipe-collapse-body" style="display:none;">
+		  <div class="pipe-run-note pipe-run-note-warn">
+			<i class="fas fa-triangle-exclamation"></i>
+			<p>The Docker container runs the <strong>web dashboard only</strong>. Hadoop, HBase, and the pipeline must still run on the host. Set <code class="pipe-inline-code">HADOOP_HOST</code> and <code class="pipe-inline-code">HBASE_HOST</code> to reach them.</p>
+		  </div>
+		  <div class="pipe-docker-cmds">
+			<div class="pipe-docker-cmd">
+			  <div class="pipe-step-title">Development <span class="pipe-docker-tag">foreground · hot reload</span></div>
+			  <div class="pipe-step-desc">Mounts templates and static files from the host — changes apply without rebuilding.</div>
+			  <pre class="pipe-code">docker compose up</pre>
+			</div>
+			<div class="pipe-docker-cmd">
+			  <div class="pipe-step-title">Production <span class="pipe-docker-tag">detached</span></div>
+			  <div class="pipe-step-desc">Bakes all files into the image and runs in the background.</div>
+			  <pre class="pipe-code">docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d</pre>
+			</div>
+			<div class="pipe-docker-cmd">
+			  <div class="pipe-step-title">Rebuild image</div>
+			  <div class="pipe-step-desc">Force a full rebuild after installing new dependencies or changing the Dockerfile.</div>
+			  <pre class="pipe-code">docker compose up --build</pre>
+			</div>
+		  </div>
+		</div>
+	  </div>
+  
+	</div>
+  </div>

@@ -1,0 +1,17 @@
+<div class="card pipe-card">
+	<div class="card-head">
+	  <h3><i class="fas fa-server"></i> Services</h3>
+	  <span class="text-xs text-3" id="svc-updated">—</span>
+	</div>
+	<div id="services-list" class="pipe-services">
+	  {% for group, label in [('Hadoop','Hadoop HDFS + YARN'), ('HBase','HBase + Thrift'), ('App','Web Application')] %}
+	  <div class="pipe-service-group">
+		<div class="pipe-group-label">{{ label }}</div>
+		<div class="pipe-group-items" id="group-{{ group }}">
+		  <div class="pipe-skeleton"></div>
+		  <div class="pipe-skeleton"></div>
+		</div>
+	  </div>
+	  {% endfor %}
+	</div>
+  </div>
