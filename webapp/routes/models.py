@@ -12,4 +12,10 @@ models_bp = Blueprint("models", __name__)
 def models():
     model_results = get_model_results_from_hbase()
     history       = get_model_history_from_hbase()
-    return render_template("models.html", models=model_results, history=history)
+    best          = next((m for m in model_results if m["is_best"]), model_results[0] if model_results else None)
+    return render_template(
+        "models/index.html",
+        models=model_results,
+        history=history,
+        best=best,
+    )

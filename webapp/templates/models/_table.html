@@ -1,0 +1,41 @@
+<div class="card">
+	<div class="card-head">
+	  <h3><i class="fas fa-table"></i> Comparison</h3>
+	  <span class="text-xs text-3">Latest run · sorted by AUC</span>
+	</div>
+	<div class="models-table-wrap">
+	  <table class="models-table">
+		<thead>
+		  <tr>
+			<th>Model</th>
+			<th class="text-right">AUC</th>
+			<th class="text-right">CV-AUC</th>
+			<th class="text-right">Accuracy</th>
+			<th class="text-right">Precision</th>
+			<th class="text-right">Recall</th>
+			<th class="text-right">F1</th>
+			<th class="text-right">Time</th>
+		  </tr>
+		</thead>
+		<tbody>
+		  {% for m in models %}
+		  {% set row_cls = 'models-row-best' if m.is_best else '' %}
+		  <tr class="{{ row_cls }}">
+			<td>
+			  <span class="models-model-name">{{ m.name }}</span>
+			  {% if m.is_best %}
+			  <span class="badge badge-safe models-best-badge">Best</span>
+			  {% endif %}
+			</td>
+			{% for key in ['auc','cv_auc','accuracy','precision','recall','f1'] %}
+			{% set val = m[key] %}
+			{% set highlight = 'models-cell-best' if m.is_best else '' %}
+			<td class="text-right mono {{ highlight }}">{{ "%.4f" | format(val) }}</td>
+			{% endfor %}
+			<td class="text-right mono text-3">{{ m.training_time }}s</td>
+		  </tr>
+		  {% endfor %}
+		</tbody>
+	  </table>
+	</div>
+  </div>

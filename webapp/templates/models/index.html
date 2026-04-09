@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% set active_page = 'models' %}
+{% block title %}Models{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/models.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Models</h1>
+  <p class="text-2 text-sm">Trained classifier evaluation results and feature analysis</p>
+</div>
+
+{% if not models %}
+<div class="card models-empty">
+  <i class="fas fa-flask"></i>
+  <h3>No model results yet</h3>
+  <p>Run the pipeline to train and evaluate all classifiers.</p>
+  <code>python3 main.py</code>
+</div>
+{% else %}
+{% include 'models/_best.html' %}
+<div class="models-row2">
+  {% include 'models/_table.html' %}
+  {% include 'models/_radar.html' %}
+</div>
+<div class="models-row3">
+  {% include 'models/_importance.html' %}
+  {% include 'models/_history.html' %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/models.js') }}"></script>
+{% if models %}
+<script>
+  Models.init(
+    {{ models | tojson }},
+    {{ history | tojson }}
+  );
+</script>
+{% endif %}
+{% endblock %}

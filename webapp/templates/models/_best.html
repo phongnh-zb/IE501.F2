@@ -1,0 +1,45 @@
+{% if best %}
+{% set auc_pct = (best.auc * 100) | round(1) %}
+{% set auc_cls = 'safe' if best.auc >= 0.85 else ('watch' if best.auc >= 0.75 else 'crit') %}
+<div class="card models-best">
+  <div class="models-best-left">
+    <div class="models-best-label">Best model</div>
+    <div class="models-best-name">{{ best.name }}</div>
+    <div class="models-best-meta">
+      <span class="badge badge-{{ auc_cls }} models-auc-badge">
+        AUC {{ "%.4f" | format(best.auc) }}
+      </span>
+      {% if best.auc >= 0.85 %}
+      <span class="models-target-met">
+        <i class="fas fa-circle-check"></i> Meets target AUC ≥ 0.85
+      </span>
+      {% else %}
+      <span class="models-target-miss">
+        <i class="fas fa-circle-xmark"></i> Below target AUC ≥ 0.85
+      </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="models-best-metrics">
+    {% for label, key in [
+        ('CV-AUC',    'cv_auc'),
+        ('Accuracy',  'accuracy'),
+        ('Precision', 'precision'),
+        ('Recall',    'recall'),
+        ('F1',        'f1'),
+      ] %}
+    <div class="models-best-stat">
+      <span class="models-best-stat-val mono">{{ "%.4f" | format(best[key]) }}</span>
+      <span class="models-best-stat-lbl">{{ label }}</span>
+    </div>
+    {% if not loop.last %}<div class="models-best-divider"></div>{% endif %}
+    {% endfor %}
+  </div>
+
+  <div class="models-best-time">
+    <i class="fas fa-clock"></i>
+    {{ best.training_time }}s training
+  </div>
+</div>
+{% endif %}
