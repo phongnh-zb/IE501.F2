@@ -331,6 +331,7 @@ img, svg { display: block; }
 
 @media (max-width: 900px) {
   .nav-links { display: none; }
+  .nav-brand-text { display: none; }
   .nav-account-name { display: none; }
   .nav-account-role { display: none; }
   .nav-account-caret { display: none; }
@@ -359,9 +360,22 @@ img, svg { display: block; }
     right: 0;
     background: var(--navy);
     border-bottom: 1px solid rgba(255,255,255,.08);
-    padding: .5rem 1rem;
+    padding: .375rem .5rem;
     gap: .125rem;
     z-index: 199;
+  }
+  .nav-links.mobile-open li {
+    width: 100%;
+  }
+  .nav-links.mobile-open .nav-link {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    padding: .75rem .875rem;
+    border-radius: var(--r-md);
+    font-size: .9375rem;
+    gap: .625rem;
   }
 }
 

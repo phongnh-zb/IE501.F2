@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign in — Dropout Prediction</title>
-  <<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" />
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
@@ -34,7 +34,7 @@
         {% endfor %}
       {% endwith %}
 
-      <form method="POST" action="{{ url_for('auth.login') }}" class="login-form" autocomplete="off">
+      <form method="POST" action="{{ url_for('auth.login') }}" class="login-form" id="login-form">
 
         <div class="login-field">
           <label for="username">Username</label>
@@ -79,5 +79,6 @@
 
   </div>
 
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>
 </html>
