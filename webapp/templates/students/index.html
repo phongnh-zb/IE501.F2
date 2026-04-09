@@ -9,12 +9,10 @@
 {% block content %}
 
 <div class="page-header">
-  <div>
-    <h1>Students</h1>
-    <p class="text-2 text-sm">Dropout risk predictions for all enrolled students</p>
-  </div>
+  <h1>Students</h1>
+  <p class="text-2 text-sm">Dropout risk predictions for all enrolled students</p>
   {% if last_updated %}
-  <span class="text-xs text-3 mono">Updated {{ last_updated }}</span>
+  <span class="page-header-note">Updated {{ last_updated }}</span>
   {% endif %}
 </div>
 

@@ -1,0 +1,41 @@
+<div class="card prof-card">
+	<div class="card-head">
+	  <h3><i class="fas fa-id-card"></i> Account information</h3>
+	</div>
+	<div class="prof-identity">
+  
+	  <div class="prof-avatar">
+		<span>{{ user.display_name[0] | upper }}</span>
+	  </div>
+  
+	  <div class="prof-identity-detail">
+		<div class="prof-display-name">{{ user.display_name }}</div>
+		<div class="prof-username mono">@{{ user.username }}</div>
+		<span class="badge {% if user.is_admin %}badge-crit{% else %}badge-watch{% endif %} prof-role-badge">
+		  {{ user.role | title }}
+		</span>
+	  </div>
+  
+	</div>
+  
+	<div class="prof-fields">
+	  <div class="prof-field-row">
+		<span class="prof-field-label">Module access</span>
+		<span class="prof-field-value">
+		  {% if user.is_admin or not user.modules %}
+			<span class="prof-all-modules">All modules</span>
+		  {% else %}
+			<span class="prof-module-list">
+			  {% for mod in user.modules %}
+			  <span class="st-module-tag">{{ mod }}</span>
+			  {% endfor %}
+			</span>
+		  {% endif %}
+		</span>
+	  </div>
+	  <div class="prof-field-row">
+		<span class="prof-field-label">Last login</span>
+		<span class="prof-field-value mono text-sm">{{ user.last_login or 'Never' }}</span>
+	  </div>
+	</div>
+  </div>

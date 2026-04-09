@@ -129,3 +129,26 @@ def update_last_login(user_id):
             "UPDATE users SET last_login = ?, updated_at = ?, updated_by = ? WHERE id = ?",
             (now, now, "system", user_id),
         )
+
+
+def update_user_info(user_id, full_name, email):
+    _validate(full_name=full_name, email=email)
+    with _connect() as conn:
+        existing = conn.execute(
+            "SELECT id FROM users WHERE email = ? AND id != ?",
+            (email.strip(), user_id),
+        ).fetchone()
+        if existing:
+            raise ValueError("This email address is already in use by another account.")
+        conn.execute(
+            "UPDATE users SET full_name = ?, email = ?, updated_at = ?, updated_by = ? WHERE id = ?",
+            (full_name.strip(), email.strip(), _now(), str(user_id), user_id),
+        )
+
+
+def update_password(user_id, new_password_hash):
+    with _connect() as conn:
+        conn.execute(
+            "UPDATE users SET password_hash = ?, updated_at = ?, updated_by = ? WHERE id = ?",
+            (new_password_hash, _now(), str(user_id), user_id),
+        )

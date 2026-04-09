@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% set active_page = 'profile' %}
+{% block title %}My Profile{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>My Profile</h1>
+  <p class="text-2 text-sm">Manage your account details and password</p>
+</div>
+
+<div class="prof-grid">
+  {% include 'profile/_identity.html' %}
+  <div class="prof-forms">
+    {% include 'profile/_edit_info.html' %}
+    {% include 'profile/_password.html' %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}

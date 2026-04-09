@@ -1,0 +1,224 @@
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.prof-grid {
+	display: grid;
+	grid-template-columns: 320px 1fr;
+	gap: 1.25rem;
+	align-items: start;
+  }
+  
+  .prof-forms {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+  }
+  
+  .prof-card { overflow: visible; }
+  
+  /* ── Identity card ───────────────────────────────────────────────────────── */
+  .prof-identity {
+	display: flex;
+	align-items: center;
+	gap: 1.25rem;
+	padding: 1.5rem 1.25rem 1rem;
+	border-bottom: 1px solid var(--bd);
+  }
+  
+  .prof-avatar {
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: var(--navy);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: #fff;
+	flex-shrink: 0;
+  }
+  
+  .prof-display-name {
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--tx-1);
+	line-height: 1.2;
+  }
+  
+  .prof-username {
+	font-size: .8125rem;
+	color: var(--tx-3);
+	margin-top: .2rem;
+  }
+  
+  .prof-role-badge { margin-top: .5rem; }
+  
+  .prof-fields {
+	padding: .375rem 0 .5rem;
+  }
+  
+  .prof-field-row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: .5rem 1.25rem;
+	border-bottom: 1px solid var(--bd);
+	font-size: .8125rem;
+  }
+  
+  .prof-field-row:last-child { border-bottom: none; }
+  
+  .prof-field-label {
+	color: var(--tx-3);
+	flex-shrink: 0;
+	font-size: .75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: .05em;
+  }
+  
+  .prof-field-value {
+	color: var(--tx-1);
+	text-align: right;
+	word-break: break-word;
+  }
+  
+  .prof-all-modules {
+	font-size: .75rem;
+	color: var(--safe-tx);
+	background: var(--safe-bg);
+	border: 1px solid var(--safe-bd);
+	border-radius: 999px;
+	padding: .15rem .5rem;
+	font-weight: 600;
+  }
+  
+  .prof-module-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .25rem;
+	justify-content: flex-end;
+  }
+  
+  /* ── Form shared ─────────────────────────────────────────────────────────── */
+  .prof-form { padding: 0; }
+  
+  .prof-form-group {
+	padding: 1rem 1.25rem .25rem;
+  }
+  
+  .prof-label {
+	display: block;
+	font-size: .75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: .05em;
+	color: var(--tx-3);
+	margin-bottom: .4rem;
+  }
+  
+  .prof-input-wrap {
+	position: relative;
+  }
+  
+  .prof-input {
+	width: 100%;
+	height: 38px;
+	padding: 0 2.5rem 0 .75rem;
+	font-size: .875rem;
+	font-family: var(--font);
+	color: var(--tx-1);
+	background: var(--surface-2);
+	border: 1px solid var(--bd);
+	border-radius: var(--r-md);
+	outline: none;
+	transition: border-color var(--ease), box-shadow var(--ease);
+  }
+  
+  /* Non-password inputs don't need right padding for eye button */
+  input[type=text].prof-input,
+  input[type=email].prof-input { padding-right: .75rem; }
+  
+  .prof-input:focus {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+	background: var(--surface);
+  }
+  
+  .prof-eye {
+	position: absolute;
+	right: .625rem;
+	top: 50%;
+	transform: translateY(-50%);
+	background: none;
+	border: none;
+	color: var(--tx-3);
+	cursor: pointer;
+	font-size: .875rem;
+	padding: .25rem;
+	transition: color var(--ease);
+  }
+  
+  .prof-eye:hover { color: var(--tx-1); }
+  
+  /* ── Password strength ───────────────────────────────────────────────────── */
+  .prof-strength {
+	margin-top: .5rem;
+	display: flex;
+	align-items: center;
+	gap: .625rem;
+  }
+  
+  .prof-strength-bar {
+	flex: 1;
+	height: 4px;
+	background: var(--bd);
+	border-radius: 999px;
+	overflow: hidden;
+  }
+  
+  .prof-strength-fill {
+	height: 100%;
+	border-radius: 999px;
+	transition: width .3s ease, background .3s ease;
+  }
+  
+  .prof-strength-label {
+	font-size: .75rem;
+	font-weight: 600;
+	flex-shrink: 0;
+	min-width: 48px;
+  }
+  
+  /* ── Match message ───────────────────────────────────────────────────────── */
+  .prof-match-msg {
+	display: block;
+	font-size: .75rem;
+	margin-top: .375rem;
+	font-weight: 500;
+	min-height: 1em;
+  }
+  
+  /* ── Form footer ─────────────────────────────────────────────────────────── */
+  .prof-form-footer {
+	padding: 1rem 1.25rem 1.25rem;
+	border-top: 1px solid var(--bd);
+	margin-top: .75rem;
+	display: flex;
+	justify-content: flex-end;
+  }
+  
+  /* ── Responsive ──────────────────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+	.prof-grid {
+	  grid-template-columns: 1fr;
+	}
+  }
+  
+  @media (max-width: 640px) {
+	.prof-form-footer { justify-content: stretch; }
+	.prof-form-footer .btn { width: 100%; justify-content: center; }
+	.prof-field-row { flex-direction: column; gap: .25rem; }
+	.prof-field-value { text-align: left; }
+	.prof-module-list { justify-content: flex-start; }
+  }

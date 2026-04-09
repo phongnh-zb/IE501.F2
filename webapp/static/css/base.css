@@ -552,3 +552,46 @@ img, svg { display: block; }
 .flash-error   { background: var(--crit-bg);  border-color: var(--crit-bd);  color: var(--crit-tx); }
 .flash-info    { background: var(--accent-dim); border-color: #93c5fd;        color: #1e40af; }
 .flash-success { background: var(--safe-bg);  border-color: var(--safe-bd);  color: var(--safe-tx); }
+
+/* ── Page header ─────────────────────────────────────────────────────────── */
+.page-header { margin-bottom: 1rem; }
+.page-header h1 { margin: 0; line-height: 1.2; }
+.page-header p  { margin: .25rem 0 0; }
+.page-header .page-header-note {
+  display: block;
+  margin-top: .3rem;
+  font-size: .75rem;
+  color: var(--tx-3);
+  font-family: var(--font-mono);
+}
+
+/* ── Text selection ──────────────────────────────────────────────────────── */
+/* Block selection on UI chrome — buttons, labels, nav, structural elements */
+.navbar, .footer,
+.btn, .badge,
+.card-head,
+.stat-label, .stat-note,
+.page-header h1, .page-header p,
+.st-toolbar,
+.st-table thead,
+.st-status-badge, .st-module-tag, .st-pres-tag, .st-tier-chip,
+.st-field-group-label,
+.st-panel-tab, .st-pg-btn, .st-pg-ellipsis,
+.attention-bar-label, .withdrew-pill, .attention-demo,
+.dash-hero-title, .dash-hero-sub,
+.prof-label, .prof-field-label, .prof-avatar, .prof-role-badge,
+.nav-dropdown-item {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Always allow selection on data values and form inputs */
+input, textarea, select,
+.st-id, .mono,
+.prof-field-value,
+.prof-input,
+.attention-id,
+.nav-dropdown-email {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
