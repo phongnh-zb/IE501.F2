@@ -1,10 +1,11 @@
 import re
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_required
+from flask_login import current_user, login_required, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from webapp.auth.db import get_user_by_id, update_password, update_user_info
+from webapp.auth.db import (get_user_by_id, get_user_by_username,
+                            update_password, update_user_info)
 
 profile_bp = Blueprint("profile", __name__)
 
@@ -51,7 +52,6 @@ def change_password():
     new_pw      = request.form.get("new_password", "")
     confirm_pw  = request.form.get("confirm_password", "")
 
-    from webapp.auth.db import get_user_by_username
     _, stored_hash = get_user_by_username(current_user.username)
 
     if not check_password_hash(stored_hash, current_pw):
@@ -67,5 +67,7 @@ def change_password():
         return redirect(url_for("profile.profile"))
 
     update_password(current_user.id, generate_password_hash(new_pw))
-    flash("Password changed successfully.", "success")
-    return redirect(url_for("profile.profile"))
+
+    logout_user()
+    flash("Password changed successfully. Please sign in with your new password.", "success")
+    return redirect(url_for("auth.login"))

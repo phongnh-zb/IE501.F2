@@ -96,7 +96,7 @@
   .prof-module-list {
 	display: flex;
 	flex-wrap: wrap;
-	gap: .25rem;
+	gap: .375rem;
 	justify-content: flex-end;
   }
   
@@ -221,4 +221,10 @@
 	.prof-field-row { flex-direction: column; gap: .25rem; }
 	.prof-field-value { text-align: left; }
 	.prof-module-list { justify-content: flex-start; }
+  }
+  
+  /* ── Password criteria hint ──────────────────────────────────────────────── */
+  .prof-pw-criteria {
+	margin-top: .375rem;
+	line-height: 1.5;
   }

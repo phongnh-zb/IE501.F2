@@ -11,7 +11,7 @@
 	  <div class="prof-identity-detail">
 		<div class="prof-display-name">{{ user.display_name }}</div>
 		<div class="prof-username mono">@{{ user.username }}</div>
-		<span class="badge {% if user.is_admin %}badge-crit{% else %}badge-watch{% endif %} prof-role-badge">
+		<span class="badge {% if user.is_admin %}badge-role-admin{% else %}badge-role-lecturer{% endif %} prof-role-badge">
 		  {{ user.role | title }}
 		</span>
 	  </div>

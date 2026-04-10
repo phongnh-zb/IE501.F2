@@ -426,6 +426,10 @@ img, svg { display: block; }
 .nav-role-admin    { background: rgba(239,68,68,.3);  color: #fca5a5; }
 .nav-role-lecturer { background: rgba(59,130,246,.3); color: #93c5fd; }
 
+/* Role badges — consistent across navbar and profile */
+.badge-role-admin    { background: rgba(220,38,38,.1);  border-color: rgba(220,38,38,.3);  color: #b91c1c; }
+.badge-role-lecturer { background: rgba(37,99,235,.1);  border-color: rgba(37,99,235,.3);  color: #1d4ed8; }
+
 .nav-account-caret {
   font-size: .625rem;
   color: rgba(255,255,255,.4);

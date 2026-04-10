@@ -298,6 +298,12 @@
   @media (max-width: 768px) {
 	.pipe-row { grid-template-columns: 1fr; }
 	.pipe-header-actions { gap: .5rem; }
+	/* Stack card-head title + timestamp vertically */
+	.pipe-card .card-head {
+	  flex-direction: column;
+	  align-items: flex-start;
+	  gap: .2rem;
+	}
   }
   
   @media (max-width: 640px) {

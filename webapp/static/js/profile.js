@@ -27,7 +27,7 @@ const Profile = (() => {
 
     let score = 0;
     if (value.length >= 8) score++;
-    if (value.length >= 12) score++;
+    if (value.length >= 10) score++;
     if (/[A-Z]/.test(value)) score++;
     if (/[0-9]/.test(value)) score++;
     if (/[^A-Za-z0-9]/.test(value)) score++;
@@ -93,9 +93,10 @@ const Profile = (() => {
     if (!btn || !form) return;
     const name = form.full_name.value.trim();
     const email = form.email.value.trim();
+    const nonEmpty = name.length > 0 && email.length > 0;
     const changed =
       name !== btn.dataset.initName || email !== btn.dataset.initEmail;
-    btn.disabled = !changed;
+    btn.disabled = !(nonEmpty && changed);
   }
 
   function _checkPasswordBtn() {
