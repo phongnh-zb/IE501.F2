@@ -120,10 +120,10 @@
 	font-size: .8125rem;
 	color: var(--tx-2);
 	margin-bottom: .625rem;
+	min-height: 2.625rem;
   }
   
   .st-summary strong { color: var(--tx-1); font-weight: 600; }
-  .st-summary-dot    { color: var(--tx-3); }
   
   .st-tier-chip {
 	font-size: .6875rem;
@@ -140,7 +140,9 @@
   
   /* ── Table card ──────────────────────────────────────────────────────────── */
   .st-table-card { overflow: hidden; }
-  .st-table-wrap { overflow-x: auto; }
+  .st-table-wrap {
+	overflow-x: auto;
+  }
   
   .st-table {
 	width: 100%;
@@ -160,9 +162,7 @@
 	cursor: pointer;
 	user-select: none;
 	transition: color var(--ease);
-  }
-  
-  .st-table thead th:hover { color: var(--tx-1); }
+  }.st-table thead th:hover { color: var(--tx-1); }
   .st-th-active { color: var(--tx-1) !important; }
   .st-sort-idle { opacity: .35; }
   
@@ -172,7 +172,7 @@
   .st-table tbody td.text-center { text-align: center; }
   
   .st-table tbody td {
-	padding: .5625rem 1rem;
+	padding: .625rem 1rem;
 	border-bottom: 1px solid var(--bd);
 	color: var(--tx-2);
 	vertical-align: middle;
@@ -222,7 +222,7 @@
   .st-cell-val { font-size: .75rem; }
   
   .st-mini-bar-wrap {
-	width: 44px;
+	width: calc(100% - 24px);
 	height: 4px;
 	background: var(--bd);
 	border-radius: 999px;
@@ -649,3 +649,12 @@
   .result-distinction { background: #eff6ff;          border-color: #93c5fd;         color: #1e40af; }
   .result-fail        { background: var(--high-bg);  border-color: var(--high-bd);  color: var(--high-tx); }
   .result-withdrawn   { background: var(--crit-bg);  border-color: var(--crit-bd);  color: var(--crit-tx); }
+  
+  /* ── Loading state ───────────────────────────────────────────────────────── */
+  .st-loading-cell {
+	text-align: center;
+	padding: 3rem 1rem;
+	color: var(--tx-3);
+	font-size: .875rem;
+	vertical-align: middle;
+  }

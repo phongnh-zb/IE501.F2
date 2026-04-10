@@ -22,6 +22,18 @@ def _visible_data():
     return [s for s in data if s.get("code_module", "") in current_user.modules]
 
 
+@api_bp.route("/students")
+@login_required
+def students_data():
+    if not SYSTEM_CACHE["is_ready"]:
+        return jsonify({"students": [], "last_updated": None, "is_ready": False})
+    return jsonify({
+        "students":     _visible_data(),
+        "last_updated": SYSTEM_CACHE["last_updated"],
+        "is_ready":     True,
+    })
+
+
 @api_bp.route("/realtime-data")
 @login_required
 def realtime_data():

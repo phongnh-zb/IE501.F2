@@ -1,28 +1,26 @@
-{% extends 'base.html' %}
-{% set active_page = 'students' %}
-{% block title %}Students{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/students.css') }}" />
-{% endblock %}
-
-{% block content %}
-
+{% extends 'base.html' %} {% set active_page = 'students' %} {% block title
+%}Students{% endblock %} {% block head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/students.css') }}"
+/>
+{% endblock %} {% block content %}
 <div class="page-header">
   <h1>Students</h1>
-  <p class="text-2 text-sm">Dropout risk predictions for all enrolled students</p>
-  {% if last_updated %}
-  <span class="page-header-note">Updated {{ last_updated }}</span>
-  {% endif %}
+  <p class="text-2 text-sm">
+    Dropout risk predictions for all enrolled students
+  </p>
+  <span class="page-header-note" id="st-last-updated">
+    {% if last_updated %}Updated {{ last_updated }}{% endif %}
+  </span>
 </div>
 
-{% include 'students/_toolbar.html' %}
-{% include 'students/_summary.html' %}
-{% include 'students/_table.html' %}
-{% include 'students/_panel.html' %}
-
-{% endblock %}
-
-{% block scripts %}
+{% include 'students/_toolbar.html' %} {% include 'students/_summary.html' %} {%
+include 'students/_table.html' %} {% include 'students/_panel.html' %} {%
+endblock %} {% block scripts %}
+<script>
+  const ST_MODULES       = {{ modules_available | tojson }};
+  const ST_PRESENTATIONS = {{ presentations_available | tojson }};
+</script>
 <script src="{{ url_for('static', filename='js/students.js') }}"></script>
 {% endblock %}

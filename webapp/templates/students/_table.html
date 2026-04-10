@@ -1,104 +1,71 @@
 <div class="card st-table-card">
-	{% if students %}
-	<div class="st-table-wrap">
-	<table class="st-table">
-	  <thead>
-		<tr>
-		  {% macro sort_th(label, field, align='left') %}
-		  <th class="text-{{ align }} {% if sort_by == field %}st-th-active{% endif %}"
-			  onclick="Students.sort('{{ field }}')">
-			{{ label }}
-			{% if sort_by == field %}
-			  <i class="fas fa-sort-{{ 'down' if order == 'desc' else 'up' }}"></i>
-			{% else %}
-			  <i class="fas fa-sort st-sort-idle"></i>
-			{% endif %}
-		  </th>
-		  {% endmacro %}
-	
-		  {{ sort_th('Student ID', 'id') }}
-		  <th>Module</th>
-		  {{ sort_th('Risk', 'risk') }}
-		  {{ sort_th('Score', 'score', 'right') }}
-		  {{ sort_th('Submission', 'submission_rate', 'right') }}
-		  {{ sort_th('Active days', 'active_days', 'right') }}
-		  {{ sort_th('Clicks', 'clicks', 'right') }}
-		  <th class="text-center">Status</th>
-		</tr>
-	  </thead>
-	  <tbody>
-		{% for s in students %}
-		{% set tier_class = ['safe','watch','high','crit'][s.risk] %}
-		<tr class="st-row" onclick="Students.openPanel('{{ s.id }}')" data-id="{{ s.id }}">
-	
-		  <td><span class="st-id">{{ s.id }}</span></td>
-	
-		  <td>
-			{% if s.code_module %}
-			<span class="st-module-tag">{{ s.code_module }}</span>
-			{% endif %}
-			{% if s.code_presentation %}
-			<span class="st-pres-tag">{{ s.code_presentation }}</span>
-			{% endif %}
-		  </td>
-	
-		  <td>
-			<span class="badge badge-{{ tier_class }}">
-			  <i class="fas fa-circle" style="font-size:.45rem;"></i>
-			  {{ s.risk_label }}
-			</span>
-		  </td>
-	
-		  <td class="text-right">
-			{% set score_cls = 'crit' if s.score < 40 else ('watch' if s.score < 60 else ('high' if s.score < 75 else 'safe')) %}
-			<div class="st-cell-bar-wrap">
-			  <span class="st-cell-val mono">{{ "%.1f" | format(s.score) }}</span>
-			  <div class="st-mini-bar-wrap">
-				<div class="st-mini-bar st-mini-bar-{{ score_cls }}"
-					 style="width:{{ [s.score, 100] | min | int }}%"></div>
-			  </div>
-			</div>
-		  </td>
-	
-		  <td class="text-right">
-			{% set sub_pct = (s.submission_rate * 100) | round(0) | int %}
-			{% set sub_cls = 'crit' if sub_pct < 40 else ('watch' if sub_pct < 70 else 'safe') %}
-			<div class="st-cell-bar-wrap">
-			  <span class="st-cell-val mono">{{ sub_pct }}%</span>
-			  <div class="st-mini-bar-wrap">
-				<div class="st-mini-bar st-mini-bar-{{ sub_cls }}" style="width:{{ sub_pct }}%"></div>
-			  </div>
-			</div>
-		  </td>
-	
-		  <td class="text-right mono text-2">{{ s.active_days }}</td>
-		  <td class="text-right mono text-2">{{ s.clicks | int | format_number }}</td>
-	
-		  <td class="text-center">
-			{% if s.withdrew_early %}
-			<span class="st-status-badge st-status-withdrew">
-			  <i class="fas fa-person-walking-arrow-right"></i> Withdrew
-			</span>
-			{% else %}
-			<span class="st-status-badge st-status-active">
-			  <i class="fas fa-circle-check"></i> Active
-			</span>
-			{% endif %}
-		  </td>
-	
-		</tr>
-		{% endfor %}
-	  </tbody>
-	</table>
-	</div>
-	{% else %}
-	<div class="st-empty">
-	  <i class="fas fa-users-slash"></i>
-	  <p>No students match the current filters.</p>
-	  <button class="btn btn-outline btn-sm mt-2" onclick="Students.clearAll()">Clear filters</button>
-	</div>
-	{% endif %}
-	
-	{% include 'students/_pagination.html' %}
-	
-	</div>
+  <div class="st-table-wrap">
+    <table class="st-table" id="st-table">
+      <thead>
+        <tr>
+          <th class="text-left" onclick="Students.sort('id')" data-field="id">
+            Student ID <i class="fas fa-sort st-sort-idle"></i>
+          </th>
+          <th
+            class="text-center"
+            onclick="Students.sort('code_module')"
+            data-field="code_module"
+          >
+            Module <i class="fas fa-sort st-sort-idle"></i>
+          </th>
+          <th
+            class="text-center"
+            onclick="Students.sort('risk')"
+            data-field="risk"
+          >
+            Risk <i class="fas fa-sort-down"></i>
+          </th>
+          <th
+            class="text-center"
+            onclick="Students.sort('score')"
+            data-field="score"
+          >
+            Score <i class="fas fa-sort st-sort-idle"></i>
+          </th>
+          <th
+            class="text-center"
+            onclick="Students.sort('submission_rate')"
+            data-field="submission_rate"
+          >
+            Submission <i class="fas fa-sort st-sort-idle"></i>
+          </th>
+          <th
+            class="text-center"
+            onclick="Students.sort('active_days')"
+            data-field="active_days"
+          >
+            Active days <i class="fas fa-sort st-sort-idle"></i>
+          </th>
+          <th
+            class="text-center"
+            onclick="Students.sort('clicks')"
+            data-field="clicks"
+          >
+            Clicks <i class="fas fa-sort st-sort-idle"></i>
+          </th>
+          <th
+            class="text-center"
+            onclick="Students.sort('withdrew_early')"
+            data-field="withdrew_early"
+          >
+            Status <i class="fas fa-sort st-sort-idle"></i>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="st-tbody">
+        <tr>
+          <td colspan="8" class="text-center st-loading-cell">
+            <i class="fas fa-spinner fa-spin"></i> Loading…
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="st-pagination" class="st-pagination"></div>
+</div>

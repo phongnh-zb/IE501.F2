@@ -1,92 +1,101 @@
 <div class="st-toolbar card">
+  <div class="st-toolbar-left">
+    <div class="st-search-wrap">
+      <i class="fas fa-magnifying-glass st-search-icon"></i>
+      <input
+        type="text"
+        id="search-input"
+        class="st-search"
+        placeholder="Search by student ID…"
+        autocomplete="off"
+      />
+      <button
+        class="st-search-clear"
+        id="search-clear"
+        style="display: none"
+        onclick="Students.clearSearch()"
+        title="Clear search"
+      >
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
 
-	<div class="st-toolbar-left">
-  
-	  <div class="st-search-wrap">
-		<i class="fas fa-magnifying-glass st-search-icon"></i>
-		<input
-		  type="text"
-		  id="search-input"
-		  class="st-search"
-		  placeholder="Search by student ID…"
-		  value="{{ search }}"
-		  autocomplete="off"
-		/>
-		{% if search %}
-		<button class="st-search-clear" onclick="Students.clearSearch()" title="Clear search">
-		  <i class="fas fa-xmark"></i>
-		</button>
-		{% endif %}
-	  </div>
-  
-	  <div class="st-filters">
-  
-		<div class="st-multiselect" id="risk-multiselect">
-		  <button class="st-multiselect-btn" onclick="RiskFilter.toggle()" type="button">
-			<span id="risk-label">{{ risk_label if risk_label else 'All risk tiers' }}</span>
-			<i class="fas fa-chevron-down st-multiselect-caret"></i>
-		  </button>
-		  <div class="st-multiselect-panel" id="risk-panel" style="display:none;">
-			{% for val, label in [('3','Critical'),('2','High Risk'),('1','Watch'),('0','Safe')] %}
-			<label class="st-multiselect-item">
-			  <input type="checkbox" value="{{ val }}"
-				{% if risk_filter and val in risk_filter.split(',') %}checked{% endif %}
-				onchange="RiskFilter.update()" />
-			  <span class="badge badge-{{ ['safe','watch','high','crit'][val|int] }}">
-				<i class="fas fa-circle" style="font-size:.45rem;"></i> {{ label }}
-			  </span>
-			</label>
-			{% endfor %}
-			<div class="st-multiselect-footer">
-			  <button class="st-multiselect-clear" onclick="RiskFilter.clear()" type="button">
-				Clear
-			  </button>
-			</div>
-		  </div>
-		</div>
-  
-		{% if modules_available | length > 1 %}
-		<select class="st-select" id="filter-module" onchange="Students.filter('module', this.value)">
-		  <option value="">All modules</option>
-		  {% for mod in modules_available %}
-		  <option value="{{ mod }}" {% if module_filter == mod %}selected{% endif %}>{{ mod }}</option>
-		  {% endfor %}
-		</select>
-		{% endif %}
-  
-		{% if presentations_available %}
-		<select class="st-select" id="filter-presentation" onchange="Students.filter('presentation', this.value)">
-		  <option value="">All presentations</option>
-		  {% for pres in presentations_available %}
-		  <option value="{{ pres }}" {% if presentation == pres %}selected{% endif %}>{{ pres }}</option>
-		  {% endfor %}
-		</select>
-		{% endif %}
-  
-		<select class="st-select" id="filter-withdrew" onchange="Students.filter('withdrew', this.value)">
-		  <option value="">All students</option>
-		  <option value="1" {% if withdrew == '1' %}selected{% endif %}>Withdrew</option>
-		  <option value="0" {% if withdrew == '0' %}selected{% endif %}>Active</option>
-		</select>
-  
-	  </div>
-  
-	</div>
-  
-	<div class="st-toolbar-right">
-	  {% if search or risk_filter or module_filter or presentation or withdrew %}
-	  <button class="btn btn-outline btn-sm" onclick="Students.clearAll()">
-		<i class="fas fa-xmark"></i> Clear
-	  </button>
-	  {% endif %}
-	  <a class="btn btn-outline btn-sm" id="export-btn" href="#" onclick="Students.export(event)">
-		<i class="fas fa-download"></i> Export CSV
-	  </a>
-	  <select class="st-select" onchange="Students.filter('page_size', this.value)">
-		<option value="25"  {% if page_size == 25  %}selected{% endif %}>25 / page</option>
-		<option value="50"  {% if page_size == 50  %}selected{% endif %}>50 / page</option>
-		<option value="100" {% if page_size == 100 %}selected{% endif %}>100 / page</option>
-	  </select>
-	</div>
-  
+    <div class="st-filters">
+      <div class="st-multiselect" id="risk-multiselect">
+        <button
+          class="st-multiselect-btn"
+          onclick="RiskFilter.toggle()"
+          type="button"
+        >
+          <span id="risk-label">All risk tiers</span>
+          <i class="fas fa-chevron-down st-multiselect-caret"></i>
+        </button>
+        <div class="st-multiselect-panel" id="risk-panel" style="display: none">
+          {% for val, label in [('3','Critical'),('2','High
+          Risk'),('1','Watch'),('0','Safe')] %}
+          <label class="st-multiselect-item">
+            <input
+              type="checkbox"
+              value="{{ val }}"
+              onchange="RiskFilter.update()"
+            />
+            <span
+              class="badge badge-{{ ['safe','watch','high','crit'][val|int] }}"
+            >
+              <i class="fas fa-circle" style="font-size: 0.45rem"></i> {{ label
+              }}
+            </span>
+          </label>
+          {% endfor %}
+          <div class="st-multiselect-footer">
+            <button
+              class="st-multiselect-clear"
+              onclick="RiskFilter.clear()"
+              type="button"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <select class="st-select" id="filter-module">
+        <option value="">All modules</option>
+      </select>
+
+      <select class="st-select" id="filter-presentation">
+        <option value="">All presentations</option>
+      </select>
+
+      <select class="st-select" id="filter-withdrew">
+        <option value="">All students</option>
+        <option value="1">Withdrew</option>
+        <option value="0">Active</option>
+      </select>
+    </div>
   </div>
+
+  <div class="st-toolbar-right">
+    <button
+      class="btn btn-outline btn-sm"
+      id="clear-btn"
+      style="display: none"
+      onclick="Students.clearAll()"
+    >
+      <i class="fas fa-xmark"></i> Clear
+    </button>
+    <a
+      class="btn btn-outline btn-sm"
+      id="export-btn"
+      href="#"
+      onclick="Students.export(event)"
+    >
+      <i class="fas fa-download"></i> Export CSV
+    </a>
+    <select class="st-select" id="filter-page-size">
+      <option value="25">25 / page</option>
+      <option value="50" selected>50 / page</option>
+      <option value="100">100 / page</option>
+    </select>
+  </div>
+</div>
