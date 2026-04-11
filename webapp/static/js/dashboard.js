@@ -143,11 +143,14 @@ const Dashboard = (() => {
         type: "scattergl",
         mode: "markers",
         name: TIER[tier].name,
-        x: pts.map((d) => d.score),
-        y: pts.map((d) => d.clicks),
-        text: pts.map((d) => d.id),
+        x: pts.map((d) => d.exam_score ?? 0),
+        y: pts.map((d) => Math.round((d.submission_rate ?? 0) * 100)),
+        text: pts.map(
+          (d) =>
+            `${d.id} · ${d.code_module || ""} ${d.code_presentation || ""}`,
+        ),
         hovertemplate:
-          "<b>%{text}</b><br>Score: %{x:.1f}<br>Clicks: %{y:,}<extra>" +
+          "<b>%{text}</b><br>Exam: %{x:.1f}<br>Submission: %{y}%<extra>" +
           TIER[tier].name +
           "</extra>",
         marker: { color: TIER[tier].color, size: 4.5, opacity: 0.6 },
@@ -156,16 +159,17 @@ const Dashboard = (() => {
 
     const layout = {
       ...PLY_BASE,
-      margin: { t: 8, r: 16, b: 52, l: 60 },
+      margin: { t: 8, r: 16, b: 52, l: 56 },
       xaxis: {
-        title: { text: "Average score", standoff: 10 },
+        title: { text: "Exam score", standoff: 10 },
         range: [-2, 102],
         gridcolor: "#edf2f7",
         zeroline: false,
         tickfont: { family: "'Space Mono', monospace", size: 10 },
       },
       yaxis: {
-        title: { text: "Total clicks", standoff: 10 },
+        title: { text: "Submission rate (%)", standoff: 10 },
+        range: [-2, 105],
         gridcolor: "#edf2f7",
         zeroline: false,
         tickfont: { family: "'Space Mono', monospace", size: 10 },
@@ -180,29 +184,30 @@ const Dashboard = (() => {
     _set("scatter-count", rows.length.toLocaleString());
   }
 
-  /* ── Risk by module ──────────────────────────────────────────────────── */
+  /* ── Risk by module × presentation ──────────────────────────────────── */
   function _moduleChart(rows) {
     const counts = {};
     rows.forEach((d) => {
-      const mod = d.code_module || "Unknown";
-      if (!counts[mod]) counts[mod] = { crit: 0, high: 0 };
-      if (d.risk === 3) counts[mod].crit++;
-      else if (d.risk === 2) counts[mod].high++;
+      const key = `${d.code_module || "?"} ${d.code_presentation || ""}`.trim();
+      if (!counts[key]) counts[key] = { crit: 0, high: 0 };
+      if (d.risk === 3) counts[key].crit++;
+      else if (d.risk === 2) counts[key].high++;
     });
 
     const modules = Object.entries(counts)
-      .map(([mod, c]) => ({
-        mod,
+      .map(([key, c]) => ({
+        key,
         crit: c.crit,
         high: c.high,
         total: c.crit + c.high,
       }))
       .filter((x) => x.total > 0)
-      .sort((a, b) => b.total - a.total);
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 12);
 
     if (!modules.length) return;
 
-    const labels = modules.map((x) => x.mod);
+    const labels = modules.map((x) => x.key);
     const traces = [
       {
         type: "bar",
@@ -227,15 +232,15 @@ const Dashboard = (() => {
     const layout = {
       ...PLY_BASE,
       barmode: "stack",
-      margin: { t: 8, r: 16, b: 36, l: 52 },
+      margin: { t: 8, r: 16, b: 36, l: 80 },
       xaxis: {
         gridcolor: "#edf2f7",
         zeroline: false,
         tickfont: { family: "'Space Mono', monospace", size: 10 },
       },
-      yaxis: { tickfont: { size: 11 }, automargin: true },
-      legend: { orientation: "h", y: -0.2, font: { size: 11 }, itemgap: 12 },
-      showlegend: false,
+      yaxis: { tickfont: { size: 10 }, automargin: true },
+      legend: { orientation: "h", y: -0.12, font: { size: 10 }, itemgap: 8 },
+      showlegend: true,
     };
 
     const fn = _drawn.module ? Plotly.react : Plotly.newPlot;
@@ -252,8 +257,6 @@ const Dashboard = (() => {
       bands[band][d.risk]++;
     });
 
-    // Plotly horizontal bars render y values bottom→top, so reverse order
-    // to put 0-35 (most students) at the top and 55<= at the bottom
     const ORDER = ["55<=", "35-55", "0-35"];
     const labels = Object.keys(bands).sort((a, b) => {
       const ia = ORDER.indexOf(a),
@@ -263,7 +266,6 @@ const Dashboard = (() => {
 
     if (!labels.length) return;
 
-    // Render Critical → Safe so legend reads worst-to-best (matches donut convention)
     const traces = [3, 2, 1, 0].map((tier) => ({
       type: "bar",
       name: TIER[tier].name,
@@ -322,12 +324,17 @@ const Dashboard = (() => {
           0,
           Math.min(100, (d.submission_rate ?? 0) * 100),
         );
+        const engPct = Math.max(
+          0,
+          Math.min(100, (d.engagement_ratio ?? 0) * 100),
+        );
         const scoreColor = d.risk === 3 ? "#dc2626" : "#ea580c";
         const subColor =
           subPct < 40 ? "#dc2626" : subPct < 70 ? "#d97706" : "#059669";
+        const engColor =
+          engPct < 20 ? "#dc2626" : engPct < 50 ? "#d97706" : "#059669";
         const module = d.code_module || "—";
 
-        // Demographic context
         const genderStr = GENDER[d.gender] || d.gender || "";
         const ageStr = d.age_band || "";
         const demoStr = [genderStr, ageStr].filter(Boolean).join(" · ");
@@ -356,6 +363,11 @@ const Dashboard = (() => {
                 <span class="attention-bar-wrap">${_bar(subPct, subColor)}</span>
                 <span class="attention-bar-val">${subPct.toFixed(0)}%</span>
               </span>
+              <span class="attention-bar-row">
+                <span class="attention-bar-label">Eng.</span>
+                <span class="attention-bar-wrap">${_bar(engPct, engColor)}</span>
+                <span class="attention-bar-val">${engPct.toFixed(0)}%</span>
+              </span>
             </span>
           </span>
           <span class="attention-badge-col">
@@ -381,6 +393,13 @@ const Dashboard = (() => {
       _set("stat-crit", s.critical);
       if (s.last_updated) _set("last-updated", "Updated " + s.last_updated);
 
+      if (data.raw_data.length) {
+        const avgEng =
+          data.raw_data.reduce((sum, d) => sum + (d.engagement_ratio ?? 0), 0) /
+          data.raw_data.length;
+        _set("stat-engagement", (avgEng * 100).toFixed(1) + "%");
+      }
+
       _donut(s);
       _actualDonut(data.raw_data);
       _moduleChart(data.raw_data);
@@ -392,11 +411,32 @@ const Dashboard = (() => {
     }
   }
 
+  /* ── Resize observer ─────────────────────────────────────────────────── */
+  function _initResizeObserver() {
+    // Plotly responsive:true only fires on window resize, not CSS reflow.
+    // ResizeObserver catches grid collapse (2-col → 1-col at breakpoints).
+    if (typeof ResizeObserver === "undefined") return;
+    [
+      "chart-donut",
+      "chart-actual",
+      "chart-scatter",
+      "chart-module",
+      "chart-ageband",
+    ].forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      new ResizeObserver(() => {
+        if (el.children.length) Plotly.Plots.resize(el);
+      }).observe(el);
+    });
+  }
+
+  /* ── Public API ──────────────────────────────────────────────────────── */
   async function refresh() {
     const btn = document.getElementById("refresh-btn");
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-rotate-right fa-spin"></i>';
+      btn.innerHTML = '<i class="fas fa-rotate-right fa-spin"></i>Refreshing...';
     }
     try {
       await fetch("/api/refresh-cache", { method: "POST" });
@@ -411,6 +451,7 @@ const Dashboard = (() => {
 
   function init() {
     _fetch();
+    _initResizeObserver();
     setInterval(_fetch, 15_000);
   }
 

@@ -232,15 +232,12 @@
   }
   
   /* ── Standalone section spacing ──────────────────────────────────────────── */
-  .models-best       { margin-bottom: 1.25rem; }
   .models-table-card { margin-bottom: 1.25rem; }
-  .models-row2       { margin-bottom: 1.25rem; }
-  .models-row3       { margin-bottom: 1.25rem; }
+  .models-row2       { margin-bottom: 1rem; }
+  .models-row3       { margin-bottom: 1rem; }
   .models-imp-card   { margin-bottom: 1.25rem; }
   .models-tuning-card { margin-bottom: 1.25rem; }
-  .models-tuning-meta {
-	margin-bottom: .875rem;
-  }
+  .models-tuning-meta { margin-bottom: .875rem; }
   
   .models-tuning-table-wrap { overflow-x: auto; margin-bottom: .875rem; }
   

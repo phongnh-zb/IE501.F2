@@ -36,6 +36,13 @@
           </th>
           <th
             class="text-center"
+            onclick="Students.sort('engagement_ratio')"
+            data-field="engagement_ratio"
+          >
+            Engagement <i class="fas fa-sort st-sort-idle"></i>
+          </th>
+          <th
+            class="text-center"
             onclick="Students.sort('active_days')"
             data-field="active_days"
           >
@@ -59,7 +66,7 @@
       </thead>
       <tbody id="st-tbody">
         <tr>
-          <td colspan="8" class="text-center st-loading-cell">
+          <td colspan="9" class="text-center st-loading-cell">
             <i class="fas fa-spinner fa-spin"></i> Loading…
           </td>
         </tr>

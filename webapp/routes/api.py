@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from flask import Blueprint, jsonify, send_file
 from flask_login import current_user, login_required
@@ -20,6 +21,11 @@ def _visible_data():
     if current_user.is_admin or not current_user.modules:
         return data
     return [s for s in data if s.get("code_module", "") in current_user.modules]
+
+
+def pdf_filename(prefix="student_0_report"):
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return f"{prefix}_{ts}.pdf"
 
 
 @api_bp.route("/students")
@@ -91,7 +97,7 @@ def student_report(student_id):
     recommendations = generate_smart_recommendations(student)
     buffer = generate_student_report_pdf(student, recommendations)
     return send_file(buffer, mimetype="application/pdf", as_attachment=True,
-                     download_name=f"student_{student_id}_report.pdf")
+                     download_name=pdf_filename(prefix=f"student_{student_id}_report"))
 
 
 @api_bp.route("/cohort/report")

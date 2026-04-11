@@ -3,11 +3,12 @@
 	background: var(--navy);
 	border-radius: var(--r-xl);
 	padding: 1.75rem 2rem 0;
-	margin-bottom: 1.5rem;
+	margin-bottom: 1rem;
 	overflow: hidden;
 	-webkit-font-smoothing: antialiased;
 	text-rendering: geometricPrecision;
-	transform: translateZ(0);
+	position: relative;
+	z-index: 0;
   }
   
   .dash-hero-top {
@@ -21,7 +22,7 @@
   .dash-hero-title { font-size: 1.375rem; font-weight: 600; color: #fff; }
   .dash-hero-sub   { font-size: .8125rem; color: rgba(255,255,255,.45); margin-top: .2rem; }
   .dash-hero-actions { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
-  .dash-updated { font-size: .75rem; color: rgba(255,255,255,.4); font-family: var(--font-mono); }
+  .dash-updated { font-size: .75rem; color: rgba(255,255,255,.45); font-family: var(--font-mono); }
   
   /* ── Stat strip ──────────────────────────────────────────────────────────── */
   .stat-strip {
@@ -32,14 +33,12 @@
   
   .stat-block {
 	flex: 1;
+	min-width: 0;
 	display: flex;
 	flex-direction: column;
 	gap: .3rem;
-	padding: 1.25rem 1.5rem 1.375rem;
+	padding: 1.25rem 0rem 1.375rem;
   }
-  
-  .stat-block-total { padding-left: 0; }
-  .stat-block-crit  { padding-right: 0; }
   
   .stat-label {
 	font-size: .6875rem;
@@ -58,7 +57,7 @@
 	letter-spacing: -.02em;
   }
   
-  .stat-note { font-size: .6875rem; color: rgba(255,255,255,.3); }
+  .stat-note { font-size: .6875rem; color: rgba(255,255,255,.6); }
   
   .stat-divider {
 	width: 1px;
@@ -80,22 +79,18 @@
 	grid-template-columns: 1fr 1fr;
   }
   
-  /* ── Row 2: attention + right stack ─────────────────────────────────────── */
-  .dash-action {
-	grid-template-columns: 1fr 320px;
+  /* ── Row 4: module + age band 1fr 1fr ───────────────────────────────────── */
+  .dash-charts-row {
+	grid-template-columns: 1fr 1fr;
   }
   
-  .dash-action-right {
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
+  @media (max-width: 640px) {
+	.dash-row .card-head {
+	  flex-direction: column;
+	  align-items: flex-start;
+	  gap: .2rem;
+	}
   }
-  
-  .dash-attention-card { min-height: 380px; }
-  
-  /* ── Row 3: scatter is a direct .card, full width, with bottom margin ────── */
-  .card + .card { margin-top: 0; }
-  .dash-row + .card { margin-top: 1rem; }
   
   /* ── Attention list ──────────────────────────────────────────────────────── */
   .attention-list { padding: .25rem 0; }
@@ -212,20 +207,49 @@
   /* ── Responsive ──────────────────────────────────────────────────────────── */
   @media (max-width: 1024px) {
 	.dash-donuts { grid-template-columns: 1fr 1fr; }
-	.dash-action { grid-template-columns: 1fr; }
-	.dash-action-right { display: grid; grid-template-columns: 1fr 1fr; }
+	.dash-charts-row { grid-template-columns: 1fr; }
   }
   
   @media (max-width: 850px) {
-	.stat-strip   { display: grid; grid-template-columns: 1fr 1fr; }
-	.stat-block   { padding: 1rem; }
-	.stat-block-total { grid-column: 1 / -1; border-bottom: 1px solid rgba(255,255,255,.07); }
-	.stat-divider { display: none; }
-	.stat-num     { font-size: 1.625rem; }
-	.dash-donuts  { grid-template-columns: 1fr; }
-	.dash-action-right { grid-template-columns: 1fr; }
-	.dash-hero    { padding: 1.25rem 1.25rem 0; }
-	.dash-hero-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-	.dash-hero-top { flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
-	.dash-updated  { font-size: .6875rem; }
+	.stat-strip        { display: grid; grid-template-columns: 1fr 1fr; }
+	.stat-divider      { display: none; }
+	.stat-num          { font-size: 1.625rem; }
+	.dash-donuts       { grid-template-columns: 1fr; }
+	.dash-charts-row   { grid-template-columns: 1fr; }
+	.dash-hero         { padding: 1.25rem 1.25rem 0; }
+	.dash-hero-sub     { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.dash-hero-top     { flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+	.dash-updated      { font-size: .6875rem; }
+  }
+  
+  @media (max-width: 640px) {
+	.dash-row .card-head {
+	  flex-direction: column;
+	  align-items: flex-start;
+	  gap: .2rem;
+	}
+
+	/* Attention row: drop to 2-row layout so meta has full width to breathe */
+	.attention-row {
+	  grid-template-columns: 1fr auto;
+	  align-items: start;
+	  padding: .75rem 1rem;
+	  gap: .375rem .75rem;
+	}
+	.attention-id        { grid-column: 1; grid-row: 1; padding-top: .1rem; }
+	.attention-badge-col { grid-column: 2; grid-row: 1; }
+	.attention-meta      { grid-column: 1 / -1; grid-row: 2; }
+  }
+  
+  @media (max-width: 480px) {
+	/* Hero top: stack title block and actions vertically */
+	.dash-hero         { padding: 1rem 1rem 0; }
+	.dash-hero-top     { flex-direction: column; align-items: flex-start; gap: .375rem; margin-bottom: .875rem; }
+	.dash-hero-sub     { white-space: normal; overflow: visible; text-overflow: unset; }
+	.dash-hero-actions { flex-wrap: wrap; gap: .375rem; }
+	.dash-updated      { font-size: .625rem; flex-basis: 100%; }
+
+	/* Stat strip: single column so every metric gets full width */
+	.stat-strip        { grid-template-columns: 1fr; }
+	.stat-num          { font-size: 1.5rem; }
   }

@@ -7,7 +7,6 @@
 	margin-bottom: .625rem;
   }
   
-  /* Row 1: search + all filters */
   .st-toolbar-left {
 	display: flex;
 	align-items: center;
@@ -70,7 +69,6 @@
   
   .st-search-clear:hover { color: var(--tx-1); }
   
-  /* Filters sit in the same row as search */
   .st-filters {
 	display: flex;
 	align-items: center;
@@ -81,11 +79,17 @@
   
   .st-select {
 	height: 34px;
-	padding: 0 .625rem;
+	padding: 0 2rem 0 .625rem;
 	font-size: .8125rem;
 	font-family: var(--font);
 	color: var(--tx-2);
 	background: var(--surface);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%2394a3b8' d='M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right .625rem center;
+	background-size: 10px;
+	-webkit-appearance: none;
+	appearance: none;
 	border: 1px solid var(--bd);
 	border-radius: var(--r-md);
 	outline: none;
@@ -97,7 +101,6 @@
   
   .st-select:focus { border-color: var(--accent); }
   
-  /* Row 2: actions */
   .st-toolbar-right {
 	display: flex;
 	align-items: center;
@@ -125,6 +128,8 @@
   
   .st-summary strong { color: var(--tx-1); font-weight: 600; }
   
+  .st-summary-dot { color: var(--tx-3); margin: 0 .125rem; }
+  
   .st-tier-chip {
 	font-size: .6875rem;
 	font-weight: 600;
@@ -140,9 +145,7 @@
   
   /* ── Table card ──────────────────────────────────────────────────────────── */
   .st-table-card { overflow: hidden; }
-  .st-table-wrap {
-	overflow-x: auto;
-  }
+  .st-table-wrap { overflow-x: auto; }
   
   .st-table {
 	width: 100%;
@@ -162,7 +165,8 @@
 	cursor: pointer;
 	user-select: none;
 	transition: color var(--ease);
-  }.st-table thead th:hover { color: var(--tx-1); }
+  }
+  .st-table thead th:hover { color: var(--tx-1); }
   .st-th-active { color: var(--tx-1) !important; }
   .st-sort-idle { opacity: .35; }
   
@@ -216,7 +220,7 @@
 	display: flex;
 	align-items: center;
 	gap: .375rem;
-	justify-content: flex-end;
+	justify-content: center;
   }
   
   .st-cell-val { font-size: .75rem; }
@@ -511,19 +515,47 @@
 	flex-shrink: 0;
   }
   
+  /* ── Final result badge in panel ─────────────────────────────────────────── */
+  .st-panel-final-result {
+	margin-top: .375rem;
+	font-size: .75rem;
+	font-weight: 600;
+	padding: .25rem .625rem;
+	border-radius: var(--r-sm);
+	border: 1px solid;
+	display: inline-flex;
+	align-items: center;
+	gap: .375rem;
+	width: fit-content;
+  }
+  
+  .result-pass        { background: var(--safe-bg);  border-color: var(--safe-bd);  color: var(--safe-tx); }
+  .result-distinction { background: #eff6ff;          border-color: #93c5fd;         color: #1e40af; }
+  .result-fail        { background: var(--high-bg);  border-color: var(--high-bd);  color: var(--high-tx); }
+  .result-withdrawn   { background: var(--crit-bg);  border-color: var(--crit-bd);  color: var(--crit-tx); }
+  
+  /* ── Loading state ───────────────────────────────────────────────────────── */
+  .st-loading-cell {
+	text-align: center;
+	padding: 3rem 1rem;
+	color: var(--tx-3);
+	font-size: .875rem;
+	vertical-align: middle;
+  }
+  
   /* ── Responsive ──────────────────────────────────────────────────────────── */
   
-  /* Hide less critical columns on tablet */
+  /* Tablet: hide Active days (col 7) and Clicks (col 8) — keep Engagement */
   @media (max-width: 768px) {
 	.st-panel {
 	  width: 100%;
 	  top: var(--nav-h);
 	  height: calc(100vh - var(--nav-h));
 	}
-	.st-table thead th:nth-child(6),
-	.st-table tbody td:nth-child(6),
 	.st-table thead th:nth-child(7),
-	.st-table tbody td:nth-child(7) { display: none; }
+	.st-table tbody td:nth-child(7),
+	.st-table thead th:nth-child(8),
+	.st-table tbody td:nth-child(8) { display: none; }
   }
   
   @media (max-width: 640px) {
@@ -539,8 +571,26 @@
 	  justify-content: center;
 	  text-align: center;
 	}
+	.st-table thead th:nth-child(6),
+	.st-table tbody td:nth-child(6) { display: none; }
 	.st-pg-info { margin-left: 0; order: 10; width: 100%; text-align: center; font-size: .75rem; }
 	.st-pg-jump { display: none; }
+  }
+  
+  /* Narrow phone: stack filter dropdowns into single column */
+  @media (max-width: 480px) {
+	.st-filters {
+	  flex-direction: column;
+	  align-items: stretch;
+	}
+	.st-filters .st-multiselect,
+	.st-filters .st-select {
+	  flex: 1 1 100%;
+	  min-width: 0;
+	  width: 100%;
+	  min-height: 34px;
+	  box-sizing: border-box;
+	}
   }
   
   /* ── Multi-select risk dropdown ──────────────────────────────────────────── */
@@ -630,31 +680,3 @@
   }
   
   .st-multiselect-clear:hover { color: var(--crit-tx); background: var(--crit-bg); }
-  
-  /* ── Final result badge in panel ─────────────────────────────────────────── */
-  .st-panel-final-result {
-	margin-top: .375rem;
-	font-size: .75rem;
-	font-weight: 600;
-	padding: .25rem .625rem;
-	border-radius: var(--r-sm);
-	border: 1px solid;
-	display: inline-flex;
-	align-items: center;
-	gap: .375rem;
-	width: fit-content;
-  }
-  
-  .result-pass        { background: var(--safe-bg);  border-color: var(--safe-bd);  color: var(--safe-tx); }
-  .result-distinction { background: #eff6ff;          border-color: #93c5fd;         color: #1e40af; }
-  .result-fail        { background: var(--high-bg);  border-color: var(--high-bd);  color: var(--high-tx); }
-  .result-withdrawn   { background: var(--crit-bg);  border-color: var(--crit-bd);  color: var(--crit-tx); }
-  
-  /* ── Loading state ───────────────────────────────────────────────────────── */
-  .st-loading-cell {
-	text-align: center;
-	padding: 3rem 1rem;
-	color: var(--tx-3);
-	font-size: .875rem;
-	vertical-align: middle;
-  }

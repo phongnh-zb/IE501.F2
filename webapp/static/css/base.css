@@ -436,7 +436,7 @@ img, svg { display: block; }
 
 .nav-account-caret {
   font-size: .625rem;
-  color: rgba(255,255,255,.4);
+  color: rgba(255,255,255,.45);
   transition: transform var(--ease);
 }
 

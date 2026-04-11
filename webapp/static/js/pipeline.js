@@ -161,7 +161,7 @@ const Pipeline = (() => {
     const btn = document.getElementById("refresh-btn");
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-rotate-right fa-spin"></i>';
+      btn.innerHTML = '<i class="fas fa-rotate-right fa-spin"></i>Refreshing...';
     }
     _fetch();
   }

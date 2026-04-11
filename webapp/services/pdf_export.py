@@ -118,7 +118,7 @@ def _section(title):
 
 def _footer(story):
     s = _base_styles()
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M")
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     story.append(Spacer(1, 16))
     story.append(HRFlowable(width=CONTENT_W, thickness=0.3, color=COLOR_BORDER))
     story.append(Spacer(1, 4))

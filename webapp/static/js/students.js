@@ -40,8 +40,8 @@ const LEVEL_ICON = {
 
 /* ── State ───────────────────────────────────────────────────────────────── */
 
-let _all = []; // full dataset
-let _filtered = []; // after filters applied
+let _all = [];
+let _filtered = [];
 let _state = {
   search: "",
   risk: [],
@@ -176,6 +176,8 @@ function _renderRow(s) {
           : "safe";
   const sub = Math.round((s.submission_rate || 0) * 100);
   const subc = sub < 40 ? "crit" : sub < 70 ? "watch" : "safe";
+  const eng = Math.round((s.engagement_ratio || 0) * 100);
+  const engc = eng < 20 ? "crit" : eng < 50 ? "watch" : "safe";
   const status = s.withdrew_early
     ? `<span class="st-status-badge st-status-withdrew"><i class="fas fa-person-walking-arrow-right"></i> Withdrew</span>`
     : `<span class="st-status-badge st-status-active"><i class="fas fa-circle-check"></i> Active</span>`;
@@ -189,6 +191,7 @@ function _renderRow(s) {
     <td class="text-center"><span class="badge badge-${tc}"><i class="fas fa-circle" style="font-size:.45rem;"></i> ${TIER_NAMES[s.risk]}</span></td>
     <td class="text-center">${_miniBar(s.score.toFixed(1), sc)}</td>
     <td class="text-center">${_miniBar(sub + "%", subc, sub)}</td>
+    <td class="text-center">${_miniBar(eng + "%", engc, eng)}</td>
     <td class="text-center mono text-2">${s.active_days}</td>
     <td class="text-center mono text-2">${_fmt(Math.round(s.clicks))}</td>
     <td class="text-center">${status}</td>
@@ -231,7 +234,7 @@ function _renderSummary(total, tiers) {
       ? `<span class="st-tier-chip chip-crit">${_fmt(tiers.critical)} Critical</span>`
       : "",
     tiers.high > 0
-      ? `<span class="st-tier-chip chip-high">${_fmt(tiers.high)} High</span>`
+      ? `<span class="st-tier-chip chip-high">${_fmt(tiers.high)} High Risk</span>`
       : "",
     tiers.watch > 0
       ? `<span class="st-tier-chip chip-watch">${_fmt(tiers.watch)} Watch</span>`
@@ -243,9 +246,18 @@ function _renderSummary(total, tiers) {
     .filter(Boolean)
     .join("");
 
+  const avgEng = _filtered.length
+    ? (
+        (_filtered.reduce((sum, s) => sum + (s.engagement_ratio ?? 0), 0) /
+          _filtered.length) *
+        100
+      ).toFixed(1)
+    : "0.0";
+
   el.innerHTML = `<span>Showing <strong>${_fmt(total)}</strong> student${total !== 1 ? "s" : ""}</span>
     ${chips ? `<span class="st-summary-dot">·</span>${chips}` : ""}
-    ${_state.search ? `<span class="st-summary-dot">·</span><span class="text-3 text-xs">Search: <strong class="text-2">${_state.search}</strong></span>` : ""}`;
+    ${_state.search ? `<span class="st-summary-dot">·</span><span class="text-3 text-xs">Search: <strong class="text-2">${_state.search}</strong></span>` : ""}
+    <span class="st-summary-dot">·</span><span class="text-3 text-xs">Avg engagement: <strong class="text-2">${avgEng}%</strong></span>`;
 }
 
 function _renderPagination(total, pageSize, page) {
@@ -262,7 +274,6 @@ function _renderPagination(total, pageSize, page) {
       onclick="Students.goPage(${p})" ${disabled ? "disabled" : ""}>${icon}</button>`;
   }
 
-  // Build page range
   const range = [];
   if (totalPages <= 7) {
     for (let i = 1; i <= totalPages; i++) range.push(i);
@@ -347,14 +358,12 @@ function _applyFiltersAndSort() {
     data = data.filter((s) => s.id.toLowerCase().includes(q));
   }
 
-  // Sort
   const rev = _state.order === "desc";
   data = [...data].sort((a, b) => {
     let av = a[_state.sortBy] ?? 0;
     let bv = b[_state.sortBy] ?? 0;
     if (typeof av === "string")
       return rev ? bv.localeCompare(av) : av.localeCompare(bv);
-    // Secondary sort: within same risk tier, sort by score ascending
     if (_state.sortBy === "risk" && av === bv) return a.score - b.score;
     return rev ? bv - av : av - bv;
   });
@@ -448,7 +457,6 @@ const Students = (() => {
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
       btn.style.pointerEvents = "none";
     }
-    // Build export URL from current filter state
     const p = new URLSearchParams();
     if (_state.search) p.set("search", _state.search);
     if (_state.risk.length) p.set("risk", _state.risk.join(","));
@@ -552,6 +560,18 @@ const Students = (() => {
           : "var(--safe)",
     );
     _setText("pf-days-early", (s.avg_days_early ?? 0).toFixed(1));
+
+    const engPct = (s.engagement_ratio ?? 0) * 100;
+    _setText("pf-eng-ratio", engPct.toFixed(1) + "%");
+    _setColor(
+      "pf-eng-ratio",
+      engPct < 20
+        ? "var(--crit)"
+        : engPct < 50
+          ? "var(--watch)"
+          : "var(--safe)",
+    );
+
     const cpd =
       s.active_days > 0 ? (s.clicks / s.active_days).toFixed(1) : "0.0";
     _setText("pf-clicks", (s.clicks ?? 0).toLocaleString());
@@ -652,7 +672,6 @@ const Students = (() => {
     _state.withdrew = p.get("withdrew") ?? "";
     _state.page = +p.get("page") || 1;
     _state.pageSize = +p.get("page_size") || 50;
-    // Only override sort defaults when the param is explicitly in the URL
     if (p.has("sort_by")) _state.sortBy = p.get("sort_by");
     if (p.has("order")) _state.order = p.get("order");
   }
@@ -747,10 +766,8 @@ const Students = (() => {
   async function init() {
     _restoreFromURL();
 
-    // Hide table, show loading until data arrives
     document.querySelector(".st-table-wrap")?.classList.add("hidden");
 
-    // Fetch all data once
     try {
       const res = await fetch("/api/students");
       const json = await res.json();
@@ -762,7 +779,7 @@ const Students = (() => {
       console.error("[Students] fetch failed:", err);
       const tbody = document.getElementById("st-tbody");
       if (tbody)
-        tbody.innerHTML = `<tr><td colspan="8" class="st-loading-cell" style="color:var(--crit)">
+        tbody.innerHTML = `<tr><td colspan="9" class="st-loading-cell" style="color:var(--crit)">
         Failed to load student data.</td></tr>`;
       return;
     }
