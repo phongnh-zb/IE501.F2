@@ -1,12 +1,10 @@
-{% extends 'base.html' %}
-{% set active_page = 'pipeline' %}
-{% block title %}Pipeline{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pipeline.css') }}" />
-{% endblock %}
-
-{% block content %}
+{% extends 'base.html' %} {% set active_page = 'pipeline' %} {% block title
+%}Pipeline{% endblock %} {% block head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/pipeline.css') }}"
+/>
+{% endblock %} {% block content %}
 <div class="page-header">
   <div>
     <h1>Pipeline</h1>
@@ -14,20 +12,20 @@
   </div>
   <div class="pipe-header-actions">
     <span class="pipe-summary" id="pipe-summary">Checking…</span>
-    <button class="btn btn-outline btn-sm" id="refresh-btn" onclick="Pipeline.refresh()">
+    <button
+      class="btn btn-outline btn-sm"
+      id="refresh-btn"
+      onclick="Pipeline.refresh()"
+    >
       <i class="fas fa-rotate-right"></i> Refresh
     </button>
   </div>
 </div>
 
 <div class="pipe-row pipe-section">
-  {% include 'pipeline/_services.html' %}
-  {% include 'pipeline/_data.html' %}
+  {% include 'pipeline/_services.html' %} {% include 'pipeline/_data.html' %}
 </div>
 
-{% include 'pipeline/_run_info.html' %}
-{% endblock %}
-
-{% block scripts %}
+{% include 'pipeline/_run_info.html' %} {% endblock %} {% block scripts %}
 <script src="{{ url_for('static', filename='js/pipeline.js') }}"></script>
 {% endblock %}

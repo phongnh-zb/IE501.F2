@@ -30,11 +30,13 @@ const PLY_CFG = { displayModeBar: false, responsive: true, scrollZoom: true };
 
 const Dashboard = (() => {
   let _drawn = {
+    hero: false,
     donut: false,
     actual: false,
     scatter: false,
     module: false,
     ageband: false,
+    attention: false,
   };
 
   function _set(id, val) {
@@ -45,6 +47,12 @@ const Dashboard = (() => {
 
   function _bar(pct, color) {
     return `<div class="attention-bar-fill" style="width:${Math.min(100, Math.max(0, pct))}%;background:${color};"></div>`;
+  }
+
+  /* Hide the loading overlay the first time a section renders */
+  function _hideLoading(id) {
+    const el = document.getElementById(id + "-loading");
+    if (el) el.classList.add("hidden");
   }
 
   /* ── Predicted risk donut ────────────────────────────────────────────── */
@@ -81,6 +89,7 @@ const Dashboard = (() => {
 
     const fn = _drawn.donut ? Plotly.react : Plotly.newPlot;
     fn("chart-donut", data, layout, PLY_CFG);
+    if (!_drawn.donut) _hideLoading("chart-donut");
     _drawn.donut = true;
   }
 
@@ -92,16 +101,13 @@ const Dashboard = (() => {
     });
 
     const labels = Object.keys(counts);
-    const values = Object.values(counts);
-    const colors = labels.map((l) => RESULT_COLOR[l]);
-
     const data = [
       {
         type: "pie",
         hole: 0.55,
-        values,
+        values: Object.values(counts),
         labels,
-        marker: { colors },
+        marker: { colors: labels.map((l) => RESULT_COLOR[l]) },
         textinfo: "percent",
         textfont: { family: "'Space Mono', monospace", size: 10.5 },
         hovertemplate:
@@ -126,10 +132,11 @@ const Dashboard = (() => {
 
     const fn = _drawn.actual ? Plotly.react : Plotly.newPlot;
     fn("chart-actual", data, layout, PLY_CFG);
+    if (!_drawn.actual) _hideLoading("chart-actual");
     _drawn.actual = true;
   }
 
-  /* ── Score vs engagement scatter (WebGL) ─────────────────────────────── */
+  /* ── Score vs submission scatter (WebGL) ─────────────────────────────── */
   function _scatter(rows) {
     const groups = { 0: [], 1: [], 2: [], 3: [] };
     rows.forEach((d) => {
@@ -180,6 +187,7 @@ const Dashboard = (() => {
 
     const fn = _drawn.scatter ? Plotly.react : Plotly.newPlot;
     fn("chart-scatter", traces, layout, PLY_CFG);
+    if (!_drawn.scatter) _hideLoading("chart-scatter");
     _drawn.scatter = true;
     _set("scatter-count", rows.length.toLocaleString());
   }
@@ -245,6 +253,7 @@ const Dashboard = (() => {
 
     const fn = _drawn.module ? Plotly.react : Plotly.newPlot;
     fn("chart-module", traces, layout, PLY_CFG);
+    if (!_drawn.module) _hideLoading("chart-module");
     _drawn.module = true;
   }
 
@@ -292,10 +301,11 @@ const Dashboard = (() => {
 
     const fn = _drawn.ageband ? Plotly.react : Plotly.newPlot;
     fn("chart-ageband", traces, layout, PLY_CFG);
+    if (!_drawn.ageband) _hideLoading("chart-ageband");
     _drawn.ageband = true;
   }
 
-  /* ── Attention list (enriched) ───────────────────────────────────────── */
+  /* ── Attention list ──────────────────────────────────────────────────── */
   function _attentionList(rows) {
     const urgent = rows
       .filter((d) => d.risk >= 2)
@@ -309,6 +319,9 @@ const Dashboard = (() => {
 
     const el = document.getElementById("attention-list");
     if (!el) return;
+
+    if (!_drawn.attention) _hideLoading("attention-list");
+    _drawn.attention = true;
 
     if (!urgent.length) {
       el.innerHTML =
@@ -334,46 +347,44 @@ const Dashboard = (() => {
         const engColor =
           engPct < 20 ? "#dc2626" : engPct < 50 ? "#d97706" : "#059669";
         const module = d.code_module || "—";
-
         const genderStr = GENDER[d.gender] || d.gender || "";
         const ageStr = d.age_band || "";
         const demoStr = [genderStr, ageStr].filter(Boolean).join(" · ");
-
         const withdrewPill = d.withdrew_early
           ? `<span class="withdrew-pill"><i class="fas fa-person-walking-arrow-right"></i> Withdrew</span>`
           : "";
 
         return `
-        <a class="attention-row" href="/students?search=${encodeURIComponent(d.id)}">
-          <span class="attention-id">${d.id}</span>
-          <span class="attention-meta">
-            <span class="attention-meta-top">
-              <span class="attention-module">${module}</span>
-              ${demoStr ? `<span class="attention-demo">${demoStr}</span>` : ""}
-              ${withdrewPill}
+      <a class="attention-row" href="/students?search=${encodeURIComponent(d.id)}">
+        <span class="attention-id">${d.id}</span>
+        <span class="attention-meta">
+          <span class="attention-meta-top">
+            <span class="attention-module">${module}</span>
+            ${demoStr ? `<span class="attention-demo">${demoStr}</span>` : ""}
+            ${withdrewPill}
+          </span>
+          <span class="attention-bars">
+            <span class="attention-bar-row">
+              <span class="attention-bar-label">Score</span>
+              <span class="attention-bar-wrap">${_bar(scorePct, scoreColor)}</span>
+              <span class="attention-bar-val">${d.score.toFixed(1)}</span>
             </span>
-            <span class="attention-bars">
-              <span class="attention-bar-row">
-                <span class="attention-bar-label">Score</span>
-                <span class="attention-bar-wrap">${_bar(scorePct, scoreColor)}</span>
-                <span class="attention-bar-val">${d.score.toFixed(1)}</span>
-              </span>
-              <span class="attention-bar-row">
-                <span class="attention-bar-label">Sub.</span>
-                <span class="attention-bar-wrap">${_bar(subPct, subColor)}</span>
-                <span class="attention-bar-val">${subPct.toFixed(0)}%</span>
-              </span>
-              <span class="attention-bar-row">
-                <span class="attention-bar-label">Eng.</span>
-                <span class="attention-bar-wrap">${_bar(engPct, engColor)}</span>
-                <span class="attention-bar-val">${engPct.toFixed(0)}%</span>
-              </span>
+            <span class="attention-bar-row">
+              <span class="attention-bar-label">Sub.</span>
+              <span class="attention-bar-wrap">${_bar(subPct, subColor)}</span>
+              <span class="attention-bar-val">${subPct.toFixed(0)}%</span>
+            </span>
+            <span class="attention-bar-row">
+              <span class="attention-bar-label">Eng.</span>
+              <span class="attention-bar-wrap">${_bar(engPct, engColor)}</span>
+              <span class="attention-bar-val">${engPct.toFixed(0)}%</span>
             </span>
           </span>
-          <span class="attention-badge-col">
-            <span class="badge ${d.risk === 3 ? "badge-crit" : "badge-high"}">${t.name}</span>
-          </span>
-        </a>`;
+        </span>
+        <span class="attention-badge-col">
+          <span class="badge ${d.risk === 3 ? "badge-crit" : "badge-high"}">${t.name}</span>
+        </span>
+      </a>`;
       })
       .join("");
   }
@@ -400,6 +411,10 @@ const Dashboard = (() => {
         _set("stat-engagement", (avgEng * 100).toFixed(1) + "%");
       }
 
+      // Hide the stat-strip loading overlay on the first successful fetch
+      if (!_drawn.hero) _hideLoading("stat-strip");
+      _drawn.hero = true;
+
       _donut(s);
       _actualDonut(data.raw_data);
       _moduleChart(data.raw_data);
@@ -413,8 +428,6 @@ const Dashboard = (() => {
 
   /* ── Resize observer ─────────────────────────────────────────────────── */
   function _initResizeObserver() {
-    // Plotly responsive:true only fires on window resize, not CSS reflow.
-    // ResizeObserver catches grid collapse (2-col → 1-col at breakpoints).
     if (typeof ResizeObserver === "undefined") return;
     [
       "chart-donut",
@@ -426,7 +439,15 @@ const Dashboard = (() => {
       const el = document.getElementById(id);
       if (!el) return;
       new ResizeObserver(() => {
-        if (el.children.length) Plotly.Plots.resize(el);
+        requestAnimationFrame(() => {
+          if (el.children.length) {
+            setTimeout(() => {
+              Plotly.relayout(el, { width: null, height: null }).then(() => {
+                Plotly.Plots.resize(el);
+              });
+            }, 100);
+          }
+        });
       }).observe(el);
     });
   }

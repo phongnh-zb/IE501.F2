@@ -1,6 +1,7 @@
 from pyspark.sql.functions import avg as _avg
 from pyspark.sql.functions import col, count, countDistinct
 from pyspark.sql.functions import floor as _floor
+from pyspark.sql.functions import least as _least
 from pyspark.sql.functions import lit, regexp_extract
 from pyspark.sql.functions import sum as _sum
 from pyspark.sql.functions import when
@@ -54,8 +55,10 @@ def _build_vle_features(df_vle, df_vle_info, df_courses):
         )
     )
 
-    # engagement_ratio — fraction of the module duration the student was active
-    # Requires courses.csv for module_presentation_length
+    # engagement_ratio — fraction of the module duration the student was active.
+    # Clamped to 1.0 because students can interact with VLE materials before or
+    # after the scheduled window, making active_days > module_presentation_length
+    # a valid but > 100% outcome without the clamp.
     df_with_length = df_agg.join(
         df_courses.select("code_module", "code_presentation", "module_presentation_length"),
         ["code_module", "code_presentation"],
@@ -66,7 +69,7 @@ def _build_vle_features(df_vle, df_vle_info, df_courses):
         "engagement_ratio",
         when(
             col("module_presentation_length").isNotNull() & (col("module_presentation_length") > 0),
-            col("active_days") / col("module_presentation_length"),
+            _least(col("active_days") / col("module_presentation_length"), lit(1.0)),
         ).otherwise(0.0),
     ).drop("module_presentation_length")
 
@@ -104,16 +107,9 @@ def _build_assessment_features(df_student_assess, df_assessments):
             _avg(
                 when(col("date_submitted").isNotNull(), col("date") - col("date_submitted"))
             ).alias("avg_days_early"),
-            # Per-type scores — avg score for each assessment category
-            _avg(
-                when(col("assessment_type") == "Exam", col("score"))
-            ).alias("exam_score"),
-            _avg(
-                when(col("assessment_type") == "TMA", col("score"))
-            ).alias("tma_score"),
-            _avg(
-                when(col("assessment_type") == "CMA", col("score"))
-            ).alias("cma_score"),
+            _avg(when(col("assessment_type") == "Exam", col("score"))).alias("exam_score"),
+            _avg(when(col("assessment_type") == "TMA",  col("score"))).alias("tma_score"),
+            _avg(when(col("assessment_type") == "CMA",  col("score"))).alias("cma_score"),
         )
     )
 
@@ -158,7 +154,6 @@ def _build_demographic_features(df_info):
             col("num_of_prev_attempts").alias("num_prev_attempts"),
             "imd_band_encoded",
             "disability_encoded",
-            # Display-only fields — stored in HBase for the educator
             col("gender"),
             col("region"),
             col("highest_education"),

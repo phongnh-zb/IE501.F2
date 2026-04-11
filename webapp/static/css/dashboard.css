@@ -11,6 +11,12 @@
 	z-index: 0;
   }
   
+  .dash-hero .chart-loading {
+	background: var(--navy);
+	color: rgba(255,255,255,.45);
+	border-radius: var(--r-xl);
+  }
+  
   .dash-hero-top {
 	display: flex;
 	align-items: flex-start;
@@ -84,16 +90,25 @@
 	grid-template-columns: 1fr 1fr;
   }
   
-  @media (max-width: 640px) {
-	.dash-row .card-head {
-	  flex-direction: column;
-	  align-items: flex-start;
-	  gap: .2rem;
-	}
+  /* ── Chart loading overlay ───────────────────────────────────────────────── */
+  .chart-loading {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: .5rem;
+	font-size: .8125rem;
+	color: var(--tx-3);
+	pointer-events: none;
+	z-index: 1;
   }
   
   /* ── Attention list ──────────────────────────────────────────────────────── */
-  .attention-list { padding: .25rem 0; }
+  .attention-list {
+	position: relative;
+	min-height: 120px;
+  }
   
   .attention-row {
 	display: grid;
@@ -212,6 +227,7 @@
   
   @media (max-width: 850px) {
 	.stat-strip        { display: grid; grid-template-columns: 1fr 1fr; }
+	.stat-block        { border-bottom: 1px solid rgba(255,255,255,.07); }
 	.stat-divider      { display: none; }
 	.stat-num          { font-size: 1.625rem; }
 	.dash-donuts       { grid-template-columns: 1fr; }
@@ -229,7 +245,6 @@
 	  gap: .2rem;
 	}
 
-	/* Attention row: drop to 2-row layout so meta has full width to breathe */
 	.attention-row {
 	  grid-template-columns: 1fr auto;
 	  align-items: start;
@@ -242,14 +257,12 @@
   }
   
   @media (max-width: 480px) {
-	/* Hero top: stack title block and actions vertically */
 	.dash-hero         { padding: 1rem 1rem 0; }
 	.dash-hero-top     { flex-direction: column; align-items: flex-start; gap: .375rem; margin-bottom: .875rem; }
 	.dash-hero-sub     { white-space: normal; overflow: visible; text-overflow: unset; }
 	.dash-hero-actions { flex-wrap: wrap; gap: .375rem; }
 	.dash-updated      { font-size: .625rem; flex-basis: 100%; }
 
-	/* Stat strip: single column so every metric gets full width */
 	.stat-strip        { grid-template-columns: 1fr; }
 	.stat-num          { font-size: 1.5rem; }
   }

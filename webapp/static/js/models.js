@@ -13,7 +13,6 @@ const Models = (() => {
 
   const PLY_CFG = { displayModeBar: false, responsive: true };
 
-  // Injected by the template
   let _models = [];
   let _history = {};
 
@@ -27,8 +26,6 @@ const Models = (() => {
     const keys = ["auc", "cv_auc", "accuracy", "precision", "recall", "f1"];
 
     const traces = _models.map((m, i) => {
-      // Replace cv_auc=0 with null when CV was skipped — avoids misleading
-      // zero spike on the radar for non-Spark-ML models (e.g. XGBoost)
       const vals = keys.map((k) =>
         k === "cv_auc" && m[k] === 0 ? null : m[k],
       );
@@ -55,10 +52,7 @@ const Models = (() => {
           tickfont: { size: 9, family: "'Space Mono', monospace" },
           gridcolor: "#e2e8f0",
         },
-        angularaxis: {
-          tickfont: { size: 11 },
-          gridcolor: "#e2e8f0",
-        },
+        angularaxis: { tickfont: { size: 11 }, gridcolor: "#e2e8f0" },
         bgcolor: "rgba(0,0,0,0)",
       },
       margin: { t: 20, r: 20, b: 20, l: 20 },
@@ -80,7 +74,6 @@ const Models = (() => {
 
   /* ── Feature importance ──────────────────────────────────────────────── */
   function showImportance(modelName) {
-    // Update tab styles
     document.querySelectorAll(".models-imp-tab").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.model === modelName);
     });
@@ -135,8 +128,6 @@ const Models = (() => {
     if (!el) return;
 
     const names = Object.keys(_history);
-
-    // Check if any model has more than one run
     const hasHistory = names.some((n) => _history[n].length > 1);
 
     if (!hasHistory) {
@@ -154,7 +145,7 @@ const Models = (() => {
       return {
         type: "scatter",
         mode: "lines+markers",
-        name: name,
+        name,
         x: runs.map((r, idx) => `Run ${idx + 1}`),
         y: runs.map((r) => r.auc),
         line: { color: COLORS[i % COLORS.length], width: 2 },
@@ -166,7 +157,7 @@ const Models = (() => {
 
     const layout = {
       ...PLY_BASE,
-      margin: { t: 8, r: 16, b: 72, l: 52 },
+      margin: { t: 20, r: 16, b: 20, l: 52 },
       xaxis: {
         gridcolor: "#edf2f7",
         zeroline: false,
@@ -177,7 +168,7 @@ const Models = (() => {
         range: [0, 1],
         gridcolor: "#edf2f7",
         zeroline: false,
-        title: { text: "AUC", standoff: 8 },
+        title: { text: "", standoff: 8 },
         tickfont: { family: "'Space Mono', monospace", size: 10 },
       },
       legend: {
@@ -193,7 +184,6 @@ const Models = (() => {
       hovermode: "x unified",
     };
 
-    // Draw AUC=0.85 target line
     layout.shapes = [
       {
         type: "line",
@@ -228,12 +218,12 @@ const Models = (() => {
     document.querySelectorAll(".models-tuning-panel").forEach((panel) => {
       panel.classList.add("hidden");
     });
-    const id = "tuning-panel-" + modelName.replace(/ /g, "-");
-    document.getElementById(id)?.classList.remove("hidden");
+    document
+      .getElementById("tuning-panel-" + modelName.replace(/ /g, "-"))
+      ?.classList.remove("hidden");
   }
 
   /* ── Resize observer ─────────────────────────────────────────────────── */
-
   function _initResizeObserver() {
     // Plotly responsive:true only fires on window resize, not CSS reflow.
     // ResizeObserver catches grid collapse (2-col → 1-col at 900px breakpoint).
@@ -242,7 +232,15 @@ const Models = (() => {
       const el = document.getElementById(id);
       if (!el) return;
       new ResizeObserver(() => {
-        if (el.children.length) Plotly.Plots.resize(el);
+        requestAnimationFrame(() => {
+          if (el.children.length) {
+            setTimeout(() => {
+              Plotly.relayout(el, { width: null, height: null }).then(() => {
+                Plotly.Plots.resize(el);
+              });
+            }, 100);
+          }
+        });
       }).observe(el);
     });
   }
@@ -255,7 +253,6 @@ const Models = (() => {
     _radar();
     _renderHistory();
 
-    // Render importance for the best model by default
     const best = _models.find((m) => m.is_best) || _models[0];
     if (best) showImportance(best.name);
 

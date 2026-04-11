@@ -9,10 +9,10 @@ from webapp.services.csv_export import csv_filename, generate_students_csv
 
 students_bp = Blueprint("students", __name__)
 
-VALID_SORT   = {"id", "code_module", "score", "submission_rate", "active_days",
-                "clicks", "risk", "withdrew_early"}
-VALID_ORDER  = {"asc", "desc"}
-VALID_SIZES  = {25, 50, 100}
+VALID_SORT  = {"id", "code_module", "score", "submission_rate", "engagement_ratio",
+               "active_days", "clicks", "risk", "withdrew_early"}
+VALID_ORDER = {"asc", "desc"}
+VALID_SIZES = {25, 50, 100}
 
 
 @students_bp.route("/students")
@@ -38,8 +38,6 @@ def export_students():
     if not SYSTEM_CACHE["is_ready"]:
         return Response("Data not ready.", status=503, mimetype="text/plain")
 
-    # Parse filters from URL params to allow exporting the current view
-    _TIER_NAMES = {"3": "Critical", "2": "High Risk", "1": "Watch", "0": "Safe"}
     modules      = None if current_user.is_admin else current_user.modules
     search       = request.args.get("search",       "", type=str).strip()
     risk_raw     = request.args.get("risk",         "", type=str).strip()
@@ -49,11 +47,11 @@ def export_students():
     sort_by      = request.args.get("sort_by",      "risk")
     order        = request.args.get("order",        "desc")
 
-    valid_tiers      = {"0", "1", "2", "3"}
-    risk_filter      = {int(r) for r in risk_raw.split(",") if r in valid_tiers} or None
-    withdrew_filter  = int(withdrew_raw) if withdrew_raw in {"0", "1"} else None
+    valid_tiers     = {"0", "1", "2", "3"}
+    risk_filter     = {int(r) for r in risk_raw.split(",") if r in valid_tiers} or None
+    withdrew_filter = int(withdrew_raw) if withdrew_raw in {"0", "1"} else None
     if sort_by not in VALID_SORT: sort_by = "risk"
-    if order not in VALID_ORDER:  order   = "desc"
+    if order   not in VALID_ORDER: order  = "desc"
 
     result = get_data_from_memory(
         page=1, page_size=999_999,

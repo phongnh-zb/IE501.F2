@@ -1,4 +1,4 @@
-<div class="card dash-row">
+<div class="card dash-row" style="gap: 0">
   <div class="card-head">
     <h3><i class="fas fa-circle-dot"></i> Exam score vs submission rate</h3>
     <span class="text-xs text-3"
@@ -7,6 +7,9 @@
   </div>
   <div class="card-body">
     <div class="chart-wrap" style="height: 340px">
+      <div id="chart-scatter-loading" class="chart-loading">
+        <i class="fas fa-spinner fa-spin"></i> Loading…
+      </div>
       <div id="chart-scatter" style="height: 100%"></div>
     </div>
   </div>

@@ -22,6 +22,15 @@ COLOR_TEXT    = colors.HexColor("#212529")
 COLOR_MUTED   = colors.HexColor("#6C757D")
 COLOR_WHITE   = colors.white
 
+_RISK_LABEL = {0: "Safe", 1: "Watch", 2: "High Risk", 3: "Critical"}
+_RISK_COLOR = {
+    0: colors.HexColor("#059669"),
+    1: colors.HexColor("#D97706"),
+    2: colors.HexColor("#EA580C"),
+    3: colors.HexColor("#DC2626"),
+}
+_GENDER = {"M": "Male", "F": "Female"}
+
 
 def _base_styles():
     base = getSampleStyleSheet()
@@ -55,15 +64,9 @@ def _base_styles():
             "footer", parent=base["Normal"],
             fontSize=8, textColor=COLOR_MUTED, alignment=1,
         ),
-        "risk_high": ParagraphStyle(
-            "risk_high", parent=base["Normal"],
-            fontSize=11, textColor=COLOR_RISK,
-            fontName="Helvetica-Bold", leading=14,
-        ),
-        "risk_safe": ParagraphStyle(
-            "risk_safe", parent=base["Normal"],
-            fontSize=11, textColor=COLOR_SAFE,
-            fontName="Helvetica-Bold", leading=14,
+        "risk_label": ParagraphStyle(
+            "risk_label", parent=base["Normal"],
+            fontSize=11, fontName="Helvetica-Bold", leading=14,
         ),
     }
 
@@ -140,18 +143,22 @@ def generate_student_report_pdf(student, recommendations):
     risk = student.get("risk", 0)
     story = []
 
-    risk_label = "HIGH RISK" if risk else "SAFE"
+    risk_label = _RISK_LABEL.get(risk, "Unknown")
     story.append(_page_header(
         f"Student Risk Report — {student.get('id', 'Unknown')}",
-        f"Risk status: {risk_label}",
+        f"Module: {student.get('code_module', '—')} {student.get('code_presentation', '')}  |  Risk: {risk_label}",
     ))
     story.append(Spacer(1, 10))
-    story.append(Paragraph(
-        f"● {risk_label}",
-        s["risk_high"] if risk else s["risk_safe"],
-    ))
+
+    # Risk badge paragraph — colour matches the 4-tier system
+    risk_style = ParagraphStyle(
+        "risk_inline", parent=s["risk_label"],
+        textColor=_RISK_COLOR.get(risk, COLOR_TEXT),
+    )
+    story.append(Paragraph(f"● {risk_label}", risk_style))
     story.append(Spacer(1, 8))
 
+    # ── Academic Performance ──────────────────────────────────────────────
     story.extend(_section("Academic Performance"))
     days_early = student.get("avg_days_early", 0)
     timing_str = (
@@ -160,31 +167,52 @@ def generate_student_report_pdf(student, recommendations):
         else "on deadline"
     )
     story.append(_kv_table([
-        ("Average Score",          f"{student.get('score', 0):.1f} / 100"),
-        ("Weighted Score",         f"{student.get('weighted_score', 0):.1f} / 100"),
-        ("Submission Rate",        f"{student.get('submission_rate', 0):.0%}"),
-        ("Avg Submission Timing",  timing_str),
+        ("Average Score",         f"{student.get('score',          0):.2f} / 100"),
+        ("Weighted Score",        f"{student.get('weighted_score',  0):.2f} / 100"),
+        ("Exam Score",            f"{student.get('exam_score',      0):.2f} / 100"),
+        ("TMA Score",             f"{student.get('tma_score',       0):.2f} / 100"),
+        ("CMA Score",             f"{student.get('cma_score',       0):.2f} / 100"),
+        ("Submission Rate",       f"{student.get('submission_rate', 0):.0%}"),
+        ("Avg Submission Timing", timing_str),
     ]))
 
+    # ── VLE Engagement ────────────────────────────────────────────────────
     story.extend(_section("VLE Engagement"))
     clicks = student.get("clicks", 0)
     active = student.get("active_days", 0)
     cpa    = f"{clicks / active:.1f}" if active else "—"
+    eng    = student.get("engagement_ratio", 0)
     story.append(_kv_table([
-        ("Total Clicks",       f"{int(clicks):,}"),
+        ("Engagement Ratio",   f"{eng * 100:.1f}%"),
         ("Active Days",        str(active)),
+        ("Active Weeks",       str(student.get("active_weeks", 0))),
+        ("Total Clicks",       f"{int(clicks):,}"),
         ("Clicks / Active Day", cpa),
-        ("Forum Clicks",       f"{int(student.get('forum_clicks', 0)):,}"),
+        ("Forum Clicks",       f"{int(student.get('forum_clicks',    0)):,}"),
+        ("Quiz Clicks",        f"{int(student.get('quiz_clicks',     0)):,}"),
         ("Resource Clicks",    f"{int(student.get('resource_clicks', 0)):,}"),
-        ("Quiz Clicks",        f"{int(student.get('quiz_clicks', 0)):,}"),
     ]))
 
+    # ── Student Background ────────────────────────────────────────────────
     story.extend(_section("Student Background"))
+    gender   = _GENDER.get(student.get("gender", ""), student.get("gender", "—") or "—")
+    disability_raw = student.get("disability", "")
+    disability = "Yes" if disability_raw == "Y" else "No" if disability_raw == "N" else "—"
+    imd = student.get("imd_band") or "—"
     story.append(_kv_table([
-        ("Previous Attempts", str(student.get("num_prev_attempts", 0))),
+        ("Gender",            gender),
+        ("Age Band",          student.get("age_band",           "—") or "—"),
+        ("Region",            student.get("region",             "—") or "—"),
+        ("Highest Education", student.get("highest_education",  "—") or "—"),
+        ("IMD Band",          imd),
+        ("Disability",        disability),
+        ("Studied Credits",   str(student.get("studied_credits", "—"))),
+        ("Prev Attempts",     str(student.get("num_prev_attempts", 0))),
+        ("Days Before Start", f"{int(student.get('days_before_start', 0))} days"),
         ("Formally Withdrew", "Yes" if student.get("withdrew_early") else "No"),
     ]))
 
+    # ── Risk Analysis & Recommendations ──────────────────────────────────
     story.extend(_section("Risk Analysis & Recommended Actions"))
     for rec in recommendations:
         text = rec.get("text", rec) if isinstance(rec, dict) else rec
@@ -207,10 +235,13 @@ def generate_cohort_report_pdf(students):
     s = _base_styles()
     story = []
 
-    total   = len(students)
-    at_risk = [st for st in students if st.get("risk") == 1]
-    safe    = total - len(at_risk)
-    pct     = len(at_risk) / total * 100 if total else 0
+    total    = len(students)
+    critical = [st for st in students if st.get("risk") == 3]
+    high     = [st for st in students if st.get("risk") == 2]
+    watch    = [st for st in students if st.get("risk") == 1]
+    safe_lst = [st for st in students if st.get("risk") == 0]
+    at_risk  = critical + high   # High Risk + Critical require action
+    pct_at_risk = len(at_risk) / total * 100 if total else 0
 
     story.append(_page_header(
         "Cohort Risk Summary Report",
@@ -218,38 +249,48 @@ def generate_cohort_report_pdf(students):
     ))
     story.append(Spacer(1, 10))
 
+    # ── Overview ──────────────────────────────────────────────────────────
     story.extend(_section("Overview"))
-    avg_score  = sum(st.get("score", 0) for st in students) / total if total else 0
+    avg_score = sum(st.get("score", 0) for st in students) / total if total else 0
+    avg_eng   = sum(st.get("engagement_ratio", 0) for st in students) / total if total else 0
     avg_clicks = sum(st.get("clicks", 0) for st in students) / total if total else 0
     story.append(_kv_table([
-        ("Total Students",   f"{total:,}"),
-        ("High Risk",        f"{len(at_risk):,}  ({pct:.1f}%)"),
-        ("Safe",             f"{safe:,}  ({100 - pct:.1f}%)"),
-        ("Avg Score",        f"{avg_score:.1f} / 100"),
-        ("Avg Total Clicks", f"{avg_clicks:,.0f}"),
+        ("Total Students",    f"{total:,}"),
+        ("Critical",          f"{len(critical):,}  ({len(critical)/total*100:.1f}%)" if total else "0"),
+        ("High Risk",         f"{len(high):,}  ({len(high)/total*100:.1f}%)"         if total else "0"),
+        ("Watch",             f"{len(watch):,}  ({len(watch)/total*100:.1f}%)"       if total else "0"),
+        ("Safe",              f"{len(safe_lst):,}  ({len(safe_lst)/total*100:.1f}%)" if total else "0"),
+        ("High + Critical",   f"{len(at_risk):,}  ({pct_at_risk:.1f}%)"),
+        ("Avg Score",         f"{avg_score:.1f} / 100"),
+        ("Avg Engagement",    f"{avg_eng * 100:.1f}%"),
+        ("Avg Total Clicks",  f"{avg_clicks:,.0f}"),
     ]))
 
+    # ── Top 50 Highest-Risk Students ──────────────────────────────────────
     story.extend(_section("Top 50 Highest-Risk Students"))
 
-    top = sorted(at_risk, key=lambda x: x.get("score", 100))[:50]
+    # Sort: Critical first, then High Risk; within tier sort by score ascending
+    top = sorted(at_risk, key=lambda x: (-x.get("risk", 0), x.get("score", 100)))[:50]
 
     if top:
         col_w = [
-            CONTENT_W * 0.22, CONTENT_W * 0.10, CONTENT_W * 0.10,
-            CONTENT_W * 0.13, CONTENT_W * 0.13, CONTENT_W * 0.17, CONTENT_W * 0.15,
+            CONTENT_W * 0.20, CONTENT_W * 0.10, CONTENT_W * 0.10,
+            CONTENT_W * 0.12, CONTENT_W * 0.12, CONTENT_W * 0.12,
+            CONTENT_W * 0.12, CONTENT_W * 0.12,
         ]
         header_row = [
             Paragraph(f"<b>{h}</b>", s["body"])
-            for h in ["Student ID", "Score", "Clicks", "Active Days",
-                      "Sub. Rate", "Prev. Attempts", "Withdrew"]
+            for h in ["Student ID", "Risk", "Score", "Sub. Rate",
+                      "Engagement", "Active Days", "Prev. Att.", "Withdrew"]
         ]
         data = [header_row] + [
             [
                 Paragraph(st.get("id", ""), s["body"]),
+                Paragraph(_RISK_LABEL.get(st.get("risk", 0), "—"), s["body"]),
                 Paragraph(f"{st.get('score', 0):.1f}", s["body"]),
-                Paragraph(f"{int(st.get('clicks', 0)):,}", s["body"]),
-                Paragraph(str(st.get("active_days", 0)), s["body"]),
                 Paragraph(f"{st.get('submission_rate', 0):.0%}", s["body"]),
+                Paragraph(f"{st.get('engagement_ratio', 0) * 100:.1f}%", s["body"]),
+                Paragraph(str(st.get("active_days", 0)), s["body"]),
                 Paragraph(str(st.get("num_prev_attempts", 0)), s["body"]),
                 Paragraph("Yes" if st.get("withdrew_early") else "No", s["body"]),
             ]
@@ -270,7 +311,7 @@ def generate_cohort_report_pdf(students):
         story.append(t)
     else:
         story.append(Paragraph(
-            "No high-risk students found in the current dataset.", s["body"]
+            "No high-risk or critical students found in the current dataset.", s["body"]
         ))
 
     _footer(story)

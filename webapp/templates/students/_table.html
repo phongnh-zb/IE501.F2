@@ -1,4 +1,8 @@
-<div class="card st-table-card">
+<div id="st-loading" class="st-loading-outer card">
+  <i class="fas fa-spinner fa-spin"></i> Loading students…
+</div>
+
+<div class="card st-table-card hidden" id="st-table-card">
   <div class="st-table-wrap">
     <table class="st-table" id="st-table">
       <thead>
@@ -64,15 +68,11 @@
           </th>
         </tr>
       </thead>
-      <tbody id="st-tbody">
-        <tr>
-          <td colspan="9" class="text-center st-loading-cell">
-            <i class="fas fa-spinner fa-spin"></i> Loading…
-          </td>
-        </tr>
-      </tbody>
+      <tbody id="st-tbody"></tbody>
     </table>
   </div>
 
   <div id="st-pagination" class="st-pagination"></div>
 </div>
+
+<div id="st-empty" class="st-empty hidden card"></div>

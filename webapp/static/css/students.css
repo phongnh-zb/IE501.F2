@@ -143,6 +143,17 @@
   .chip-watch { background: var(--watch-bg); border-color: var(--watch-bd); color: var(--watch-tx);}
   .chip-safe  { background: var(--safe-bg);  border-color: var(--safe-bd);  color: var(--safe-tx); }
   
+  /* ── Loading outer ───────────────────────────────────────────────────────── */
+  .st-loading-outer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: .625rem;
+	padding: 3rem 1rem;
+	font-size: .875rem;
+	color: var(--tx-3);
+  }
+  
   /* ── Table card ──────────────────────────────────────────────────────────── */
   .st-table-card { overflow: hidden; }
   .st-table-wrap { overflow-x: auto; }
@@ -226,7 +237,7 @@
   .st-cell-val { font-size: .75rem; }
   
   .st-mini-bar-wrap {
-	width: calc(100% - 24px);
+	width: 60px;
 	height: 4px;
 	background: var(--bd);
 	border-radius: 999px;
@@ -277,7 +288,7 @@
 	color: var(--tx-3);
   }
   
-  .st-empty i { font-size: 2rem; margin-bottom: .75rem; opacity: .4; }
+  .st-empty i { font-size: 2rem; margin-bottom: .75rem; opacity: .4; display: block; }
   .st-empty p { font-size: .875rem; }
   
   /* ── Pagination ──────────────────────────────────────────────────────────── */
@@ -534,7 +545,7 @@
   .result-fail        { background: var(--high-bg);  border-color: var(--high-bd);  color: var(--high-tx); }
   .result-withdrawn   { background: var(--crit-bg);  border-color: var(--crit-bd);  color: var(--crit-tx); }
   
-  /* ── Loading state ───────────────────────────────────────────────────────── */
+  /* ── Loading state (inline tbody fallback) ───────────────────────────────── */
   .st-loading-cell {
 	text-align: center;
 	padding: 3rem 1rem;
@@ -552,10 +563,6 @@
 	  top: var(--nav-h);
 	  height: calc(100vh - var(--nav-h));
 	}
-	.st-table thead th:nth-child(7),
-	.st-table tbody td:nth-child(7),
-	.st-table thead th:nth-child(8),
-	.st-table tbody td:nth-child(8) { display: none; }
   }
   
   @media (max-width: 640px) {
@@ -571,8 +578,6 @@
 	  justify-content: center;
 	  text-align: center;
 	}
-	.st-table thead th:nth-child(6),
-	.st-table tbody td:nth-child(6) { display: none; }
 	.st-pg-info { margin-left: 0; order: 10; width: 100%; text-align: center; font-size: .75rem; }
 	.st-pg-jump { display: none; }
   }

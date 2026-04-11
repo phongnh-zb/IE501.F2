@@ -1,10 +1,12 @@
-<div class="card dash-row">
+<div class="card dash-row" style="gap: 0">
   <div class="card-head">
     <h3><i class="fas fa-triangle-exclamation"></i> Requires attention</h3>
     <span class="text-xs text-3">Sorted by severity</span>
   </div>
   <div id="attention-list" class="attention-list">
-    <div class="attention-empty text-3 text-sm">Loading...</div>
+    <div id="attention-list-loading" class="chart-loading">
+      <i class="fas fa-spinner fa-spin"></i> Loading…
+    </div>
   </div>
 </div>
 
@@ -15,11 +17,10 @@
       <span class="text-xs text-3">Critical + High · by presentation</span>
     </div>
     <div class="card-body">
-      <div
-        class="chart-wrap"
-        id="module-chart-wrap"
-        style="height: 260px"
-      >
+      <div class="chart-wrap" id="module-chart-wrap" style="height: 260px">
+        <div id="chart-module-loading" class="chart-loading">
+          <i class="fas fa-spinner fa-spin"></i> Loading…
+        </div>
         <div id="chart-module" style="height: 100%"></div>
       </div>
     </div>
@@ -32,6 +33,9 @@
     </div>
     <div class="card-body">
       <div class="chart-wrap" style="height: 260px">
+        <div id="chart-ageband-loading" class="chart-loading">
+          <i class="fas fa-spinner fa-spin"></i> Loading…
+        </div>
         <div id="chart-ageband" style="height: 100%"></div>
       </div>
     </div>

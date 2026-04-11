@@ -1,38 +1,48 @@
 <div class="card prof-card" id="card-info">
-	<div class="card-head">
-	  <h3><i class="fas fa-pen-to-square"></i> Edit profile</h3>
-	</div>
-	<form method="POST" action="{{ url_for('profile.update_info') }}" class="prof-form" id="form-info">
-	  <div class="prof-form-group">
-		<label class="prof-label" for="full_name">Full name</label>
-		<input
-		  type="text"
-		  id="full_name"
-		  name="full_name"
-		  class="prof-input"
-		  value="{{ user.full_name }}"
-		  placeholder="Your full name"
-		  required
-		  autocomplete="name"
-		/>
-	  </div>
-	  <div class="prof-form-group">
-		<label class="prof-label" for="email">Email address</label>
-		<input
-		  type="email"
-		  id="email"
-		  name="email"
-		  class="prof-input"
-		  value="{{ user.email }}"
-		  placeholder="you@example.com"
-		  required
-		  autocomplete="email"
-		/>
-	  </div>
-	  <div class="prof-form-footer">
-		<button type="submit" class="btn btn-primary btn-sm" id="btn-save-info" disabled>
-		  <i class="fas fa-check"></i> Save changes
-		</button>
-	  </div>
-	</form>
+  <div class="card-head">
+    <h3><i class="fas fa-pen-to-square"></i> Edit profile</h3>
   </div>
+  <form
+    method="POST"
+    action="{{ url_for('profile.update_info') }}"
+    class="prof-form"
+    id="form-info"
+  >
+    <div class="prof-form-group">
+      <label class="prof-label" for="full_name">Full name</label>
+      <input
+        type="text"
+        id="full_name"
+        name="full_name"
+        class="prof-input"
+        value="{{ user.full_name }}"
+        placeholder="Your full name"
+        required
+        autocomplete="name"
+      />
+    </div>
+    <div class="prof-form-group">
+      <label class="prof-label" for="email">Email address</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        class="prof-input"
+        value="{{ user.email }}"
+        placeholder="you@example.com"
+        required
+        autocomplete="email"
+      />
+    </div>
+    <div class="prof-form-footer">
+      <button
+        type="submit"
+        class="btn btn-primary btn-sm"
+        id="btn-save-info"
+        disabled
+      >
+        <i class="fas fa-check"></i> Save changes
+      </button>
+    </div>
+  </form>
+</div>

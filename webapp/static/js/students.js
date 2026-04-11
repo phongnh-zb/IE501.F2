@@ -30,7 +30,6 @@ const IMD_BANDS = {
   8: "80–90%",
   9: "90–100%",
 };
-
 const LEVEL_ICON = {
   crit: "fa-triangle-exclamation",
   high: "fa-arrow-up-right-dots",
@@ -199,13 +198,11 @@ function _renderRow(s) {
 }
 
 function _renderTable(rows) {
+  const card = document.getElementById("st-table-card");
   const tbody = document.getElementById("st-tbody");
-  const loading = document.getElementById("st-loading");
-  const emptyEl = document.getElementById("st-empty");
   const wrap = document.querySelector(".st-table-wrap");
+  const emptyEl = document.getElementById("st-empty");
   const pagination = document.getElementById("st-pagination");
-
-  if (loading) loading.classList.add("hidden");
 
   if (!rows.length) {
     if (wrap) wrap.classList.add("hidden");
@@ -248,7 +245,7 @@ function _renderSummary(total, tiers) {
 
   const avgEng = _filtered.length
     ? (
-        (_filtered.reduce((sum, s) => sum + (s.engagement_ratio ?? 0), 0) /
+        (_filtered.reduce((s, r) => s + (r.engagement_ratio ?? 0), 0) /
           _filtered.length) *
         100
       ).toFixed(1)
@@ -343,7 +340,6 @@ function _updateClearBtn() {
 
 function _applyFiltersAndSort() {
   let data = _all;
-
   if (_state.risk.length)
     data = data.filter((s) => _state.risk.includes(s.risk));
   if (_state.module) data = data.filter((s) => s.code_module === _state.module);
@@ -384,16 +380,13 @@ const Students = (() => {
   function _render() {
     const { page, pageSize } = _state;
     const total = _filtered.length;
-    const start = (page - 1) * pageSize;
-    const rows = _filtered.slice(start, start + pageSize);
-
+    const rows = _filtered.slice((page - 1) * pageSize, page * pageSize);
     const tiers = {
       critical: _filtered.filter((s) => s.risk === 3).length,
       high: _filtered.filter((s) => s.risk === 2).length,
       watch: _filtered.filter((s) => s.risk === 1).length,
       safe: _filtered.filter((s) => s.risk === 0).length,
     };
-
     _renderTable(rows);
     _renderSummary(total, tiers);
     _renderPagination(total, pageSize, page);
@@ -424,8 +417,8 @@ const Students = (() => {
     _state.page = 1;
     const input = document.getElementById("search-input");
     if (input) input.value = "";
-    const clear = document.getElementById("search-clear");
-    if (clear) clear.style.display = "none";
+    const clr = document.getElementById("search-clear");
+    if (clr) clr.style.display = "none";
     applyFilters();
   }
 
@@ -547,9 +540,9 @@ const Students = (() => {
       fr.style.display = "inline-flex";
     }
 
-    const sub = ((s.submission_rate ?? 0) * 100).toFixed(0) + "%";
     _setText("pf-score", (s.score ?? 0).toFixed(2));
     _setText("pf-w-score", (s.weighted_score ?? 0).toFixed(2));
+    const sub = ((s.submission_rate ?? 0) * 100).toFixed(0) + "%";
     _setText("pf-sub-rate", sub);
     _setColor(
       "pf-sub-rate",
@@ -659,8 +652,11 @@ const Students = (() => {
     if (_state.order !== "desc") p.set("order", _state.order);
     if (_state.page !== 1) p.set("page", _state.page);
     if (_state.pageSize !== 50) p.set("page_size", _state.pageSize);
-    const url = "/students" + (p.toString() ? "?" + p.toString() : "");
-    history.pushState(_state, "", url);
+    history.pushState(
+      _state,
+      "",
+      "/students" + (p.toString() ? "?" + p.toString() : ""),
+    );
   }
 
   function _restoreFromURL() {
@@ -766,7 +762,8 @@ const Students = (() => {
   async function init() {
     _restoreFromURL();
 
-    document.querySelector(".st-table-wrap")?.classList.add("hidden");
+    const loadingEl = document.getElementById("st-loading");
+    const cardEl = document.getElementById("st-table-card");
 
     try {
       const res = await fetch("/api/students");
@@ -777,12 +774,14 @@ const Students = (() => {
         note.textContent = "Updated " + json.last_updated;
     } catch (err) {
       console.error("[Students] fetch failed:", err);
-      const tbody = document.getElementById("st-tbody");
-      if (tbody)
-        tbody.innerHTML = `<tr><td colspan="9" class="st-loading-cell" style="color:var(--crit)">
-        Failed to load student data.</td></tr>`;
+      if (loadingEl)
+        loadingEl.innerHTML =
+          '<i class="fas fa-circle-exclamation" style="color:var(--crit)"></i> Failed to load student data.';
       return;
     }
+
+    if (loadingEl) loadingEl.classList.add("hidden");
+    if (cardEl) cardEl.classList.remove("hidden");
 
     _populateDropdowns();
     RiskFilter.syncFromState();

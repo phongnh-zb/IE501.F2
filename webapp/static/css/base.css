@@ -44,6 +44,7 @@
 
   --sh-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
   --sh-md: 0 4px 12px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.04);
+  --sh-lg: 0 8px 24px rgba(0,0,0,.10), 0 4px 8px rgba(0,0,0,.05);
 
   --nav-h: 56px;
   --max-w: 1300px;
@@ -53,7 +54,7 @@
 /* ── Reset ───────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
-body { font-family: var(--font); font-size: .9375rem; line-height: 1.6; color: var(--tx-1); background: var(--bg); min-height: 100vh; }
+body { font-family: var(--font); font-size: .9375rem; line-height: 1.6; color: var(--tx-1); background: var(--bg); min-height: 100vh; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 button { font-family: var(--font); cursor: pointer; }
@@ -61,6 +62,7 @@ img, svg { display: block; }
 
 /* ── Utility ─────────────────────────────────────────────────────────────── */
 .mono        { font-family: var(--font-mono); }
+.hidden      { display: none !important; }
 
 .text-left   { text-align: left; }
 .text-center { text-align: center; }
@@ -88,7 +90,7 @@ img, svg { display: block; }
 .w-full      { width: 100%; }
 
 /* ── Page shell ──────────────────────────────────────────────────────────── */
-.shell { min-height: calc(100vh - var(--nav-h)); display: flex; flex-direction: column; }
+.shell { min-height: 100vh; display: flex; flex-direction: column; }
 
 .container {
   max-width: var(--max-w);
@@ -258,6 +260,13 @@ img, svg { display: block; }
 }
 .btn-ghost:hover { background: rgba(255,255,255,.14); color: #fff; }
 
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
+
 .btn-outline {
   background: var(--surface);
   border-color: var(--bd-2);
@@ -368,9 +377,7 @@ img, svg { display: block; }
     gap: .125rem;
     z-index: 199;
   }
-  .nav-links.mobile-open li {
-    width: 100%;
-  }
+  .nav-links.mobile-open li { width: 100%; }
   .nav-links.mobile-open .nav-link {
     display: flex;
     justify-content: flex-start;
@@ -571,35 +578,4 @@ img, svg { display: block; }
   font-size: .75rem;
   color: var(--tx-3);
   font-family: var(--font-mono);
-}
-
-/* ── Text selection ──────────────────────────────────────────────────────── */
-/* Block selection on UI chrome — buttons, labels, nav, structural elements */
-.navbar, .footer,
-.btn, .badge,
-.card-head,
-.stat-label, .stat-note,
-.page-header h1, .page-header p,
-.st-toolbar,
-.st-table thead,
-.st-status-badge, .st-module-tag, .st-pres-tag, .st-tier-chip,
-.st-field-group-label,
-.st-panel-tab, .st-pg-btn, .st-pg-ellipsis,
-.attention-bar-label, .withdrew-pill, .attention-demo,
-.dash-hero-title, .dash-hero-sub,
-.prof-label, .prof-field-label, .prof-avatar, .prof-role-badge,
-.nav-dropdown-item {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* Always allow selection on data values and form inputs */
-input, textarea, select,
-.st-id, .mono,
-.prof-field-value,
-.prof-input,
-.attention-id,
-.nav-dropdown-email {
-  user-select: text !important;
-  -webkit-user-select: text !important;
 }
