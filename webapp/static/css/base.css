@@ -186,7 +186,7 @@ img, svg { display: block; }
 .footer {
   background: var(--navy);
   border-top: 1px solid rgba(255,255,255,.06);
-  padding: .875rem 0;
+  padding: 1rem 0;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
 }
@@ -217,7 +217,7 @@ img, svg { display: block; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: .875rem 1.25rem;
+  padding: .625rem 1rem;
   border-bottom: 1px solid var(--bd);
 }
 
@@ -231,7 +231,7 @@ img, svg { display: block; }
 }
 
 .card-head h3 i { font-size: .8125rem; color: var(--tx-3); }
-.card-body { padding: 1.25rem; }
+.card-body { padding: 1rem; }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .btn {
@@ -492,13 +492,11 @@ img, svg { display: block; }
   margin-top: .15rem;
 }
 
-.nav-dropdown-body { padding: .375rem 0; }
-
 .nav-dropdown-item {
   display: flex;
   align-items: center;
   gap: .5rem;
-  padding: .5rem 1rem;
+  padding: .625rem 1rem;
   font-size: .8125rem;
   color: var(--tx-2);
   text-decoration: none;

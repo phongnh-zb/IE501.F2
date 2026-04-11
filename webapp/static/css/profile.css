@@ -19,7 +19,7 @@
 	display: flex;
 	align-items: center;
 	gap: 1.25rem;
-	padding: 1.5rem 1.25rem 1rem;
+	padding: 1.25rem 1rem;
 	border-bottom: 1px solid var(--bd);
   }
   
@@ -52,16 +52,12 @@
   
   .prof-role-badge { margin-top: .5rem; }
   
-  .prof-fields {
-	padding: .375rem 0 .5rem;
-  }
-  
   .prof-field-row {
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
 	gap: 1rem;
-	padding: .5rem 1.25rem;
+	padding: .625rem 1rem;
 	border-bottom: 1px solid var(--bd);
 	font-size: .8125rem;
   }
@@ -104,7 +100,7 @@
   .prof-form { padding: 0; }
   
   .prof-form-group {
-	padding: 1rem 1.25rem .25rem;
+	padding: .625rem 1rem;
   }
   
   .prof-label {
@@ -201,7 +197,7 @@
   
   /* ── Form footer ─────────────────────────────────────────────────────────── */
   .prof-form-footer {
-	padding: 1rem 1.25rem 1.25rem;
+	padding: 1rem 1rem 1.25rem;
 	border-top: 1px solid var(--bd);
 	margin-top: .75rem;
 	display: flex;

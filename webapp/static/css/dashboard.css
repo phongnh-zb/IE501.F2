@@ -2,7 +2,7 @@
 .dash-hero {
 	background: var(--navy);
 	border-radius: var(--r-xl);
-	padding: 1.75rem 2rem 0;
+	padding: 1.5rem 1.75rem;
 	margin-bottom: 1rem;
 	overflow: hidden;
 	-webkit-font-smoothing: antialiased;
@@ -115,7 +115,7 @@
 	grid-template-columns: 72px 1fr auto;
 	align-items: center;
 	gap: .75rem;
-	padding: .625rem 1.25rem;
+	padding: .625rem 1rem;
 	border-bottom: 1px solid var(--bd);
 	cursor: pointer;
 	transition: background var(--ease);
@@ -248,10 +248,9 @@
 	.attention-row {
 	  grid-template-columns: 1fr auto;
 	  align-items: start;
-	  padding: .75rem 1rem;
 	  gap: .375rem .75rem;
 	}
-	.attention-id        { grid-column: 1; grid-row: 1; padding-top: .1rem; }
+	.attention-id        { grid-column: 1; grid-row: 1; }
 	.attention-badge-col { grid-column: 2; grid-row: 1; }
 	.attention-meta      { grid-column: 1 / -1; grid-row: 2; }
   }

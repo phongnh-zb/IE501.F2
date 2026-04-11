@@ -140,7 +140,7 @@
   }
   
   .models-table thead th {
-	padding: .625rem .75rem;
+	padding: .625rem 1rem;
 	font-size: .6875rem;
 	font-weight: 700;
 	text-transform: uppercase;
@@ -151,7 +151,7 @@
   }
   
   .models-table tbody td {
-	padding: .625rem .75rem;
+	padding: .625rem 1rem;
 	border-bottom: 1px solid var(--bd);
 	color: var(--tx-2);
 	vertical-align: middle;
@@ -248,7 +248,7 @@
   }
   
   .models-tuning-table thead th {
-	padding: .5rem 1rem;
+	padding: .625rem 1rem;
 	font-size: .6875rem;
 	font-weight: 700;
 	text-transform: uppercase;
@@ -257,9 +257,9 @@
 	border-bottom: 1px solid var(--bd);
 	white-space: nowrap;
   }
-  
+
   .models-tuning-table tbody td {
-	padding: .5rem 1rem;
+	padding: .625rem 1rem;
 	border-bottom: 1px solid var(--bd);
 	color: var(--tx-2);
   }
