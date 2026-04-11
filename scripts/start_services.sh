@@ -48,20 +48,12 @@ if jps | grep -q "NameNode"; then
     hdfs dfsadmin -safemode leave 2>/dev/null && echo "✔ HDFS safe mode cleared." || echo "  (safe mode already off or NameNode not ready)"
 fi
 
-# ── Docker (optional — dashboard only) ───────────────────────────────────────
-# Docker is not required for the pipeline. This block starts the web dashboard
-# container if Docker is available and the daemon is running.
-if command -v docker &>/dev/null; then
-    if docker info &>/dev/null 2>&1; then
-        echo ">>> [DOCKER] Daemon is running — starting dashboard container..."
-        docker compose -f "$PROJECT_ROOT/docker-compose.yaml" up -d 2>/dev/null \
-            && echo "✔ Dashboard container started." \
-            || echo "  (docker compose failed — check docker-compose.yaml)"
-    else
-        echo ">>> [DOCKER] Daemon not running — skipping dashboard container."
-        echo "  Start Docker Desktop manually to run the web dashboard via Docker."
-        echo "  Or run directly: python3 webapp/app.py"
-    fi
+# ── HBase schema migration ────────────────────────────────────────────────────
+# Adds any missing column families to existing HBase tables.
+# Safe to run every time — alter is a no-op if the family already exists.
+if jps | grep -q "HMaster"; then
+    echo ">>> [MIGRATE] Running HBase schema migration..."
+    bash "$PROJECT_ROOT/scripts/migrate_hbase_schema.sh"
 else
-    echo ">>> [DOCKER] Not installed — skipping."
+    echo ">>> [MIGRATE] Skipping schema migration — HMaster is not running."
 fi

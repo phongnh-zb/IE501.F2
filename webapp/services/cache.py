@@ -216,6 +216,7 @@ def _parse_model_row(key, value):
         "is_best":       value.get(b"info:is_best", b"false").decode() == "true",
         "timestamp":     value.get(b"info:timestamp", b"").decode(),
         "importance":    json.loads(value.get(b"importance:json", b"[]").decode()),
+        "tuning":        json.loads(value.get(b"tuning:json", b"{}").decode()),
     }
 
 
@@ -247,6 +248,7 @@ def get_model_history_from_hbase():
             for key, value in table.scan():
                 row = _parse_model_row(key, value)
                 row.pop("importance", None)
+                row.pop("tuning", None)
                 all_rows.append(row)
     except Exception as e:
         logger.error(f">>> [CACHE] Model history fetch error: {e}")

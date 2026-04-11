@@ -8,14 +8,18 @@ from src.models.train import train_model
 
 # CV is O(n_folds × train_time). For sequentially-boosted models use a
 # lightweight CV estimator (fewer iterations) to complete in reasonable time.
+# XGBoostClassifierWrapper uses native sklearn CV internally — excluded here.
 CV_LITE_PARAMS = {
-    "GBTClassifier":      {"maxIter": 5},
-    "SparkXGBClassifier": {"n_estimators": 20},
+    "GBTClassifier": {"maxIter": 5},
 }
 
 
 def _cv_estimator(classifier):
     name = type(classifier).__name__
+    # Non-Spark-ML wrappers (e.g. XGBoostClassifierWrapper) don't implement
+    # fitMultiple — CrossValidator will fail. Return None to signal skip.
+    if not hasattr(classifier, 'uid'):
+        return None
     if name not in CV_LITE_PARAMS:
         return classifier
     lite_kwargs = CV_LITE_PARAMS[name]
@@ -97,12 +101,17 @@ def run_evaluation(classifiers, train_data, test_data, num_cv_folds=3):
         # Evaluation on held-out test set
         metrics = evaluate_model(model, test_data)
 
-        # Cross-validation AUC — boosted models use lite estimator
+        # Cross-validation AUC — boosted models use lite estimator;
+        # non-Spark-ML wrappers return None and skip CV entirely.
         cv_est = _cv_estimator(classifier)
-        if cv_est is not classifier:
-            lite = CV_LITE_PARAMS[type(classifier).__name__]
-            print(f">>> [EVAL] CV for {name} uses lite params {lite}")
-        cv_auc = cross_validate(cv_est, train_data, num_folds=num_cv_folds)
+        if cv_est is None:
+            cv_auc = 0.0
+            print(f">>> [EVAL] CV skipped for {name} (non-Spark-ML estimator)")
+        else:
+            if cv_est is not classifier:
+                lite = CV_LITE_PARAMS[type(classifier).__name__]
+                print(f">>> [EVAL] CV for {name} uses lite params {lite}")
+            cv_auc = cross_validate(cv_est, train_data, num_folds=num_cv_folds)
 
         metrics["cv_auc"]        = cv_auc
         metrics["training_time"] = round(train_time, 2)

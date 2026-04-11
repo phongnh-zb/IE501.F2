@@ -32,7 +32,7 @@ def main():
 
     # 3 — Hyperparameter tuning for tree-based models via grid search
     print("\n>>> [TRAIN] Running hyperparameter tuning...")
-    classifiers = tune_classifiers(classifiers, train_data, num_folds=3)
+    classifiers, tuning_results = tune_classifiers(classifiers, train_data, num_folds=3)
 
     # 4 — Full training + evaluation on all classifiers
     results = run_evaluation(classifiers, train_data, test_data)
@@ -42,7 +42,8 @@ def main():
     save_model(results["best_model"], results["best_name"], run_id=run_id)
 
     # 6 — Write all metrics to HBase
-    write_model_results(results["all_results"], results["best_name"], FEATURE_COLS, run_id)
+    write_model_results(results["all_results"], results["best_name"], FEATURE_COLS, run_id,
+                        tuning_results=tuning_results)
     print(f">>> [TRAIN] Run ID: {run_id}")
 
     spark.stop()

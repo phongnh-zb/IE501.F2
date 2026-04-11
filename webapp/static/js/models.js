@@ -190,6 +190,17 @@ const Models = (() => {
     Plotly.newPlot("chart-history", traces, layout, PLY_CFG);
   }
 
+  function showTuning(modelName) {
+    document.querySelectorAll("#tuning-tabs .models-imp-tab").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.model === modelName);
+    });
+    document.querySelectorAll(".models-tuning-panel").forEach((panel) => {
+      panel.classList.add("hidden");
+    });
+    const id = "tuning-panel-" + modelName.replace(/ /g, "-");
+    document.getElementById(id)?.classList.remove("hidden");
+  }
+
   /* ── Init ────────────────────────────────────────────────────────────── */
   function init(models, history) {
     _models = models;
@@ -203,5 +214,5 @@ const Models = (() => {
     if (best) showImportance(best.name);
   }
 
-  return { init, showImportance };
+  return { init, showImportance, showTuning };
 })();

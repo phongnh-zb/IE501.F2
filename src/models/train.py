@@ -7,11 +7,83 @@ from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 from pyspark.sql.functions import col, count, when
 
 try:
-    from xgboost.spark import SparkXGBClassifier
+    import numpy as np
+    from xgboost import XGBClassifier
     XGBOOST_AVAILABLE = True
 except ImportError:
     XGBOOST_AVAILABLE = False
     print(">>> [TRAIN] xgboost not installed — XGBoost will be skipped.")
+
+if XGBOOST_AVAILABLE:
+    class XGBoostModelWrapper:
+        def __init__(self, booster, feature_importances):
+            self._booster            = booster
+            self.featureImportances  = feature_importances  # matches tree model API
+
+        def transform(self, spark_df):
+            from pyspark.ml.linalg import Vectors, VectorUDT
+            from pyspark.sql.types import DoubleType, StructField, StructType
+
+            pdf   = spark_df.toPandas()
+            X     = np.array([v.toArray() for v in pdf["features"]])
+            proba = self._booster.predict_proba(X)[:, 1]
+            preds = (proba >= 0.5).astype(float)
+
+            # rawPrediction must be a 2-element Vector for BinaryClassificationEvaluator.
+            # Explicit schema avoids Spark misidentifying types from Pandas inference.
+            rows = [
+                (
+                    float(pdf["label"].iloc[i]),
+                    float(preds[i]),
+                    Vectors.dense([1.0 - float(proba[i]), float(proba[i])]),
+                )
+                for i in range(len(preds))
+            ]
+
+            schema = StructType([
+                StructField("label",         DoubleType(), False),
+                StructField("prediction",    DoubleType(), False),
+                StructField("rawPrediction", VectorUDT(), False),
+            ])
+
+            return spark_df.sparkSession.createDataFrame(rows, schema=schema)
+
+        def extractParamMap(self):
+            return {}
+
+    class XGBoostClassifierWrapper:
+        def __init__(self, n_estimators=100, max_depth=6, **kwargs):
+            self._params = {"n_estimators": n_estimators, "max_depth": max_depth, **kwargs}
+
+        def fit(self, spark_df):
+            pdf  = spark_df.toPandas()
+            X    = np.array([v.toArray() for v in pdf["features"]])
+            y    = pdf["label"].values
+            w    = pdf["weight"].values if "weight" in pdf.columns else None
+
+            clf = XGBClassifier(
+                **self._params,
+                use_label_encoder=False,
+                eval_metric="logloss",
+                verbosity=0,
+            )
+            clf.fit(X, y, sample_weight=w)
+
+            # Build a DenseVector-like object for featureImportances
+            scores     = clf.feature_importances_
+            importances = type("FakeVector", (), {"toArray": lambda self: scores})()
+
+            return XGBoostModelWrapper(clf, importances)
+
+        def extractParamMap(self):
+            return {}
+
+        def copy(self, extra=None):
+            params = dict(self._params)
+            if extra:
+                params.update({p.name if hasattr(p, "name") else p: v for p, v in extra.items()})
+            return XGBoostClassifierWrapper(**params)
+
 
 FEATURE_COLS = [
     # VLE engagement (6)
@@ -82,10 +154,7 @@ def get_classifiers():
         ),
     }
     if XGBOOST_AVAILABLE:
-        classifiers["XGBoost"] = SparkXGBClassifier(
-            label_col="label", features_col="features",
-            weight_col="weight", n_estimators=100, max_depth=6, use_gpu=False,
-        )
+        classifiers["XGBoost"] = XGBoostClassifierWrapper(n_estimators=100, max_depth=6)
     return classifiers
 
 
@@ -103,7 +172,8 @@ def tune_classifiers(classifiers, train_data, num_folds=3):
             .build(),
     }
 
-    tuned = dict(classifiers)
+    tuned          = dict(classifiers)
+    tuning_results = {}   # {model_name: {combos: [...], best_params: {...}, best_auc: float}}
 
     for name, param_grid in grids.items():
         if name not in classifiers:
@@ -119,21 +189,35 @@ def tune_classifiers(classifiers, train_data, num_folds=3):
             parallelism=2,
         )
         try:
-            cv_model = cv.fit(train_data)
+            cv_model    = cv.fit(train_data)
             best_idx    = cv_model.avgMetrics.index(max(cv_model.avgMetrics))
             best_params = param_grid[best_idx]
             best_auc    = cv_model.avgMetrics[best_idx]
+
             print(f"    Best CV AUC: {best_auc:.4f}")
             for p, v in best_params.items():
                 print(f"    {p.name}: {v}")
-            # Build a new unfitted estimator with the best hyperparameters.
-            # cv_model.bestModel is a fitted model; we need the unfitted estimator
-            # so run_evaluation can train it with full timing and metrics.
+
+            # Build structured result for storage
+            combos = [
+                {
+                    "params": {p.name: v for p, v in combo.items()},
+                    "cv_auc": round(auc, 4),
+                    "is_best": (i == best_idx),
+                }
+                for i, (combo, auc) in enumerate(zip(param_grid, cv_model.avgMetrics))
+            ]
+            tuning_results[name] = {
+                "combos":      combos,
+                "best_params": {p.name: v for p, v in best_params.items()},
+                "best_auc":    round(best_auc, 4),
+                "num_folds":   num_folds,
+            }
             tuned[name] = estimator.copy(best_params)
         except Exception as e:
             print(f"    Grid search failed ({name}): {e} — using default.")
 
-    return tuned
+    return tuned, tuning_results
 
 
 def prepare_features(df, feature_cols=None, label_col="label", test_ratio=0.2, seed=42):

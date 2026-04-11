@@ -1,0 +1,73 @@
+{% set tuned_models = models | selectattr("tuning") | selectattr("tuning.combos") | list %}
+{% if tuned_models %}
+<div class="card models-tuning-card pipe-section">
+  <div class="card-head" style="flex-direction:column; align-items:flex-start; gap:.625rem;">
+    <h3><i class="fas fa-sliders"></i> Hyperparameter tuning</h3>
+    <div class="models-imp-tabs" id="tuning-tabs">
+      {% for m in tuned_models %}
+      <button
+        class="models-imp-tab {% if loop.first %}active{% endif %}"
+        data-model="{{ m.name }}"
+        onclick="Models.showTuning('{{ m.name }}')">
+        {{ m.name }}
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card-body">
+
+    {% for m in tuned_models %}
+    <div class="models-tuning-panel {% if not loop.first %}hidden{% endif %}"
+         id="tuning-panel-{{ m.name | replace(' ', '-') }}">
+
+      <div class="models-tuning-meta text-sm text-3">
+        {{ m.tuning.num_folds }}-fold cross-validation ·
+        {{ m.tuning.combos | length }} parameter combinations
+      </div>
+
+      <div class="models-tuning-table-wrap">
+        <table class="models-tuning-table">
+          <thead>
+            <tr>
+              {% for param in m.tuning.combos[0].params.keys() %}
+              <th>{{ param }}</th>
+              {% endfor %}
+              <th class="text-right">CV-AUC</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for combo in m.tuning.combos | sort(attribute='cv_auc', reverse=True) %}
+            <tr class="{{ 'models-tuning-best' if combo.is_best else '' }}">
+              {% for val in combo.params.values() %}
+              <td class="mono">{{ val }}</td>
+              {% endfor %}
+              <td class="text-right mono {% if combo.is_best %}models-cell-best{% endif %}">
+                {{ "%.4f" | format(combo.cv_auc) }}
+              </td>
+              <td>
+                {% if combo.is_best %}
+                <span class="badge badge-safe" style="font-size:.6rem; padding:.15rem .4rem;">Selected</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="models-tuning-best-row">
+        <i class="fas fa-circle-check" style="color:var(--safe);"></i>
+        Best:
+        {% for k, v in m.tuning.best_params.items() %}
+        <code class="models-tuning-code">{{ k }} = {{ v }}</code>
+        {% endfor %}
+        → CV-AUC <strong class="mono">{{ "%.4f" | format(m.tuning.best_auc) }}</strong>
+      </div>
+
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+{% endif %}
