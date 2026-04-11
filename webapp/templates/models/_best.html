@@ -23,14 +23,20 @@
 
   <div class="models-best-metrics">
     {% for label, key in [
-        ('CV-AUC',    'cv_auc'),
+        ('Composite', 'composite_score'),
         ('Accuracy',  'accuracy'),
         ('Precision', 'precision'),
         ('Recall',    'recall'),
         ('F1',        'f1'),
       ] %}
     <div class="models-best-stat">
-      <span class="models-best-stat-val mono">{{ "%.4f" | format(best[key]) }}</span>
+      <span class="models-best-stat-val mono">
+        {% if key == 'composite_score' %}
+        {{ "%.4f" | format(best[key] | default(0.0)) }}
+        {% else %}
+        {{ "%.4f" | format(best[key]) }}
+        {% endif %}
+      </span>
       <span class="models-best-stat-lbl">{{ label }}</span>
     </div>
     {% if not loop.last %}<div class="models-best-divider"></div>{% endif %}

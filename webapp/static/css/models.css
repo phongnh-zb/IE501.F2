@@ -121,31 +121,26 @@
   }
   
   /* ── Row layouts ─────────────────────────────────────────────────────────── */
-  .models-row2,
   .models-row3 {
 	display: grid;
+	grid-template-columns: 1fr 1fr;
 	gap: 1rem;
-	margin-bottom: 1rem;
   }
   
-  .models-row2 > *,
   .models-row3 > * { min-width: 0; }
-  
-  .models-row2 { grid-template-columns: 1fr 360px; }
-  .models-row3 { grid-template-columns: 1fr 1fr; }
   
   /* ── Comparison table ────────────────────────────────────────────────────── */
   .models-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   
   .models-table {
 	width: 100%;
-	min-width: 640px;
+	min-width: 780px;
 	border-collapse: collapse;
 	font-size: .8125rem;
   }
   
   .models-table thead th {
-	padding: .625rem 1rem;
+	padding: .625rem .75rem;
 	font-size: .6875rem;
 	font-weight: 700;
 	text-transform: uppercase;
@@ -156,7 +151,7 @@
   }
   
   .models-table tbody td {
-	padding: .625rem 1rem;
+	padding: .625rem .75rem;
 	border-bottom: 1px solid var(--bd);
 	color: var(--tx-2);
 	vertical-align: middle;
@@ -171,6 +166,7 @@
   
   .models-table tbody tr:hover td { background: var(--surface-2); }
   .models-row-best td { background: var(--navy-light); }
+  .models-row-best td:first-child { border-left: 3px solid var(--navy); }
   .models-row-best:hover td { background: var(--navy-light) !important; filter: brightness(.97); }
   
   .models-cell-best { color: var(--navy) !important; font-weight: 700; }
@@ -216,7 +212,6 @@
   
   /* ── Responsive ──────────────────────────────────────────────────────────── */
   @media (max-width: 900px) {
-	.models-row2 { grid-template-columns: 1fr; }
 	.models-row3 { grid-template-columns: 1fr; }
 	.models-best {
 	  flex-direction: column;
@@ -224,6 +219,8 @@
 	  gap: 1rem;
 	}
 	.models-best-time { align-self: flex-end; }
+	.models-table .col-score,
+	.models-table .col-time { display: none; }
   }
   
   @media (max-width: 640px) {
@@ -234,7 +231,13 @@
 	.models-imp-tab      { font-size: .6875rem; padding: 0 .5rem; }
   }
   
-  /* ── Tuning card ─────────────────────────────────────────────────────────── */
+  /* ── Standalone section spacing ──────────────────────────────────────────── */
+  .models-best       { margin-bottom: 1.25rem; }
+  .models-table-card { margin-bottom: 1.25rem; }
+  .models-row2       { margin-bottom: 1.25rem; }
+  .models-row3       { margin-bottom: 1.25rem; }
+  .models-imp-card   { margin-bottom: 1.25rem; }
+  .models-tuning-card { margin-bottom: 1.25rem; }
   .models-tuning-meta {
 	margin-bottom: .875rem;
   }

@@ -1,6 +1,6 @@
 {% set tuned_models = models | selectattr("tuning") | selectattr("tuning.combos") | list %}
 {% if tuned_models %}
-<div class="card models-tuning-card pipe-section">
+<div class="card models-tuning-card">
   <div class="card-head" style="flex-direction:column; align-items:flex-start; gap:.625rem;">
     <h3><i class="fas fa-sliders"></i> Hyperparameter tuning</h3>
     <div class="models-imp-tabs" id="tuning-tabs">
@@ -30,22 +30,22 @@
           <thead>
             <tr>
               {% for param in m.tuning.combos[0].params.keys() %}
-              <th>{{ param }}</th>
+              <th class="text-left">{{ param }}</th>
               {% endfor %}
               <th class="text-right">CV-AUC</th>
-              <th></th>
+              <th class="text-right"></th>
             </tr>
           </thead>
           <tbody>
             {% for combo in m.tuning.combos | sort(attribute='cv_auc', reverse=True) %}
             <tr class="{{ 'models-tuning-best' if combo.is_best else '' }}">
               {% for val in combo.params.values() %}
-              <td class="mono">{{ val }}</td>
+              <td class="text-left mono">{{ val }}</td>
               {% endfor %}
               <td class="text-right mono {% if combo.is_best %}models-cell-best{% endif %}">
                 {{ "%.4f" | format(combo.cv_auc) }}
               </td>
-              <td>
+              <td class="text-right">
                 {% if combo.is_best %}
                 <span class="badge badge-safe" style="font-size:.6rem; padding:.15rem .4rem;">Selected</span>
                 {% endif %}

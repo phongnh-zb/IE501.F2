@@ -23,6 +23,7 @@ def main():
         df_assessments=raw["assessments"],
         df_reg=raw["student_registration"],
         df_vle_info=raw["vle"],
+        df_courses=raw["courses"],
     )
 
     load_to_hdfs(df_final, config.HDFS_OUTPUT_PATH)

@@ -26,3 +26,15 @@ CACHE_INTERVAL      = 600
 FLASK_PORT  = 5001
 SECRET_KEY  = os.environ.get("SECRET_KEY", "dev-key-change-before-production")
 DB_PATH     = os.path.join(os.path.dirname(__file__), '..', 'data', 'auth', 'users.db')
+
+# ── Model selection weights ───────────────────────────────────────────────────
+# Weighted composite score used to pick the best model after evaluation.
+# Weights must sum to 1.0. Adjust to reprioritise operational vs ranking metrics.
+# cv_auc is 0.0 for non-Spark-ML models (e.g. XGBoost) — its weight still
+# applies but effectively does not contribute for those models.
+MODEL_SELECTION_WEIGHTS = {
+    "auc":     0.40,   # discrimination across all thresholds
+    "f1":      0.30,   # balanced precision/recall at deployment threshold
+    "recall":  0.20,   # catching dropouts matters more than false alarms
+    "cv_auc":  0.10,   # cross-validation stability
+}

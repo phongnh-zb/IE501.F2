@@ -26,17 +26,25 @@ const Models = (() => {
     const axes = ["AUC", "CV-AUC", "Accuracy", "Precision", "Recall", "F1"];
     const keys = ["auc", "cv_auc", "accuracy", "precision", "recall", "f1"];
 
-    const traces = _models.map((m, i) => ({
-      type: "scatterpolar",
-      name: m.name,
-      r: [...keys.map((k) => m[k]), m[keys[0]]],
-      theta: [...axes, axes[0]],
-      fill: "toself",
-      fillcolor: COLORS[i % COLORS.length] + "22",
-      line: { color: COLORS[i % COLORS.length], width: 2 },
-      hovertemplate:
-        "<b>" + m.name + "</b><br>%{theta}: %{r:.4f}<extra></extra>",
-    }));
+    const traces = _models.map((m, i) => {
+      // Replace cv_auc=0 with null when CV was skipped — avoids misleading
+      // zero spike on the radar for non-Spark-ML models (e.g. XGBoost)
+      const vals = keys.map((k) =>
+        k === "cv_auc" && m[k] === 0 ? null : m[k],
+      );
+      return {
+        type: "scatterpolar",
+        name: m.name,
+        r: [...vals, vals[0]],
+        theta: [...axes, axes[0]],
+        fill: "toself",
+        fillcolor: COLORS[i % COLORS.length] + "22",
+        line: { color: COLORS[i % COLORS.length], width: 2 },
+        connectgaps: false,
+        hovertemplate:
+          "<b>" + m.name + "</b><br>%{theta}: %{r:.4f}<extra></extra>",
+      };
+    });
 
     const layout = {
       ...PLY_BASE,
@@ -53,8 +61,17 @@ const Models = (() => {
         },
         bgcolor: "rgba(0,0,0,0)",
       },
-      margin: { t: 20, r: 20, b: 40, l: 20 },
-      legend: { orientation: "h", y: -0.12, font: { size: 10.5 }, itemgap: 12 },
+      margin: { t: 20, r: 20, b: 20, l: 20 },
+      legend: {
+        orientation: "h",
+        x: 0.5,
+        xanchor: "center",
+        y: -0.18,
+        yanchor: "top",
+        font: { size: 9.5 },
+        itemgap: 6,
+        bgcolor: "rgba(255,255,255,0.8)",
+      },
       showlegend: true,
     };
 
@@ -99,7 +116,7 @@ const Models = (() => {
 
     const layout = {
       ...PLY_BASE,
-      margin: { t: 8, r: 24, b: 8, l: 130 },
+      margin: { t: 8, r: 24, b: 28, l: 160 },
       xaxis: {
         range: [0, Math.max(...values) * 1.12],
         gridcolor: "#edf2f7",
@@ -149,8 +166,13 @@ const Models = (() => {
 
     const layout = {
       ...PLY_BASE,
-      margin: { t: 8, r: 16, b: 52, l: 52 },
-      xaxis: { gridcolor: "#edf2f7", zeroline: false },
+      margin: { t: 8, r: 16, b: 72, l: 52 },
+      xaxis: {
+        gridcolor: "#edf2f7",
+        zeroline: false,
+        tickangle: -35,
+        tickfont: { size: 9.5 },
+      },
       yaxis: {
         range: [0, 1],
         gridcolor: "#edf2f7",
@@ -158,7 +180,16 @@ const Models = (() => {
         title: { text: "AUC", standoff: 8 },
         tickfont: { family: "'Space Mono', monospace", size: 10 },
       },
-      legend: { orientation: "h", y: -0.18, font: { size: 10.5 }, itemgap: 12 },
+      legend: {
+        orientation: "h",
+        x: 0.5,
+        xanchor: "center",
+        y: -0.28,
+        yanchor: "top",
+        font: { size: 9.5 },
+        itemgap: 6,
+        bgcolor: "rgba(255,255,255,0.8)",
+      },
       hovermode: "x unified",
     };
 
@@ -201,6 +232,21 @@ const Models = (() => {
     document.getElementById(id)?.classList.remove("hidden");
   }
 
+  /* ── Resize observer ─────────────────────────────────────────────────── */
+
+  function _initResizeObserver() {
+    // Plotly responsive:true only fires on window resize, not CSS reflow.
+    // ResizeObserver catches grid collapse (2-col → 1-col at 900px breakpoint).
+    if (typeof ResizeObserver === "undefined") return;
+    ["chart-radar", "chart-importance", "chart-history"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      new ResizeObserver(() => {
+        if (el.children.length) Plotly.Plots.resize(el);
+      }).observe(el);
+    });
+  }
+
   /* ── Init ────────────────────────────────────────────────────────────── */
   function init(models, history) {
     _models = models;
@@ -212,6 +258,8 @@ const Models = (() => {
     // Render importance for the best model by default
     const best = _models.find((m) => m.is_best) || _models[0];
     if (best) showImportance(best.name);
+
+    _initResizeObserver();
   }
 
   return { init, showImportance, showTuning };

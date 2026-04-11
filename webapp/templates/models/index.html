@@ -21,15 +21,23 @@
 </div>
 {% else %}
 {% include 'models/_best.html' %}
+
 <div class="models-row2">
-  {% include 'models/_table.html' %}
-  {% include 'models/_radar.html' %}
+{% include 'models/_table.html' %}
 </div>
+
 <div class="models-row3">
-  {% include 'models/_importance.html' %}
+  {% include 'models/_radar.html' %}
   {% include 'models/_history.html' %}
 </div>
+
+<div class="models-row2">
+{% include 'models/_importance.html' %}
+</div>
+
+<div class="models-row2">
 {% include 'models/_tuning.html' %}
+</div
 {% endif %}
 {% endblock %}
 

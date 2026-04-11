@@ -80,14 +80,21 @@ def cross_validate(classifier, train_data, label_col="label", num_folds=3):
         return 0.0
 
 
+def _composite_score(metrics, weights):
+    return sum(metrics.get(k, 0.0) * w for k, w in weights.items())
+
+
 def run_evaluation(classifiers, train_data, test_data, num_cv_folds=3):
-    results   = {}
-    best_name  = ""
-    best_auc   = 0.0
-    best_model = None
+    from configs.config import MODEL_SELECTION_WEIGHTS
+
+    results       = {}
+    best_name     = ""
+    best_score    = -1.0
+    best_model    = None
 
     print("=" * 60)
     print("STARTING MODEL TRAINING & EVALUATION")
+    print(f"Selection criterion: weighted composite {MODEL_SELECTION_WEIGHTS}")
     print("=" * 60)
 
     for name, classifier in classifiers.items():
@@ -116,28 +123,33 @@ def run_evaluation(classifiers, train_data, test_data, num_cv_folds=3):
         metrics["cv_auc"]        = cv_auc
         metrics["training_time"] = round(train_time, 2)
 
-        print(f"    AUC:       {metrics['auc']:.4f}")
-        print(f"    CV AUC:    {metrics['cv_auc']:.4f}")
-        print(f"    Accuracy:  {metrics['accuracy']:.4f}")
-        print(f"    Precision: {metrics['precision']:.4f}")
-        print(f"    Recall:    {metrics['recall']:.4f}")
-        print(f"    F1:        {metrics['f1']:.4f}")
-        print(f"    Train:     {train_time:.2f}s")
+        score = _composite_score(metrics, MODEL_SELECTION_WEIGHTS)
+        metrics["composite_score"] = round(score, 4)
+
+        print(f"    AUC:             {metrics['auc']:.4f}")
+        print(f"    CV AUC:          {metrics['cv_auc']:.4f}")
+        print(f"    Accuracy:        {metrics['accuracy']:.4f}")
+        print(f"    Precision:       {metrics['precision']:.4f}")
+        print(f"    Recall:          {metrics['recall']:.4f}")
+        print(f"    F1:              {metrics['f1']:.4f}")
+        print(f"    Train:           {train_time:.2f}s")
+        print(f"    Composite score: {score:.4f}")
 
         results[name] = {"model": model, "metrics": metrics}
 
-        if metrics["auc"] > best_auc:
-            best_auc   = metrics["auc"]
+        if score > best_score:
+            best_score = score
             best_name  = name
             best_model = model
 
     print("\n" + "=" * 60)
-    print(f"BEST MODEL: {best_name}  (AUC: {best_auc:.4f})")
+    print(f"BEST MODEL: {best_name}  (composite: {best_score:.4f})")
+    print(f"WEIGHTS: {MODEL_SELECTION_WEIGHTS}")
     print("=" * 60)
 
     return {
         "all_results": results,
         "best_name":   best_name,
         "best_model":  best_model,
-        "best_auc":    best_auc,
+        "best_auc":    results[best_name]["metrics"]["auc"],
     }

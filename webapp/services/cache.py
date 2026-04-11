@@ -52,6 +52,8 @@ def fetch_all_data_from_hbase():
                         "code_presentation": value.get(b"info:code_presentation", b"").decode("utf-8"),
                         "clicks":            _safe_float(value, b"info:total_clicks"),
                         "active_days":       _safe_int(value,   b"info:active_days"),
+                        "active_weeks":      _safe_int(value,   b"info:active_weeks"),
+                        "engagement_ratio":  _safe_float(value, b"info:engagement_ratio"),
                         "forum_clicks":      _safe_float(value, b"info:forum_clicks"),
                         "quiz_clicks":       _safe_float(value, b"info:quiz_clicks"),
                         "resource_clicks":   _safe_float(value, b"info:resource_clicks"),
@@ -59,6 +61,9 @@ def fetch_all_data_from_hbase():
                         "weighted_score":    _safe_float(value, b"info:weighted_avg_score"),
                         "submission_rate":   _safe_float(value, b"info:submission_rate"),
                         "avg_days_early":    _safe_float(value, b"info:avg_days_early"),
+                        "exam_score":        _safe_float(value, b"info:exam_score"),
+                        "tma_score":         _safe_float(value, b"info:tma_score"),
+                        "cma_score":         _safe_float(value, b"info:cma_score"),
                         "withdrew_early":    _safe_int(value,   b"info:withdrew_early"),
                         "num_prev_attempts": _safe_int(value,   b"info:num_prev_attempts"),
                         "imd_band_encoded":  _safe_int(value,   b"info:imd_band_encoded", -1),
@@ -211,8 +216,9 @@ def _parse_model_row(key, value):
         "precision":     _safe_float(value, b"metrics:precision"),
         "recall":        _safe_float(value, b"metrics:recall"),
         "f1":            _safe_float(value, b"metrics:f1"),
-        "cv_auc":        _safe_float(value, b"metrics:cv_auc"),
-        "training_time": _safe_float(value, b"metrics:training_time"),
+        "cv_auc":          _safe_float(value, b"metrics:cv_auc"),
+        "composite_score": _safe_float(value, b"metrics:composite_score"),
+        "training_time":   _safe_float(value, b"metrics:training_time"),
         "is_best":       value.get(b"info:is_best", b"false").decode() == "true",
         "timestamp":     value.get(b"info:timestamp", b"").decode(),
         "importance":    json.loads(value.get(b"importance:json", b"[]").decode()),
@@ -237,7 +243,7 @@ def get_model_results_from_hbase():
         if name not in latest or row["run_id"] > latest[name]["run_id"]:
             latest[name] = row
 
-    return sorted(latest.values(), key=lambda x: x["auc"], reverse=True)
+    return sorted(latest.values(), key=lambda x: x.get("composite_score", x["auc"]), reverse=True)
 
 
 def get_model_history_from_hbase():

@@ -1,41 +1,63 @@
 <div class="card">
-	<div class="card-head">
-	  <h3><i class="fas fa-table"></i> Comparison</h3>
-	  <span class="text-xs text-3">Latest run · sorted by AUC</span>
-	</div>
-	<div class="models-table-wrap">
-	  <table class="models-table">
-		<thead>
-		  <tr>
-			<th class="text-left">Model</th>
-			<th class="text-right">AUC</th>
-			<th class="text-right">CV-AUC</th>
-			<th class="text-right">Accuracy</th>
-			<th class="text-right">Precision</th>
-			<th class="text-right">Recall</th>
-			<th class="text-right">F1</th>
-			<th class="text-right">Time</th>
-		  </tr>
-		</thead>
-		<tbody>
-		  {% for m in models %}
-		  {% set row_cls = 'models-row-best' if m.is_best else '' %}
-		  <tr class="{{ row_cls }}">
-			<td class="text-left">
-			  <span class="models-model-name">{{ m.name }}</span>
-			  {% if m.is_best %}
-			  <span class="badge badge-safe models-best-badge">Best</span>
-			  {% endif %}
-			</td>
-			{% for key in ['auc','cv_auc','accuracy','precision','recall','f1'] %}
-			{% set val = m[key] %}
-			{% set highlight = 'models-cell-best' if m.is_best else '' %}
-			<td class="text-right mono {{ highlight }}">{{ "%.4f" | format(val) }}</td>
-			{% endfor %}
-			<td class="text-right mono text-3">{{ m.training_time }}s</td>
-		  </tr>
-		  {% endfor %}
-		</tbody>
-	  </table>
-	</div>
+  <div class="card-head">
+    <h3><i class="fas fa-table"></i> Comparison</h3>
+    <span class="text-xs text-3">Latest run · sorted by composite score</span>
   </div>
+  <div class="models-table-wrap">
+    <table class="models-table">
+      <thead>
+        <tr>
+          <th class="text-left">Model</th>
+          <th class="text-right">AUC</th>
+          <th class="text-right">CV-AUC</th>
+          <th class="text-right">Accuracy</th>
+          <th class="text-right">Precision</th>
+          <th class="text-right">Recall</th>
+          <th class="text-right">F1</th>
+          <th
+            class="text-right col-score"
+            title="Weighted composite: 40% AUC · 30% F1 · 20% Recall · 10% CV-AUC"
+          >
+            Score
+          </th>
+          <th class="text-right col-time">Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in models | sort(attribute='composite_score', reverse=True) %}
+        {% set row_cls = 'models-row-best' if m.is_best else '' %}
+        <tr class="{{ row_cls }}">
+          <td class="text-left">
+            <span class="models-model-name">{{ m.name }}</span>
+            {% if m.is_best %}
+            <span class="badge badge-safe models-best-badge">Best</span>
+            {% endif %}
+          </td>
+          {% for key in ['auc','cv_auc','accuracy','precision','recall','f1'] %}
+          {% set val = m[key] %} {% set highlight = 'models-cell-best' if
+          m.is_best else '' %} {% if key == 'cv_auc' and val == 0.0 %}
+          <td
+            class="text-right mono text-3 {{ highlight }}"
+            title="CV skipped (non-Spark-ML estimator)"
+          >
+            —
+          </td>
+          {% else %}
+          <td class="text-right mono {{ highlight }}">
+            {{ "%.4f" | format(val) }}
+          </td>
+          {% endif %} {% endfor %}
+          <td
+            class="text-right mono col-score {% if m.is_best %}models-cell-best{% endif %}"
+          >
+            {{ "%.4f" | format(m.composite_score | default(0.0)) }}
+          </td>
+          <td class="text-right mono text-3 col-time">
+            {{ m.training_time }}s
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>

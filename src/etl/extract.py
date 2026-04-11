@@ -6,12 +6,13 @@ def extract_raw_data(spark, config):
     def read_csv(filename):
         return spark.read.csv(f"{base}{filename}", header=True, inferSchema=True)
 
-    df_info         = read_csv(config.FILE_STUDENT_INFO)
-    df_vle          = read_csv(config.FILE_STUDENT_VLE)
+    df_info           = read_csv(config.FILE_STUDENT_INFO)
+    df_vle            = read_csv(config.FILE_STUDENT_VLE)
     df_student_assess = read_csv(config.FILE_STUDENT_ASSESSMENT)
-    df_reg          = read_csv(config.FILE_STUDENT_REGISTRATION)
-    df_assessments  = read_csv(config.FILE_ASSESSMENTS)
-    df_vle_info     = read_csv(config.FILE_VLE)
+    df_reg            = read_csv(config.FILE_STUDENT_REGISTRATION)
+    df_assessments    = read_csv(config.FILE_ASSESSMENTS)
+    df_vle_info       = read_csv(config.FILE_VLE)
+    df_courses        = read_csv(config.FILE_COURSES)
 
     print(
         f">>> [ETL:EXTRACT] Loaded — "
@@ -20,7 +21,8 @@ def extract_raw_data(spark, config):
         f"studentAssessment: {df_student_assess.count()} rows, "
         f"studentRegistration: {df_reg.count()} rows, "
         f"assessments: {df_assessments.count()} rows, "
-        f"vle: {df_vle_info.count()} rows"
+        f"vle: {df_vle_info.count()} rows, "
+        f"courses: {df_courses.count()} rows"
     )
 
     return {
@@ -30,4 +32,5 @@ def extract_raw_data(spark, config):
         "student_registration": df_reg,
         "assessments":          df_assessments,
         "vle":                  df_vle_info,
+        "courses":              df_courses,
     }

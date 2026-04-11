@@ -46,6 +46,8 @@ def write_predictions(rows, connection):
     for row in rows:
         clicks          = float(row["total_clicks"])
         active_days     = int(row["active_days"])
+        active_weeks    = int(row["active_weeks"])
+        engagement_ratio = float(row["engagement_ratio"])
         forum_clicks    = float(row["forum_clicks"])
         quiz_clicks     = float(row["quiz_clicks"])
         resource_clicks = float(row["resource_clicks"])
@@ -53,6 +55,9 @@ def write_predictions(rows, connection):
         w_score         = float(row["weighted_avg_score"])
         sub_rate        = float(row["submission_rate"])
         avg_days_early  = float(row["avg_days_early"])
+        exam_score      = float(row["exam_score"])
+        tma_score       = float(row["tma_score"])
+        cma_score       = float(row["cma_score"])
         withdrew_early  = int(row["withdrew_early"])
         prev_attempts   = int(row["num_prev_attempts"])
 
@@ -63,22 +68,27 @@ def write_predictions(rows, connection):
         batch.put(
             str(row["id_student"]).encode(),
             {
-                b"info:code_module":        str(row["code_module"]).encode(),
-                b"info:code_presentation":  str(row["code_presentation"]).encode(),
-                b"info:total_clicks":       str(clicks).encode(),
-                b"info:active_days":        str(active_days).encode(),
-                b"info:forum_clicks":       str(forum_clicks).encode(),
-                b"info:quiz_clicks":        str(quiz_clicks).encode(),
-                b"info:resource_clicks":    str(resource_clicks).encode(),
-                b"info:avg_score":          str(score).encode(),
-                b"info:weighted_avg_score": str(w_score).encode(),
-                b"info:submission_rate":    str(sub_rate).encode(),
-                b"info:avg_days_early":     str(avg_days_early).encode(),
-                b"info:withdrew_early":     str(withdrew_early).encode(),
-                b"info:num_prev_attempts":  str(prev_attempts).encode(),
-                b"info:imd_band_encoded":   str(int(row["imd_band_encoded"])).encode(),
-                b"info:disability_encoded": str(int(row["disability_encoded"])).encode(),
-                b"info:days_before_start":  str(float(row["days_before_start"])).encode(),
+                b"info:code_module":         str(row["code_module"]).encode(),
+                b"info:code_presentation":   str(row["code_presentation"]).encode(),
+                b"info:total_clicks":        str(clicks).encode(),
+                b"info:active_days":         str(active_days).encode(),
+                b"info:active_weeks":        str(active_weeks).encode(),
+                b"info:engagement_ratio":    str(engagement_ratio).encode(),
+                b"info:forum_clicks":        str(forum_clicks).encode(),
+                b"info:quiz_clicks":         str(quiz_clicks).encode(),
+                b"info:resource_clicks":     str(resource_clicks).encode(),
+                b"info:avg_score":           str(score).encode(),
+                b"info:weighted_avg_score":  str(w_score).encode(),
+                b"info:submission_rate":     str(sub_rate).encode(),
+                b"info:avg_days_early":      str(avg_days_early).encode(),
+                b"info:exam_score":          str(exam_score).encode(),
+                b"info:tma_score":           str(tma_score).encode(),
+                b"info:cma_score":           str(cma_score).encode(),
+                b"info:withdrew_early":      str(withdrew_early).encode(),
+                b"info:num_prev_attempts":   str(prev_attempts).encode(),
+                b"info:imd_band_encoded":    str(int(row["imd_band_encoded"])).encode(),
+                b"info:disability_encoded":  str(int(row["disability_encoded"])).encode(),
+                b"info:days_before_start":   str(float(row["days_before_start"])).encode(),
                 # Display-only demographic fields
                 b"info:gender":             str(row["gender"] or "").encode(),
                 b"info:region":             str(row["region"] or "").encode(),
@@ -108,9 +118,10 @@ def main():
         all_rows = df.select(
             "id_student",
             "code_module", "code_presentation",
-            "total_clicks", "active_days",
+            "total_clicks", "active_days", "active_weeks", "engagement_ratio",
             "forum_clicks", "quiz_clicks", "resource_clicks",
             "avg_score", "weighted_avg_score", "submission_rate", "avg_days_early",
+            "exam_score", "tma_score", "cma_score",
             "withdrew_early", "num_prev_attempts",
             "imd_band_encoded", "disability_encoded", "days_before_start",
             # Display-only demographic fields

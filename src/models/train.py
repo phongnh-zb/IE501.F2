@@ -86,18 +86,23 @@ if XGBOOST_AVAILABLE:
 
 
 FEATURE_COLS = [
-    # VLE engagement (6)
+    # VLE engagement (8)
     "total_clicks",
     "active_days",
     "clicks_per_day",
     "forum_clicks",
     "quiz_clicks",
     "resource_clicks",
-    # Academic performance (4)
+    "active_weeks",
+    "engagement_ratio",
+    # Academic performance (7)
     "avg_score",
     "weighted_avg_score",
     "submission_rate",
     "avg_days_early",
+    "exam_score",
+    "tma_score",
+    "cma_score",
     # Registration behavior (2)
     "withdrew_early",
     "days_before_start",

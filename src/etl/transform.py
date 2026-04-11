@@ -1,6 +1,7 @@
 from pyspark.sql.functions import avg as _avg
-from pyspark.sql.functions import (col, count, countDistinct, lit,
-                                   regexp_extract)
+from pyspark.sql.functions import col, count, countDistinct
+from pyspark.sql.functions import floor as _floor
+from pyspark.sql.functions import lit, regexp_extract
 from pyspark.sql.functions import sum as _sum
 from pyspark.sql.functions import when
 
@@ -13,24 +14,30 @@ RESOURCE_TYPES = ["resource", "url", "page", "oucontent", "pdf", "html_activity"
 FEATURE_FILL_ZERO = [
     "total_clicks", "active_days", "clicks_per_day",
     "forum_clicks", "quiz_clicks", "resource_clicks",
+    "active_weeks", "engagement_ratio",
     "avg_score", "weighted_avg_score", "submission_rate", "avg_days_early",
+    "exam_score", "tma_score", "cma_score",
     "withdrew_early", "days_before_start",
     "num_prev_attempts", "imd_band_encoded", "disability_encoded",
 ]
 
 
-def _build_vle_features(df_vle, df_vle_info):
+def _build_vle_features(df_vle, df_vle_info, df_courses):
     df_typed = df_vle.join(
         df_vle_info.select("id_site", "activity_type"),
         "id_site",
         "left",
     )
-    return (
+
+    df_agg = (
         df_typed
         .groupBy(*JOIN_KEYS)
         .agg(
             _sum("sum_click").alias("total_clicks"),
             countDistinct("date").alias("active_days"),
+            # active_weeks — distinct 7-day periods with any engagement
+            # VLE date is "days from module start", so floor(date/7) = week index
+            countDistinct(_floor(col("date") / 7)).alias("active_weeks"),
             _sum(
                 when(col("activity_type").isin(FORUM_TYPES), col("sum_click")).otherwise(0)
             ).alias("forum_clicks"),
@@ -47,8 +54,28 @@ def _build_vle_features(df_vle, df_vle_info):
         )
     )
 
+    # engagement_ratio — fraction of the module duration the student was active
+    # Requires courses.csv for module_presentation_length
+    df_with_length = df_agg.join(
+        df_courses.select("code_module", "code_presentation", "module_presentation_length"),
+        ["code_module", "code_presentation"],
+        "left",
+    )
+
+    return df_with_length.withColumn(
+        "engagement_ratio",
+        when(
+            col("module_presentation_length").isNotNull() & (col("module_presentation_length") > 0),
+            col("active_days") / col("module_presentation_length"),
+        ).otherwise(0.0),
+    ).drop("module_presentation_length")
+
 
 def _build_assessment_features(df_student_assess, df_assessments):
+    # Filter banked assessments — is_banked=1 means the score was transferred
+    # from a previous attempt and does not reflect current module performance.
+    df_student_assess = df_student_assess.filter(col("is_banked") == 0)
+
     df_total_per_module = (
         df_assessments
         .groupBy("code_module", "code_presentation")
@@ -56,7 +83,10 @@ def _build_assessment_features(df_student_assess, df_assessments):
     )
 
     df_joined = df_student_assess.join(
-        df_assessments.select("id_assessment", "code_module", "code_presentation", "weight", "date"),
+        df_assessments.select(
+            "id_assessment", "code_module", "code_presentation",
+            "weight", "date", "assessment_type",
+        ),
         "id_assessment",
         "left",
     )
@@ -74,6 +104,16 @@ def _build_assessment_features(df_student_assess, df_assessments):
             _avg(
                 when(col("date_submitted").isNotNull(), col("date") - col("date_submitted"))
             ).alias("avg_days_early"),
+            # Per-type scores — avg score for each assessment category
+            _avg(
+                when(col("assessment_type") == "Exam", col("score"))
+            ).alias("exam_score"),
+            _avg(
+                when(col("assessment_type") == "TMA", col("score"))
+            ).alias("tma_score"),
+            _avg(
+                when(col("assessment_type") == "CMA", col("score"))
+            ).alias("cma_score"),
         )
     )
 
@@ -118,7 +158,7 @@ def _build_demographic_features(df_info):
             col("num_of_prev_attempts").alias("num_prev_attempts"),
             "imd_band_encoded",
             "disability_encoded",
-            # Display-only fields — stored in HBase for the educator, not passed to VectorAssembler
+            # Display-only fields — stored in HBase for the educator
             col("gender"),
             col("region"),
             col("highest_education"),
@@ -138,14 +178,14 @@ def _label_students(df_info):
     )
 
 
-def transform_data(df_info, df_vle, df_student_assess, df_assessments, df_reg, df_vle_info):
+def transform_data(df_info, df_vle, df_student_assess, df_assessments, df_reg, df_vle_info, df_courses):
     print(">>> [ETL:TRANSFORM] Building dropout label from final_result...")
     df_base = _label_students(df_info).select(*JOIN_KEYS, "label")
 
-    print(">>> [ETL:TRANSFORM] Building VLE engagement features (6)...")
-    df_vle_feats = _build_vle_features(df_vle, df_vle_info)
+    print(">>> [ETL:TRANSFORM] Building VLE engagement features (8)...")
+    df_vle_feats = _build_vle_features(df_vle, df_vle_info, df_courses)
 
-    print(">>> [ETL:TRANSFORM] Building academic performance features (4)...")
+    print(">>> [ETL:TRANSFORM] Building academic performance features (7)...")
     df_assess_feats = _build_assessment_features(df_student_assess, df_assessments)
 
     print(">>> [ETL:TRANSFORM] Building registration behavior features (2)...")
@@ -164,7 +204,10 @@ def transform_data(df_info, df_vle, df_student_assess, df_assessments, df_reg, d
         .fillna(0, subset=FEATURE_FILL_ZERO)
     )
 
-    row_count = df_final.count()
-    print(f">>> [ETL:TRANSFORM] Done — {row_count} rows, 15 features across 4 groups.")
+    row_count    = df_final.count()
+    feature_cols = [c for c in FEATURE_FILL_ZERO if c in df_final.columns]
+    n_groups     = len([_build_vle_features, _build_assessment_features,
+                        _build_registration_features, _build_demographic_features])
+    print(f">>> [ETL:TRANSFORM] Done — {row_count} rows, {len(feature_cols)} features across {n_groups} groups.")
 
     return df_final
