@@ -18,6 +18,41 @@ SYSTEM_CACHE = {
 RISK_LABELS = {0: "Safe", 1: "Watch", 2: "High Risk", 3: "Critical"}
 
 
+def summarize_students_by_id(rows):
+    worst = {}
+    for x in rows:
+        sid = x.get("id")
+        if not sid:
+            continue
+        r = x.get("risk", 0)
+        try:
+            r = int(r)
+        except (TypeError, ValueError):
+            r = 0
+        r = max(0, min(3, r))
+        if sid not in worst or r > worst[sid]:
+            worst[sid] = r
+
+    safe = watch = high = critical = 0
+    for r in worst.values():
+        if r == 0:
+            safe += 1
+        elif r == 1:
+            watch += 1
+        elif r == 2:
+            high += 1
+        else:
+            critical += 1
+
+    return {
+        "unique_students": len(worst),
+        "safe":          safe,
+        "watch":         watch,
+        "high_risk":     high,
+        "critical":      critical,
+    }
+
+
 def _safe_float(value_dict, key, default=0.0):
     raw = value_dict.get(key, str(default).encode())
     try:
@@ -46,9 +81,16 @@ def fetch_all_data_from_hbase():
             for key, value in table.scan():
                 try:
                     risk_tier = _safe_int(value, b"prediction:risk_tier")
+
+                    # Row key is "{id_student}|{code_module}|{code_presentation}".
+                    # Split to recover the plain student ID for display and search,
+                    # while code_module and code_presentation are read from their
+                    # HBase columns below (authoritative source).
+                    student_id = key.decode("utf-8").split("|")[0]
+
                     data_buffer.append({
-                        "id":                key.decode("utf-8"),
-                        "code_module":       value.get(b"info:code_module", b"").decode("utf-8"),
+                        "id":                student_id,
+                        "code_module":       value.get(b"info:code_module",       b"").decode("utf-8"),
                         "code_presentation": value.get(b"info:code_presentation", b"").decode("utf-8"),
                         "clicks":            _safe_float(value, b"info:total_clicks"),
                         "active_days":       _safe_int(value,   b"info:active_days"),
@@ -69,7 +111,6 @@ def fetch_all_data_from_hbase():
                         "imd_band_encoded":  _safe_int(value,   b"info:imd_band_encoded", -1),
                         "disability_encoded":_safe_int(value,   b"info:disability_encoded", -1),
                         "days_before_start": _safe_float(value, b"info:days_before_start"),
-                        # Display-only demographic fields
                         "gender":            value.get(b"info:gender",            b"").decode("utf-8"),
                         "region":            value.get(b"info:region",            b"").decode("utf-8"),
                         "highest_education": value.get(b"info:highest_education", b"").decode("utf-8"),
@@ -114,8 +155,8 @@ def get_filter_options(modules=None):
     data = SYSTEM_CACHE.get("data", [])
     if modules:
         data = [x for x in data if x.get("code_module", "") in modules]
-    mods  = sorted({x["code_module"]       for x in data if x.get("code_module")})
-    pres  = sorted({x["code_presentation"] for x in data if x.get("code_presentation")})
+    mods = sorted({x["code_module"]       for x in data if x.get("code_module")})
+    pres = sorted({x["code_presentation"] for x in data if x.get("code_presentation")})
     return {"modules": mods, "presentations": pres}
 
 
@@ -131,42 +172,35 @@ def get_data_from_memory(
 
     all_data = SYSTEM_CACHE["data"]
 
-    # Module filter — lecturer-scoped
     if modules:
         all_data = [x for x in all_data if x.get("code_module", "") in modules]
 
-    # UI module filter — specific module selected from dropdown
     if module_filter:
         all_data = [x for x in all_data if x.get("code_module", "") == module_filter]
 
-    # Risk tier filter — accepts a set of tier ints, e.g. {2, 3} for High+Critical
     if risk_filter:
         all_data = [x for x in all_data if x["risk"] in risk_filter]
 
-    # Presentation filter
     if presentation_filter:
         all_data = [x for x in all_data if x.get("code_presentation") == presentation_filter]
 
-    # Withdrew early filter
     if withdrew_filter is not None:
         all_data = [x for x in all_data if x["withdrew_early"] == withdrew_filter]
 
-    # Search by student ID
     if search_query:
         q = search_query.lower()
         filtered_data = [x for x in all_data if q in x["id"].lower()]
     else:
         filtered_data = list(all_data)
 
-    # Tier counts on the fully filtered (pre-pagination) set for summary bar
+    agg = summarize_students_by_id(filtered_data)
     tier_counts = {
-        "safe":     sum(1 for x in filtered_data if x["risk"] == 0),
-        "watch":    sum(1 for x in filtered_data if x["risk"] == 1),
-        "high":     sum(1 for x in filtered_data if x["risk"] == 2),
-        "critical": sum(1 for x in filtered_data if x["risk"] == 3),
+        "safe":     agg["safe"],
+        "watch":    agg["watch"],
+        "high":     agg["high_risk"],
+        "critical": agg["critical"],
     }
 
-    # Sort — risk sorts by tier desc then score asc within same tier
     reverse = order == "desc"
     try:
         if sort_by == "risk":
@@ -193,12 +227,17 @@ def get_data_from_memory(
     }
 
 
-def get_student_by_id(student_id):
+def get_student_by_id(student_id, code_module=None, code_presentation=None):
     if not SYSTEM_CACHE["is_ready"]:
         return None
     for st in SYSTEM_CACHE["data"]:
-        if st["id"] == student_id:
-            return st
+        if st["id"] != student_id:
+            continue
+        if code_module and st.get("code_module") != code_module:
+            continue
+        if code_presentation and st.get("code_presentation") != code_presentation:
+            continue
+        return st
     return None
 
 
@@ -209,20 +248,20 @@ def _parse_model_row(key, value):
     else:
         model_key, run_id = raw_key, "00000000_000000"
     return {
-        "name":          model_key.replace("_", " "),
-        "run_id":        run_id,
-        "auc":           _safe_float(value, b"metrics:auc"),
-        "accuracy":      _safe_float(value, b"metrics:accuracy"),
-        "precision":     _safe_float(value, b"metrics:precision"),
-        "recall":        _safe_float(value, b"metrics:recall"),
-        "f1":            _safe_float(value, b"metrics:f1"),
-        "cv_auc":          _safe_float(value, b"metrics:cv_auc"),
-        "composite_score": _safe_float(value, b"metrics:composite_score"),
-        "training_time":   _safe_float(value, b"metrics:training_time"),
-        "is_best":       value.get(b"info:is_best", b"false").decode() == "true",
-        "timestamp":     value.get(b"info:timestamp", b"").decode(),
-        "importance":    json.loads(value.get(b"importance:json", b"[]").decode()),
-        "tuning":        json.loads(value.get(b"tuning:json", b"{}").decode()),
+        "name":           model_key.replace("_", " "),
+        "run_id":         run_id,
+        "auc":            _safe_float(value, b"metrics:auc"),
+        "accuracy":       _safe_float(value, b"metrics:accuracy"),
+        "precision":      _safe_float(value, b"metrics:precision"),
+        "recall":         _safe_float(value, b"metrics:recall"),
+        "f1":             _safe_float(value, b"metrics:f1"),
+        "cv_auc":         _safe_float(value, b"metrics:cv_auc"),
+        "composite_score":_safe_float(value, b"metrics:composite_score"),
+        "training_time":  _safe_float(value, b"metrics:training_time"),
+        "is_best":        value.get(b"info:is_best", b"false").decode() == "true",
+        "timestamp":      value.get(b"info:timestamp", b"").decode(),
+        "importance":     json.loads(value.get(b"importance:json", b"[]").decode()),
+        "tuning":         json.loads(value.get(b"tuning:json", b"{}").decode()),
     }
 
 

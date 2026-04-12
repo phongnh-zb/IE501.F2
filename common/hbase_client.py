@@ -29,3 +29,10 @@ def ensure_table(connection, table_name, column_families):
         print(f">>> [HBASE] Table '{table_name}' not found — creating...")
         connection.create_table(table_name, {cf: dict() for cf in column_families})
         print(f">>> [HBASE] Table '{table_name}' created.")
+
+
+def truncate_table(connection, table_name):
+    if table_name.encode() in connection.tables():
+        print(f">>> [HBASE] Truncating '{table_name}'...")
+        connection.delete_table(table_name, disable=True)
+        print(f">>> [HBASE] '{table_name}' dropped — will be recreated by ensure_table.")

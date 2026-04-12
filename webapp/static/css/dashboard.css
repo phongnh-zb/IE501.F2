@@ -217,8 +217,14 @@
   }
   
   .attention-badge-col { flex-shrink: 0; }
-  .attention-empty { padding: 1.25rem; text-align: center; }
-  
+  .attention-empty {
+	padding: 0 1rem;
+	min-height: 120px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+  }
+
   /* ── Responsive ──────────────────────────────────────────────────────────── */
   @media (max-width: 1024px) {
 	.dash-donuts { grid-template-columns: 1fr 1fr; }

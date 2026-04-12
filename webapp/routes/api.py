@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime
 
-from flask import Blueprint, jsonify, send_file
+from flask import Blueprint, jsonify, request, send_file
 from flask_login import current_user, login_required
 
 from webapp.services.cache import (SYSTEM_CACHE, fetch_all_data_from_hbase,
-                                   get_student_by_id)
+                                   get_student_by_id, summarize_students_by_id)
 from webapp.services.pdf_export import (generate_cohort_report_pdf,
                                         generate_student_report_pdf)
 from webapp.services.recommendations import generate_smart_recommendations
@@ -16,7 +16,6 @@ api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 
 def _visible_data():
-    """Return the cache data filtered to the current user's module access."""
     data = SYSTEM_CACHE["data"]
     if current_user.is_admin or not current_user.modules:
         return data
@@ -49,21 +48,17 @@ def realtime_data():
             "summary": {"total": 0, "safe": 0, "watch": 0, "high_risk": 0, "critical": 0},
         })
 
-    data     = _visible_data()
-    total    = len(data)
-    safe     = sum(1 for x in data if x["risk"] == 0)
-    watch    = sum(1 for x in data if x["risk"] == 1)
-    high     = sum(1 for x in data if x["risk"] == 2)
-    critical = sum(1 for x in data if x["risk"] == 3)
+    data = _visible_data()
+    agg  = summarize_students_by_id(data)
 
     return jsonify({
         "raw_data": data,
         "summary": {
-            "total":         total,
-            "safe":          safe,
-            "watch":         watch,
-            "high_risk":     high,
-            "critical":      critical,
+            "total":         agg["unique_students"],
+            "safe":          agg["safe"],
+            "watch":         agg["watch"],
+            "high_risk":     agg["high_risk"],
+            "critical":      agg["critical"],
             "last_updated":  SYSTEM_CACHE["last_updated"],
         },
     })
@@ -72,11 +67,13 @@ def realtime_data():
 @api_bp.route("/student/<student_id>")
 @login_required
 def student_detail(student_id):
-    student = get_student_by_id(student_id)
+    module       = request.args.get("module",       "", type=str).strip() or None
+    presentation = request.args.get("presentation", "", type=str).strip() or None
+
+    student = get_student_by_id(student_id, code_module=module, code_presentation=presentation)
     if not student:
         return jsonify({"error": "Not found"}), 404
 
-    # Lecturers cannot access students outside their modules
     if not current_user.can_see_module(student.get("code_module", "")):
         return jsonify({"error": "Access denied"}), 403
 
@@ -87,7 +84,10 @@ def student_detail(student_id):
 @api_bp.route("/student/<student_id>/report")
 @login_required
 def student_report(student_id):
-    student = get_student_by_id(student_id)
+    module       = request.args.get("module",       "", type=str).strip() or None
+    presentation = request.args.get("presentation", "", type=str).strip() or None
+
+    student = get_student_by_id(student_id, code_module=module, code_presentation=presentation)
     if not student:
         return jsonify({"error": "Not found"}), 404
 

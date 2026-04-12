@@ -8,6 +8,8 @@ from reportlab.lib.units import cm
 from reportlab.platypus import (HRFlowable, Paragraph, SimpleDocTemplate,
                                 Spacer, Table, TableStyle)
 
+from webapp.services.cache import summarize_students_by_id
+
 PAGE_W, _ = A4
 MARGIN     = 2 * cm
 CONTENT_W  = PAGE_W - 2 * MARGIN
@@ -32,6 +34,57 @@ _RISK_COLOR = {
 _GENDER = {"M": "Male", "F": "Female"}
 
 
+def _risk_int(st):
+    r = st.get("risk", 0)
+    try:
+        r = int(r)
+    except (TypeError, ValueError):
+        r = 0
+    return max(0, min(3, r))
+
+
+def _per_student_metric_means(enrollment_rows):
+    """Mean of score / engagement / clicks per student, then mean across students."""
+    by_id = {}
+    for st in enrollment_rows:
+        sid = st.get("id")
+        if not sid:
+            continue
+        by_id.setdefault(sid, []).append(st)
+    if not by_id:
+        return 0.0, 0.0, 0.0
+    score_sum = eng_sum = clk_sum = 0.0
+    for rows in by_id.values():
+        n = len(rows) or 1
+        score_sum += sum(r.get("score", 0) or 0 for r in rows) / n
+        eng_sum += sum(r.get("engagement_ratio", 0) or 0 for r in rows) / n
+        clk_sum += sum(r.get("clicks", 0) or 0 for r in rows) / n
+    m = len(by_id)
+    return score_sum / m, eng_sum / m, clk_sum / m
+
+
+def _representative_row_per_student(enrollment_rows):
+    by_id = {}
+    for st in enrollment_rows:
+        sid = st.get("id")
+        if not sid:
+            continue
+        by_id.setdefault(sid, []).append(st)
+
+    reps = []
+    for rows in by_id.values():
+        worst = max(_risk_int(r) for r in rows)
+        at_worst = [r for r in rows if _risk_int(r) == worst]
+        pick = min(
+            at_worst,
+            key=lambda x: (x.get("score", 100), x.get("code_module", ""), x.get("code_presentation", "")),
+        )
+        row = dict(pick)
+        row["risk"] = worst
+        reps.append(row)
+    return reps
+
+
 def _base_styles():
     base = getSampleStyleSheet()
     return {
@@ -54,6 +107,10 @@ def _base_styles():
         "body": ParagraphStyle(
             "body", parent=base["Normal"],
             fontSize=9, textColor=COLOR_TEXT, leading=13,
+        ),
+        "muted": ParagraphStyle(
+            "muted", parent=base["Normal"],
+            fontSize=8, textColor=COLOR_MUTED, leading=11, spaceAfter=2,
         ),
         "rec": ParagraphStyle(
             "rec", parent=base["Normal"],
@@ -225,6 +282,7 @@ def generate_student_report_pdf(student, recommendations):
 
 
 def generate_cohort_report_pdf(students):
+    """students: enrollment-level rows (same shape as cache). Counts = unique students."""
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer, pagesize=A4,
@@ -235,32 +293,40 @@ def generate_cohort_report_pdf(students):
     s = _base_styles()
     story = []
 
-    total    = len(students)
-    critical = [st for st in students if st.get("risk") == 3]
-    high     = [st for st in students if st.get("risk") == 2]
-    watch    = [st for st in students if st.get("risk") == 1]
-    safe_lst = [st for st in students if st.get("risk") == 0]
-    at_risk  = critical + high   # High Risk + Critical require action
-    pct_at_risk = len(at_risk) / total * 100 if total else 0
+    agg = summarize_students_by_id(students)
+    total = agg["unique_students"]
+    n_crit = agg["critical"]
+    n_high = agg["high_risk"]
+    n_watch = agg["watch"]
+    n_safe = agg["safe"]
+    n_at_risk = n_crit + n_high
+    pct_at_risk = n_at_risk / total * 100 if total else 0.0
+
+    avg_score, avg_eng, avg_clicks = _per_student_metric_means(students)
+    reps = _representative_row_per_student(students)
 
     story.append(_page_header(
         "Cohort Risk Summary Report",
-        f"{total:,} students — {datetime.now().strftime('%Y-%m-%d')}",
+        f"{total:,} unique students — {datetime.now().strftime('%Y-%m-%d')}",
     ))
     story.append(Spacer(1, 10))
 
     # ── Overview ──────────────────────────────────────────────────────────
     story.extend(_section("Overview"))
-    avg_score = sum(st.get("score", 0) for st in students) / total if total else 0
-    avg_eng   = sum(st.get("engagement_ratio", 0) for st in students) / total if total else 0
-    avg_clicks = sum(st.get("clicks", 0) for st in students) / total if total else 0
+    story.append(Paragraph(
+        "Each student counted once (worst tier across modules). Averages: per-student "
+        "mean across enrollments, then cohort mean.",
+        s["muted"],
+    ))
+    story.append(Spacer(1, 6))
+
     story.append(_kv_table([
         ("Total Students",    f"{total:,}"),
-        ("Critical",          f"{len(critical):,}  ({len(critical)/total*100:.1f}%)" if total else "0"),
-        ("High Risk",         f"{len(high):,}  ({len(high)/total*100:.1f}%)"         if total else "0"),
-        ("Watch",             f"{len(watch):,}  ({len(watch)/total*100:.1f}%)"       if total else "0"),
-        ("Safe",              f"{len(safe_lst):,}  ({len(safe_lst)/total*100:.1f}%)" if total else "0"),
-        ("High + Critical",   f"{len(at_risk):,}  ({pct_at_risk:.1f}%)"),
+        ("Critical",          f"{n_crit:,}  ({n_crit/total*100:.1f}%)" if total else "0"),
+        ("High Risk",         f"{n_high:,}  ({n_high/total*100:.1f}%)" if total else "0"),
+        ("Watch",             f"{n_watch:,}  ({n_watch/total*100:.1f}%)" if total else "0"),
+        ("Safe",              f"{n_safe:,}  ({n_safe/total*100:.1f}%)" if total else "0"),
+        ("High + Critical",   f"{n_at_risk:,}  ({pct_at_risk:.1f}%)"),
         ("Avg Score",         f"{avg_score:.1f} / 100"),
         ("Avg Engagement",    f"{avg_eng * 100:.1f}%"),
         ("Avg Total Clicks",  f"{avg_clicks:,.0f}"),
@@ -269,8 +335,12 @@ def generate_cohort_report_pdf(students):
     # ── Top 50 Highest-Risk Students ──────────────────────────────────────
     story.extend(_section("Top 50 Highest-Risk Students"))
 
-    # Sort: Critical first, then High Risk; within tier sort by score ascending
-    top = sorted(at_risk, key=lambda x: (-x.get("risk", 0), x.get("score", 100)))[:50]
+    at_risk_reps = [r for r in reps if r.get("risk", 0) >= 2]
+    # Critical first, then High Risk; within tier lowest score first
+    top = sorted(
+        at_risk_reps,
+        key=lambda x: (-_risk_int(x), x.get("score", 100)),
+    )[:50]
 
     if top:
         col_w = [

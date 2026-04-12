@@ -153,6 +153,47 @@ function _fmt(n) {
   return Number(n).toLocaleString();
 }
 
+/** Worst risk tier per student id; tier chips and totals match unique learners. */
+function _summaryByStudent(rows) {
+  const worst = new Map();
+  for (const s of rows) {
+    const id = s.id;
+    if (!id) continue;
+    const r = s.risk ?? 0;
+    const prev = worst.get(id);
+    if (prev === undefined || r > prev) worst.set(id, r);
+  }
+  let safe = 0,
+    watch = 0,
+    high = 0,
+    critical = 0;
+  for (const r of worst.values()) {
+    if (r === 0) safe++;
+    else if (r === 1) watch++;
+    else if (r === 2) high++;
+    else if (r === 3) critical++;
+  }
+  return { unique: worst.size, tiers: { safe, watch, high, critical } };
+}
+
+function _avgEngagementByStudent(rows) {
+  const sums = new Map();
+  const counts = new Map();
+  for (const s of rows) {
+    const id = s.id;
+    if (!id) continue;
+    const e = s.engagement_ratio ?? 0;
+    sums.set(id, (sums.get(id) || 0) + e);
+    counts.set(id, (counts.get(id) || 0) + 1);
+  }
+  if (!sums.size) return 0;
+  let total = 0;
+  for (const id of sums.keys()) {
+    total += sums.get(id) / counts.get(id);
+  }
+  return (total / sums.size) * 100;
+}
+
 function _miniBar(label, cls, width) {
   const w = width !== undefined ? width : +label;
   return `<div class="st-cell-bar-wrap">
@@ -181,7 +222,11 @@ function _renderRow(s) {
     ? `<span class="st-status-badge st-status-withdrew"><i class="fas fa-person-walking-arrow-right"></i> Withdrew</span>`
     : `<span class="st-status-badge st-status-active"><i class="fas fa-circle-check"></i> Active</span>`;
 
-  return `<tr class="st-row" onclick="Students.openPanel('${s.id}')" data-id="${s.id}">
+  return `<tr class="st-row"
+    onclick="Students.openPanel('${s.id}', '${s.code_module || ""}', '${s.code_presentation || ""}')"
+    data-id="${s.id}"
+    data-module="${s.code_module || ""}"
+    data-presentation="${s.code_presentation || ""}">
     <td class="text-left"><span class="st-id">${s.id}</span></td>
     <td class="text-center">
       ${s.code_module ? `<span class="st-module-tag">${s.code_module}</span>` : ""}
@@ -198,9 +243,8 @@ function _renderRow(s) {
 }
 
 function _renderTable(rows) {
-  const card = document.getElementById("st-table-card");
-  const tbody = document.getElementById("st-tbody");
   const wrap = document.querySelector(".st-table-wrap");
+  const tbody = document.getElementById("st-tbody");
   const emptyEl = document.getElementById("st-empty");
   const pagination = document.getElementById("st-pagination");
 
@@ -223,7 +267,7 @@ function _renderTable(rows) {
   tbody.innerHTML = rows.map(_renderRow).join("");
 }
 
-function _renderSummary(total, tiers) {
+function _renderSummary(uniqueStudents, tiers, rowsForAvg) {
   const el = document.getElementById("st-summary");
   if (!el) return;
   const chips = [
@@ -243,15 +287,11 @@ function _renderSummary(total, tiers) {
     .filter(Boolean)
     .join("");
 
-  const avgEng = _filtered.length
-    ? (
-        (_filtered.reduce((s, r) => s + (r.engagement_ratio ?? 0), 0) /
-          _filtered.length) *
-        100
-      ).toFixed(1)
+  const avgEng = rowsForAvg.length
+    ? _avgEngagementByStudent(rowsForAvg).toFixed(1)
     : "0.0";
 
-  el.innerHTML = `<span>Showing <strong>${_fmt(total)}</strong> student${total !== 1 ? "s" : ""}</span>
+  el.innerHTML = `<span>Showing <strong>${_fmt(uniqueStudents)}</strong> student${uniqueStudents !== 1 ? "s" : ""}</span>
     ${chips ? `<span class="st-summary-dot">·</span>${chips}` : ""}
     ${_state.search ? `<span class="st-summary-dot">·</span><span class="text-3 text-xs">Search: <strong class="text-2">${_state.search}</strong></span>` : ""}
     <span class="st-summary-dot">·</span><span class="text-3 text-xs">Avg engagement: <strong class="text-2">${avgEng}%</strong></span>`;
@@ -379,17 +419,12 @@ const Students = (() => {
 
   function _render() {
     const { page, pageSize } = _state;
-    const total = _filtered.length;
+    const enrollmentTotal = _filtered.length;
     const rows = _filtered.slice((page - 1) * pageSize, page * pageSize);
-    const tiers = {
-      critical: _filtered.filter((s) => s.risk === 3).length,
-      high: _filtered.filter((s) => s.risk === 2).length,
-      watch: _filtered.filter((s) => s.risk === 1).length,
-      safe: _filtered.filter((s) => s.risk === 0).length,
-    };
+    const { unique, tiers } = _summaryByStudent(_filtered);
     _renderTable(rows);
-    _renderSummary(total, tiers);
-    _renderPagination(total, pageSize, page);
+    _renderSummary(unique, tiers, _filtered);
+    _renderPagination(enrollmentTotal, pageSize, page);
     _updateSortHeaders();
   }
 
@@ -482,14 +517,16 @@ const Students = (() => {
     if (el) el.style.color = c || "";
   }
 
-  function openPanel(sid) {
+  function openPanel(sid, module, presentation) {
     const panel = document.getElementById("st-panel");
     const backdrop = document.getElementById("st-backdrop");
     document
       .querySelectorAll(".st-row")
       .forEach((r) => r.classList.remove("active"));
     document
-      .querySelector(`.st-row[data-id="${sid}"]`)
+      .querySelector(
+        `.st-row[data-id="${sid}"][data-module="${module}"][data-presentation="${presentation}"]`,
+      )
       ?.classList.add("active");
     switchTab(document.querySelector(".st-panel-tab"), "tab-overview");
     _setText("panel-id", sid);
@@ -502,9 +539,18 @@ const Students = (() => {
     panel.setAttribute("aria-hidden", "false");
     backdrop.classList.add("show");
     _activeId = sid;
+
+    // Build enrollment-precise URLs — module+presentation prevent the first-match
+    // ambiguity when a student has multiple enrollments in the cache.
+    const params = new URLSearchParams();
+    if (module) params.set("module", module);
+    if (presentation) params.set("presentation", presentation);
+    const qs = params.toString() ? "?" + params.toString() : "";
+
     const pdfBtn = document.getElementById("panel-pdf-btn");
-    if (pdfBtn) pdfBtn.href = `/api/student/${sid}/report`;
-    fetch(`/api/student/${sid}`)
+    if (pdfBtn) pdfBtn.href = `/api/student/${sid}/report${qs}`;
+
+    fetch(`/api/student/${sid}${qs}`)
       .then((r) => r.json())
       .then((data) => {
         if (_activeId !== sid) return;

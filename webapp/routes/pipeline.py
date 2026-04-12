@@ -8,7 +8,7 @@ from configs.config import (FLASK_PORT, HADOOP_HOST, HBASE_HOST, HBASE_PORT,
                             HDFS_BASE_PATH, HDFS_OUTPUT_PATH,
                             MODEL_RESULTS_TABLE, TABLE_NAME)
 from webapp.auth.decorators import admin_required
-from webapp.services.cache import SYSTEM_CACHE
+from webapp.services.cache import SYSTEM_CACHE, summarize_students_by_id
 
 pipeline_bp = Blueprint("pipeline", __name__)
 
@@ -121,6 +121,9 @@ def pipeline_status():
     all_up   = sum(1 for s in services if s["up"])
     all_down = len(services) - all_up
 
+    cache_rows = SYSTEM_CACHE.get("data", [])
+    cache_agg  = summarize_students_by_id(cache_rows)
+
     hdfs_raw  = _hdfs_ls(HDFS_BASE_PATH)
     hdfs_proc = _hdfs_ls(HDFS_OUTPUT_PATH)
 
@@ -140,6 +143,6 @@ def pipeline_status():
         "cache": {
             "is_ready":      SYSTEM_CACHE["is_ready"],
             "last_updated":  SYSTEM_CACHE["last_updated"],
-            "student_count": len(SYSTEM_CACHE.get("data", [])),
+            "student_count": cache_agg["unique_students"],
         },
     })

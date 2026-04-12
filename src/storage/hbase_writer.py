@@ -4,7 +4,7 @@ import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
-from common.hbase_client import ensure_table, hbase_connection
+from common.hbase_client import ensure_table, hbase_connection, truncate_table
 from configs import config
 from src.utils import get_spark_session
 
@@ -44,29 +44,31 @@ def write_predictions(rows, connection):
 
     batch = table.batch(batch_size=1000)
     for row in rows:
-        clicks          = float(row["total_clicks"])
-        active_days     = int(row["active_days"])
-        active_weeks    = int(row["active_weeks"])
+        clicks           = float(row["total_clicks"])
+        active_days      = int(row["active_days"])
+        active_weeks     = int(row["active_weeks"])
         engagement_ratio = float(row["engagement_ratio"])
-        forum_clicks    = float(row["forum_clicks"])
-        quiz_clicks     = float(row["quiz_clicks"])
-        resource_clicks = float(row["resource_clicks"])
-        score           = float(row["avg_score"])
-        w_score         = float(row["weighted_avg_score"])
-        sub_rate        = float(row["submission_rate"])
-        avg_days_early  = float(row["avg_days_early"])
-        exam_score      = float(row["exam_score"])
-        tma_score       = float(row["tma_score"])
-        cma_score       = float(row["cma_score"])
-        withdrew_early  = int(row["withdrew_early"])
-        prev_attempts   = int(row["num_prev_attempts"])
+        forum_clicks     = float(row["forum_clicks"])
+        quiz_clicks      = float(row["quiz_clicks"])
+        resource_clicks  = float(row["resource_clicks"])
+        score            = float(row["avg_score"])
+        w_score          = float(row["weighted_avg_score"])
+        sub_rate         = float(row["submission_rate"])
+        avg_days_early   = float(row["avg_days_early"])
+        exam_score       = float(row["exam_score"])
+        tma_score        = float(row["tma_score"])
+        cma_score        = float(row["cma_score"])
+        withdrew_early   = int(row["withdrew_early"])
+        prev_attempts    = int(row["num_prev_attempts"])
 
         risk_tier = _apply_risk_tier(
             score, clicks, sub_rate, avg_days_early, withdrew_early, int(row["label"])
         )
 
+        row_key = f"{row['id_student']}|{row['code_module']}|{row['code_presentation']}"
+
         batch.put(
-            str(row["id_student"]).encode(),
+            row_key.encode(),
             {
                 b"info:code_module":         str(row["code_module"]).encode(),
                 b"info:code_presentation":   str(row["code_presentation"]).encode(),
@@ -89,7 +91,6 @@ def write_predictions(rows, connection):
                 b"info:imd_band_encoded":    str(int(row["imd_band_encoded"])).encode(),
                 b"info:disability_encoded":  str(int(row["disability_encoded"])).encode(),
                 b"info:days_before_start":   str(float(row["days_before_start"])).encode(),
-                # Display-only demographic fields
                 b"info:gender":             str(row["gender"] or "").encode(),
                 b"info:region":             str(row["region"] or "").encode(),
                 b"info:highest_education":  str(row["highest_education"] or "").encode(),
@@ -124,7 +125,6 @@ def main():
             "exam_score", "tma_score", "cma_score",
             "withdrew_early", "num_prev_attempts",
             "imd_band_encoded", "disability_encoded", "days_before_start",
-            # Display-only demographic fields
             "gender", "region", "highest_education",
             "imd_band", "age_band", "studied_credits",
             "disability", "final_result",
@@ -138,5 +138,6 @@ def main():
 
     print(">>> [HBASE] Connecting via Thrift...")
     with hbase_connection() as conn:
+        truncate_table(conn, config.TABLE_NAME)
         ensure_table(conn, config.TABLE_NAME, ["info", "prediction"])
         write_predictions(all_rows, conn)

@@ -46,7 +46,7 @@ def run_step(fn, step_name):
 
 
 def wait_for_service(host, port, service_name, timeout=60):
-    print(f"⏳ Waiting for {service_name} to fully start (Port {port})...", end="", flush=True)
+    print(f">>> [HBASE] Waiting for {service_name} to fully start (Port {port})...", end="", flush=True)
     start_wait = time.time()
     while True:
         try:
@@ -55,7 +55,7 @@ def wait_for_service(host, port, service_name, timeout=60):
             result = sock.connect_ex((host, port))
             sock.close()
             if result == 0:
-                print(f"\n{GREEN}✔ {service_name} is ready!{RESET}")
+                print(f"\n✔ {service_name} is ready.{RESET}")
                 return True
         except Exception:
             pass
@@ -71,8 +71,6 @@ def main():
     if PROJECT_ROOT not in sys.path:
         sys.path.insert(0, PROJECT_ROOT)
 
-    # Lazy imports: must happen after PROJECT_ROOT is on sys.path so that
-    # `from configs import config` and `from src.*` resolve correctly.
     from src.etl_job import main as run_etl
     from src.save_to_hbase import main as run_hbase
     from src.train_job import main as run_train
@@ -81,12 +79,20 @@ def main():
     print(f"{YELLOW}>>> STARTING STUDENT DROPOUT PREDICTION PIPELINE PROCESS{RESET}")
     print(f"Project Directory: {PROJECT_ROOT}\n")
 
-    # --- STEP 1: START INFRASTRUCTURE (shell — Hadoop/HBase/Thrift) ---
-    if not run_command(f"bash {PROJECT_ROOT}/scripts/start_services.sh", "1. START SERVICES (HADOOP/HBASE)"):
+    # --- STEP 0: VERIFY ENVIRONMENT ---
+    if not run_command(f"bash {PROJECT_ROOT}/scripts/verify_env.sh", "0. VERIFY ENVIRONMENT"):
         sys.exit(1)
 
-    if not wait_for_service('localhost', 9090, "HBase Thrift Server"):
-        print(f"{RED}Stopping program because infrastructure is not ready.{RESET}")
+    # --- STEP 1: START INFRASTRUCTURE (shell — Hadoop/HBase/Thrift) ---
+    def _start_services():
+        subprocess.run(
+            f"bash {PROJECT_ROOT}/scripts/start_services.sh",
+            shell=True, check=True, text=True,
+        )
+        if not wait_for_service('localhost', 9090, "HBase Thrift Server"):
+            raise RuntimeError("HBase Thrift Server did not become ready in time.")
+
+    if not run_step(_start_services, "1. START SERVICES (HADOOP/HBASE)"):
         sys.exit(1)
 
     # --- STEP 2: DATA INGESTION (shell — hdfs dfs -put) ---

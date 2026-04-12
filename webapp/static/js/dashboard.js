@@ -405,9 +405,20 @@ const Dashboard = (() => {
       if (s.last_updated) _set("last-updated", "Updated " + s.last_updated);
 
       if (data.raw_data.length) {
-        const avgEng =
-          data.raw_data.reduce((sum, d) => sum + (d.engagement_ratio ?? 0), 0) /
-          data.raw_data.length;
+        const sums = new Map();
+        const counts = new Map();
+        for (const d of data.raw_data) {
+          const id = d.id;
+          if (!id) continue;
+          const e = d.engagement_ratio ?? 0;
+          sums.set(id, (sums.get(id) || 0) + e);
+          counts.set(id, (counts.get(id) || 0) + 1);
+        }
+        let engSum = 0;
+        for (const id of sums.keys()) {
+          engSum += sums.get(id) / counts.get(id);
+        }
+        const avgEng = sums.size ? engSum / sums.size : 0;
         _set("stat-engagement", (avgEng * 100).toFixed(1) + "%");
       }
 

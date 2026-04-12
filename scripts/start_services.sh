@@ -27,7 +27,7 @@ echo ">>> [RESET] Refreshing HBase Thrift Server..."
 jps | grep ThriftServer | awk '{print $1}' | xargs -r kill -9 2>/dev/null
 
 # Wait for OS to release the port (important)
-echo "-> Waiting for port $HBASE_PORT release..."
+echo ">>> [RESET] Waiting for port $HBASE_PORT release..."
 sleep 2
 
 # Restart
