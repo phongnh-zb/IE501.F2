@@ -291,7 +291,9 @@ function _renderSummary(uniqueStudents, tiers, rowsForAvg) {
     ? _avgEngagementByStudent(rowsForAvg).toFixed(1)
     : "0.0";
 
-  el.innerHTML = `<span>Showing <strong>${_fmt(uniqueStudents)}</strong> student${uniqueStudents !== 1 ? "s" : ""}</span>
+  const enrollmentCount = _filtered.length;
+
+  el.innerHTML = `<span><strong>${_fmt(enrollmentCount)}</strong> enrollment${enrollmentCount !== 1 ? "s" : ""} across <strong>${_fmt(uniqueStudents)}</strong> student${uniqueStudents !== 1 ? "s" : ""}</span>
     ${chips ? `<span class="st-summary-dot">·</span>${chips}` : ""}
     ${_state.search ? `<span class="st-summary-dot">·</span><span class="text-3 text-xs">Search: <strong class="text-2">${_state.search}</strong></span>` : ""}
     <span class="st-summary-dot">·</span><span class="text-3 text-xs">Avg engagement: <strong class="text-2">${avgEng}%</strong></span>`;
@@ -391,7 +393,12 @@ function _applyFiltersAndSort() {
   }
   if (_state.search) {
     const q = _state.search.toLowerCase();
-    data = data.filter((s) => s.id.toLowerCase().includes(q));
+    data = data.filter(
+      (s) =>
+        s.id.toLowerCase().includes(q) ||
+        (s.code_module || "").toLowerCase().includes(q) ||
+        (s.code_presentation || "").toLowerCase().includes(q),
+    );
   }
 
   const rev = _state.order === "desc";

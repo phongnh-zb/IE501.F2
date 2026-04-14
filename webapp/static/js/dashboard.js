@@ -346,7 +346,9 @@ const Dashboard = (() => {
           subPct < 40 ? "#dc2626" : subPct < 70 ? "#d97706" : "#059669";
         const engColor =
           engPct < 20 ? "#dc2626" : engPct < 50 ? "#d97706" : "#059669";
-        const module = d.code_module || "—";
+        const module =
+          [d.code_module, d.code_presentation].filter(Boolean).join(" · ") ||
+          "—";
         const genderStr = GENDER[d.gender] || d.gender || "";
         const ageStr = d.age_band || "";
         const demoStr = [genderStr, ageStr].filter(Boolean).join(" · ");
@@ -468,7 +470,8 @@ const Dashboard = (() => {
     const btn = document.getElementById("refresh-btn");
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-rotate-right fa-spin"></i>Refreshing...';
+      btn.innerHTML =
+        '<i class="fas fa-rotate-right fa-spin"></i>Refreshing...';
     }
     try {
       await fetch("/api/refresh-cache", { method: "POST" });
