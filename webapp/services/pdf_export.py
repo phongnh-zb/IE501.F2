@@ -44,7 +44,6 @@ def _risk_int(st):
 
 
 def _per_student_metric_means(enrollment_rows):
-    """Mean of score / engagement / clicks per student, then mean across students."""
     by_id = {}
     for st in enrollment_rows:
         sid = st.get("id")
@@ -57,8 +56,8 @@ def _per_student_metric_means(enrollment_rows):
     for rows in by_id.values():
         n = len(rows) or 1
         score_sum += sum(r.get("score", 0) or 0 for r in rows) / n
-        eng_sum += sum(r.get("engagement_ratio", 0) or 0 for r in rows) / n
-        clk_sum += sum(r.get("clicks", 0) or 0 for r in rows) / n
+        eng_sum   += sum(r.get("engagement_ratio", 0) or 0 for r in rows) / n
+        clk_sum   += sum(r.get("clicks", 0) or 0 for r in rows) / n
     m = len(by_id)
     return score_sum / m, eng_sum / m, clk_sum / m
 
@@ -73,9 +72,9 @@ def _representative_row_per_student(enrollment_rows):
 
     reps = []
     for rows in by_id.values():
-        worst = max(_risk_int(r) for r in rows)
+        worst    = max(_risk_int(r) for r in rows)
         at_worst = [r for r in rows if _risk_int(r) == worst]
-        pick = min(
+        pick     = min(
             at_worst,
             key=lambda x: (x.get("score", 100), x.get("code_module", ""), x.get("code_presentation", "")),
         )
@@ -188,6 +187,30 @@ def _footer(story):
     ))
 
 
+def _data_table(header_labels, col_widths, data_rows, s):
+    # Header styles are applied AFTER ROWBACKGROUNDS so they are never
+    # overridden when the table breaks across pages and the header is repeated.
+    header_row = [Paragraph(f"<b>{h}</b>", s["body"]) for h in header_labels]
+    data = [header_row] + data_rows
+    t = Table(data, colWidths=col_widths, repeatRows=1)
+    t.setStyle(TableStyle([
+        ("FONTSIZE",       (0, 0), (-1, -1), 8),
+        ("TOPPADDING",     (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING",  (0, 0), (-1, -1), 4),
+        ("LEFTPADDING",    (0, 0), (-1, -1), 5),
+        ("RIGHTPADDING",   (0, 0), (-1, -1), 5),
+        # Body rows first
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_WHITE, COLOR_ROW_ALT]),
+        ("GRID",           (0, 0), (-1, -1), 0.3, COLOR_BORDER),
+        ("TEXTCOLOR",      (0, 1), (-1, -1), COLOR_TEXT),
+        # Header styles last — override ROWBACKGROUNDS for row 0 on every page
+        ("BACKGROUND",     (0, 0), (-1, 0), COLOR_ACCENT),
+        ("TEXTCOLOR",      (0, 0), (-1, 0), COLOR_WHITE),
+        ("FONTNAME",       (0, 0), (-1, 0), "Helvetica-Bold"),
+    ]))
+    return t
+
+
 def generate_student_report_pdf(student, recommendations):
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -207,7 +230,6 @@ def generate_student_report_pdf(student, recommendations):
     ))
     story.append(Spacer(1, 10))
 
-    # Risk badge paragraph — colour matches the 4-tier system
     risk_style = ParagraphStyle(
         "risk_inline", parent=s["risk_label"],
         textColor=_RISK_COLOR.get(risk, COLOR_TEXT),
@@ -215,7 +237,6 @@ def generate_student_report_pdf(student, recommendations):
     story.append(Paragraph(f"● {risk_label}", risk_style))
     story.append(Spacer(1, 8))
 
-    # ── Academic Performance ──────────────────────────────────────────────
     story.extend(_section("Academic Performance"))
     days_early = student.get("avg_days_early", 0)
     timing_str = (
@@ -233,7 +254,6 @@ def generate_student_report_pdf(student, recommendations):
         ("Avg Submission Timing", timing_str),
     ]))
 
-    # ── VLE Engagement ────────────────────────────────────────────────────
     story.extend(_section("VLE Engagement"))
     clicks = student.get("clicks", 0)
     active = student.get("active_days", 0)
@@ -250,12 +270,11 @@ def generate_student_report_pdf(student, recommendations):
         ("Resource Clicks",    f"{int(student.get('resource_clicks', 0)):,}"),
     ]))
 
-    # ── Student Background ────────────────────────────────────────────────
     story.extend(_section("Student Background"))
-    gender   = _GENDER.get(student.get("gender", ""), student.get("gender", "—") or "—")
+    gender         = _GENDER.get(student.get("gender", ""), student.get("gender", "—") or "—")
     disability_raw = student.get("disability", "")
-    disability = "Yes" if disability_raw == "Y" else "No" if disability_raw == "N" else "—"
-    imd = student.get("imd_band") or "—"
+    disability     = "Yes" if disability_raw == "Y" else "No" if disability_raw == "N" else "—"
+    imd            = student.get("imd_band") or "—"
     story.append(_kv_table([
         ("Gender",            gender),
         ("Age Band",          student.get("age_band",           "—") or "—"),
@@ -269,7 +288,6 @@ def generate_student_report_pdf(student, recommendations):
         ("Formally Withdrew", "Yes" if student.get("withdrew_early") else "No"),
     ]))
 
-    # ── Risk Analysis & Recommendations ──────────────────────────────────
     story.extend(_section("Risk Analysis & Recommended Actions"))
     for rec in recommendations:
         text = rec.get("text", rec) if isinstance(rec, dict) else rec
@@ -282,7 +300,6 @@ def generate_student_report_pdf(student, recommendations):
 
 
 def generate_cohort_report_pdf(students):
-    """students: enrollment-level rows (same shape as cache). Counts = unique students."""
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer, pagesize=A4,
@@ -293,13 +310,13 @@ def generate_cohort_report_pdf(students):
     s = _base_styles()
     story = []
 
-    agg = summarize_students_by_id(students)
-    total = agg["unique_students"]
-    n_crit = agg["critical"]
-    n_high = agg["high_risk"]
-    n_watch = agg["watch"]
-    n_safe = agg["safe"]
-    n_at_risk = n_crit + n_high
+    agg        = summarize_students_by_id(students)
+    total      = agg["unique_students"]
+    n_crit     = agg["critical"]
+    n_high     = agg["high_risk"]
+    n_watch    = agg["watch"]
+    n_safe     = agg["safe"]
+    n_at_risk  = n_crit + n_high
     pct_at_risk = n_at_risk / total * 100 if total else 0.0
 
     avg_score, avg_eng, avg_clicks = _per_student_metric_means(students)
@@ -307,36 +324,32 @@ def generate_cohort_report_pdf(students):
 
     story.append(_page_header(
         "Cohort Risk Summary Report",
-        f"{total:,} unique students — {datetime.now().strftime('%Y-%m-%d')}",
+        f"{total:,} unique students — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
     ))
     story.append(Spacer(1, 10))
 
-    # ── Overview ──────────────────────────────────────────────────────────
     story.extend(_section("Overview"))
     story.append(Paragraph(
-        "Each student counted once (worst tier across modules). Averages: per-student "
-        "mean across enrollments, then cohort mean.",
+        "Each student counted once (worst tier across modules). "
+        "Averages are per-student means across enrollments, then cohort mean.",
         s["muted"],
     ))
     story.append(Spacer(1, 6))
-
     story.append(_kv_table([
-        ("Total Students",    f"{total:,}"),
-        ("Critical",          f"{n_crit:,}  ({n_crit/total*100:.1f}%)" if total else "0"),
-        ("High Risk",         f"{n_high:,}  ({n_high/total*100:.1f}%)" if total else "0"),
-        ("Watch",             f"{n_watch:,}  ({n_watch/total*100:.1f}%)" if total else "0"),
-        ("Safe",              f"{n_safe:,}  ({n_safe/total*100:.1f}%)" if total else "0"),
-        ("High + Critical",   f"{n_at_risk:,}  ({pct_at_risk:.1f}%)"),
-        ("Avg Score",         f"{avg_score:.1f} / 100"),
-        ("Avg Engagement",    f"{avg_eng * 100:.1f}%"),
-        ("Avg Total Clicks",  f"{avg_clicks:,.0f}"),
+        ("Total Students",   f"{total:,}"),
+        ("Critical",         f"{n_crit:,}  ({n_crit/total*100:.1f}%)" if total else "0"),
+        ("High Risk",        f"{n_high:,}  ({n_high/total*100:.1f}%)" if total else "0"),
+        ("Watch",            f"{n_watch:,}  ({n_watch/total*100:.1f}%)" if total else "0"),
+        ("Safe",             f"{n_safe:,}  ({n_safe/total*100:.1f}%)" if total else "0"),
+        ("High + Critical",  f"{n_at_risk:,}  ({pct_at_risk:.1f}%)"),
+        ("Avg Score",        f"{avg_score:.1f} / 100"),
+        ("Avg Engagement",   f"{avg_eng * 100:.1f}%"),
+        ("Avg Total Clicks", f"{avg_clicks:,.0f}"),
     ]))
 
-    # ── Top 50 Highest-Risk Students ──────────────────────────────────────
-    story.extend(_section("Top 50 Highest-Risk Students"))
+    story.extend(_section("Top 50 Highest Risk Students"))
 
     at_risk_reps = [r for r in reps if r.get("risk", 0) >= 2]
-    # Critical first, then High Risk; within tier lowest score first
     top = sorted(
         at_risk_reps,
         key=lambda x: (-_risk_int(x), x.get("score", 100)),
@@ -344,16 +357,11 @@ def generate_cohort_report_pdf(students):
 
     if top:
         col_w = [
-            CONTENT_W * 0.20, CONTENT_W * 0.10, CONTENT_W * 0.10,
-            CONTENT_W * 0.12, CONTENT_W * 0.12, CONTENT_W * 0.12,
-            CONTENT_W * 0.12, CONTENT_W * 0.12,
+            CONTENT_W * 0.18, CONTENT_W * 0.12, CONTENT_W * 0.10,
+            CONTENT_W * 0.12, CONTENT_W * 0.13, CONTENT_W * 0.12,
+            CONTENT_W * 0.11, CONTENT_W * 0.12,
         ]
-        header_row = [
-            Paragraph(f"<b>{h}</b>", s["body"])
-            for h in ["Student ID", "Risk", "Score", "Sub. Rate",
-                      "Engagement", "Active Days", "Prev. Att.", "Withdrew"]
-        ]
-        data = [header_row] + [
+        data_rows = [
             [
                 Paragraph(st.get("id", ""), s["body"]),
                 Paragraph(_RISK_LABEL.get(st.get("risk", 0), "—"), s["body"]),
@@ -366,19 +374,13 @@ def generate_cohort_report_pdf(students):
             ]
             for st in top
         ]
-        t = Table(data, colWidths=col_w, repeatRows=1)
-        t.setStyle(TableStyle([
-            ("BACKGROUND",     (0, 0), (-1, 0), COLOR_HEADER),
-            ("TEXTCOLOR",      (0, 0), (-1, 0), COLOR_WHITE),
-            ("FONTSIZE",       (0, 0), (-1, -1), 8),
-            ("TOPPADDING",     (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING",  (0, 0), (-1, -1), 4),
-            ("LEFTPADDING",    (0, 0), (-1, -1), 5),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_WHITE, COLOR_ROW_ALT]),
-            ("GRID",           (0, 0), (-1, -1), 0.3, COLOR_BORDER),
-            ("TEXTCOLOR",      (0, 1), (-1, -1), COLOR_TEXT),
-        ]))
-        story.append(t)
+        story.append(_data_table(
+            ["Student ID", "Risk", "Score", "Sub. Rate",
+             "Engagement", "Active Days", "Prev. Att.", "Withdrew"],
+            col_w,
+            data_rows,
+            s,
+        ))
     else:
         story.append(Paragraph(
             "No high-risk or critical students found in the current dataset.", s["body"]

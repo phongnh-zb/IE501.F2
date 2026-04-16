@@ -11,6 +11,7 @@ from webapp.auth.db import init_db
 from webapp.auth.manager import login_manager
 from webapp.auth.routes import auth_bp
 from webapp.routes.api import api_bp
+from webapp.routes.cohort import cohort_bp
 from webapp.routes.dashboard import dashboard_bp
 from webapp.routes.models import models_bp
 from webapp.routes.pipeline import pipeline_bp
@@ -31,6 +32,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(students_bp)
+    app.register_blueprint(cohort_bp)
     app.register_blueprint(models_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(pipeline_bp)

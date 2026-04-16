@@ -1,0 +1,93 @@
+<div class="cohort-selector card">
+  <div class="cohort-selector-inner">
+    <div class="cohort-selector-label">Viewing</div>
+    <select class="st-select cohort-sel" id="cohort-module">
+      <option value="">All modules</option>
+      {% for m in modules_available %}
+      <option value="{{ m }}">{{ m }}</option>
+      {% endfor %}
+    </select>
+    <span class="cohort-selector-sep">·</span>
+    <select class="st-select cohort-sel" id="cohort-presentation">
+      <option value="">All presentations</option>
+      {% for p in presentations_available %}
+      <option value="{{ p }}">{{ p }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <a
+    id="cohort-pdf-btn"
+    href="/api/cohort/report"
+    class="btn btn-outline btn-sm btn-disabled"
+    aria-disabled="true"
+  >
+    <i class="fas fa-file-pdf"></i> Download PDF
+  </a>
+</div>
+
+<div class="cohort-hero">
+  <div
+    id="cohort-hero-loading"
+    class="chart-loading"
+    style="color: rgba(255, 255, 255, 0.45)"
+  >
+    <i class="fas fa-spinner fa-spin"></i> Loading…
+  </div>
+
+  <div class="cohort-stat-strip">
+    <div class="cohort-stat-block">
+      <span class="cohort-stat-label">Enrollments</span>
+      <span class="cohort-stat-num mono" id="ch-enrollments">—</span>
+      <span class="cohort-stat-note" id="ch-students-note"
+        >— unique students</span
+      >
+    </div>
+    <div class="cohort-stat-divider"></div>
+    <div class="cohort-stat-block">
+      <span class="cohort-stat-label">At risk</span>
+      <span
+        class="cohort-stat-num mono"
+        id="ch-at-risk"
+        style="color: var(--crit)"
+        >—</span
+      >
+      <span class="cohort-stat-note" id="ch-at-risk-note"
+        >Critical + High Risk</span
+      >
+    </div>
+    <div class="cohort-stat-divider"></div>
+    <div class="cohort-stat-block">
+      <span class="cohort-stat-label">Avg score</span>
+      <span class="cohort-stat-num mono" id="ch-avg-score">—</span>
+      <span class="cohort-stat-note">out of 100</span>
+    </div>
+    <div class="cohort-stat-divider"></div>
+    <div class="cohort-stat-block">
+      <span class="cohort-stat-label">Avg engagement</span>
+      <span class="cohort-stat-num mono" id="ch-avg-eng">—</span>
+      <span class="cohort-stat-note">of module duration</span>
+    </div>
+    <div class="cohort-stat-divider"></div>
+    <div class="cohort-stat-block">
+      <span class="cohort-stat-label">Withdrawal rate</span>
+      <span
+        class="cohort-stat-num mono"
+        id="ch-withdrawal"
+        style="color: var(--crit)"
+        >—</span
+      >
+      <span class="cohort-stat-note">formally unregistered</span>
+    </div>
+    <div class="cohort-stat-divider"></div>
+    <div class="cohort-stat-block">
+      <span class="cohort-stat-label">Re-attempt rate</span>
+      <span
+        class="cohort-stat-num mono"
+        id="ch-reattempt"
+        style="color: var(--watch)"
+        >—</span
+      >
+      <span class="cohort-stat-note">on 2nd+ attempt</span>
+    </div>
+  </div>
+</div>

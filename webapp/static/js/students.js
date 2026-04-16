@@ -433,6 +433,11 @@ const Students = (() => {
     _renderSummary(unique, tiers, _filtered);
     _renderPagination(enrollmentTotal, pageSize, page);
     _updateSortHeaders();
+
+    const exportBtn = document.getElementById("export-btn");
+    if (exportBtn) {
+      exportBtn.classList.toggle("btn-disabled", enrollmentTotal === 0);
+    }
   }
 
   function sort(field) {
@@ -489,8 +494,8 @@ const Students = (() => {
     e.preventDefault();
     const btn = document.getElementById("export-btn");
     if (btn) {
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-      btn.style.pointerEvents = "none";
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Export CSV';
+      btn.classList.add("btn-disabled");
     }
     const p = new URLSearchParams();
     if (_state.search) p.set("search", _state.search);
@@ -508,9 +513,9 @@ const Students = (() => {
     setTimeout(() => {
       if (btn) {
         btn.innerHTML = '<i class="fas fa-download"></i> Export CSV';
-        btn.style.pointerEvents = "";
+        btn.classList.remove("btn-disabled");
       }
-    }, 2000);
+    }, 1000);
   }
 
   /* ── Panel ────────────────────────────────────────────────────────────── */

@@ -100,17 +100,6 @@ def student_report(student_id):
                      download_name=pdf_filename(prefix=f"student_{student_id}_report"))
 
 
-@api_bp.route("/cohort/report")
-@login_required
-def cohort_report():
-    if not SYSTEM_CACHE["is_ready"]:
-        return jsonify({"error": "Data not ready — run the pipeline first"}), 503
-
-    buffer = generate_cohort_report_pdf(_visible_data())
-    return send_file(buffer, mimetype="application/pdf", as_attachment=True,
-                     download_name="cohort_risk_report.pdf")
-
-
 @api_bp.route("/refresh-cache", methods=["POST"])
 @login_required
 def refresh_cache():

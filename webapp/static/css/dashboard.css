@@ -26,7 +26,7 @@
   }
   
   .dash-hero-title { font-size: 1.375rem; font-weight: 600; color: #fff; }
-  .dash-hero-sub   { font-size: .8125rem; color: rgba(255,255,255,.45); margin-top: .2rem; }
+  .dash-hero-sub   { font-size: .8125rem; color: rgba(255,255,255,.45); margin-top: .25rem; }
   .dash-hero-actions { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
   .dash-updated { font-size: .75rem; color: rgba(255,255,255,.45); font-family: var(--font-mono); }
   
@@ -43,7 +43,15 @@
 	display: flex;
 	flex-direction: column;
 	gap: .3rem;
-	padding: 1.25rem 0rem 1.375rem;
+	padding: 1.25rem 1.5rem 0 1.375rem;
+  }
+
+  .stat-block:first-child {
+	padding-left: 0;
+  }
+
+  .stat-block:last-child {
+	padding-right: 0;
   }
   
   .stat-label {
@@ -233,7 +241,7 @@
   
   @media (max-width: 850px) {
 	.stat-strip        { display: grid; grid-template-columns: 1fr 1fr; }
-	.stat-block        { border-bottom: 1px solid rgba(255,255,255,.07); }
+	.stat-block        { padding: 1.25rem 0 1.375rem; border-bottom: 1px solid rgba(255,255,255,.07); }
 	.stat-divider      { display: none; }
 	.stat-num          { font-size: 1.625rem; }
 	.dash-donuts       { grid-template-columns: 1fr; }

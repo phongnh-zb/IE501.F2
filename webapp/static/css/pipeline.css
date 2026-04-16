@@ -4,6 +4,7 @@
 	align-items: center;
 	gap: .75rem;
 	flex-shrink: 0;
+	margin-top: .25rem;
   }
   
   .pipe-summary {

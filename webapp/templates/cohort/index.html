@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% set active_page = 'cohort' %}
+{% block title %}Cohort{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cohort.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Cohort</h1>
+    <p class="text-2 text-sm">Module-level risk patterns and intervention planning</p>
+    {% if last_updated %}
+    <span class="page-header-note">Updated {{ last_updated }}</span>
+    {% endif %}
+  </div>
+</div>
+
+{% include 'cohort/_selector.html' %}
+{% include 'cohort/_charts.html' %}
+{% include 'cohort/_table.html' %}
+{% include 'cohort/_demographics.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const COHORT_MODULES       = {{ modules_available       | tojson }};
+const COHORT_PRESENTATIONS = {{ presentations_available | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/cohort.js') }}"></script>
+{% endblock %}

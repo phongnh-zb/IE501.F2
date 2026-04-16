@@ -1,0 +1,258 @@
+/* ── Selector ────────────────────────────────────────────────────────────── */
+.cohort-selector {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding: 1rem 1rem 1.25rem;
+	margin-bottom: 1rem;
+  }
+  
+  .cohort-selector-inner {
+	display: flex;
+	align-items: center;
+	gap: .75rem;
+	flex-wrap: wrap;
+  }
+  
+  .cohort-selector-label {
+	font-size: .8125rem;
+	font-weight: 600;
+	color: var(--tx-3);
+	white-space: nowrap;
+  }
+  
+  .cohort-selector-sep {
+	color: var(--tx-3);
+	font-size: .8125rem;
+  }
+  
+  /* ── Selector dropdowns — mirrors students.css .st-select ────────────────── */
+  .cohort-sel {
+	height: 34px;
+	padding: 0 2rem 0 .625rem;
+	font-size: .8125rem;
+	font-family: var(--font);
+	color: var(--tx-2);
+	background: var(--surface);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%2394a3b8' d='M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right .625rem center;
+	background-size: 10px;
+	-webkit-appearance: none;
+	appearance: none;
+	border: 1px solid var(--bd);
+	border-radius: var(--r-md);
+	outline: none;
+	cursor: pointer;
+	min-width: 140px;
+	transition: border-color var(--ease);
+  }
+  
+  .cohort-sel:focus { border-color: var(--accent); }
+  
+  .cohort-sel.open {
+	border-color: var(--accent);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%2394a3b8' transform='rotate(180 256 256)' d='M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z'/%3E%3C/svg%3E");
+  }
+  
+  /* ── Hero strip — same values as Dashboard stat strip ────────────────────── */
+  .cohort-hero {
+	background: var(--navy);
+	border-radius: var(--r-xl);
+	overflow: hidden;
+	margin-bottom: 1rem;
+	position: relative;
+	-webkit-font-smoothing: antialiased;
+  }
+  
+  .cohort-hero .chart-loading {
+	background: var(--navy);
+    color: rgba(255, 255, 255, .45);
+    border-radius: var(--r-xl);
+  }
+  
+  .cohort-stat-strip {
+	display: flex;
+	align-items: stretch;
+	border-top: 1px solid rgba(255,255,255,.07);
+  }
+  
+  .cohort-stat-block {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: .3rem;
+	padding: 1.25rem 1.5rem 1.375rem;
+  }
+  
+  .cohort-stat-label {
+	font-size: .6875rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: .07em;
+	color: rgba(255,255,255,.45);
+  }
+  
+  .cohort-stat-num {
+	font-size: 2.125rem;
+	font-weight: 700;
+	line-height: 1;
+	color: #fff;
+	font-feature-settings: 'tnum';
+	letter-spacing: -.02em;
+  }
+  
+  .cohort-stat-note {
+	font-size: .6875rem;
+	color: rgba(255,255,255,.6);
+  }
+  
+  .cohort-stat-divider {
+	width: 1px;
+	background: rgba(255,255,255,.07);
+	margin: .75rem 0;
+	flex-shrink: 0;
+  }
+  
+  /* ── 2-col rows — charts only, both fixed height ──────────────────────────── */
+  .cohort-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1rem;
+	margin-bottom: 1rem;
+  }
+
+  .cohort-row2 {
+	margin-bottom: 1rem;
+  }
+  
+  /* ── Risk driver table card body ─────────────────────────────────────────── */
+  /* position:relative + min-height anchors the chart-loading overlay, same
+	 pattern as .attention-list on the Dashboard page */
+  .cohort-table-body {
+	position: relative;
+	min-height: 160px;
+  }
+  
+  /* ── Risk driver table — mirrors models-table CSS ────────────────────────── */
+  .cohort-table-wrap {
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+  }
+  
+  .cohort-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: .8125rem;
+  }
+  
+  .cohort-table thead th {
+	padding: .625rem 1rem;
+	font-size: .6875rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: .06em;
+	color: var(--tx-3);
+	border-bottom: 1px solid var(--bd);
+	white-space: nowrap;
+	text-align: right;
+  }
+  
+  .cohort-table thead th:first-child { text-align: left; }
+  
+  .cohort-table tbody td {
+	padding: .625rem 1rem;
+	border-bottom: 1px solid var(--bd);
+	color: var(--tx-2);
+	vertical-align: middle;
+	text-align: right;
+	font-family: var(--font-mono);
+	font-size: .8125rem;
+  }
+  
+  .cohort-table tbody td:first-child {
+	text-align: left;
+	font-family: var(--font);
+  }
+  
+  .cohort-table tbody tr:last-child td { border-bottom: none; }
+  
+  .cohort-table tbody tr {
+	transition: background var(--ease);
+	cursor: default;
+  }
+  
+  .cohort-table tbody tr:hover td { background: var(--surface-2); }
+  
+  .cohort-table-empty {
+	padding: 0 1rem;
+	min-height: 160px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+  }
+  
+  /* ── Export row ──────────────────────────────────────────────────────────── */
+  .cohort-export-row {
+	display: flex;
+	justify-content: flex-end;
+	padding: 0 0 1rem;
+  }
+  
+  /* ── Chart loading overlay ───────────────────────────────────────────────── */
+  .chart-loading {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: .5rem;
+	font-size: .8125rem;
+	color: var(--tx-3);
+	pointer-events: none;
+	z-index: 1;
+  }
+  
+  /* ── Responsive ──────────────────────────────────────────────────────────── */
+  @media (max-width: 1024px) {
+	.cohort-row { grid-template-columns: 1fr; }
+  }
+  
+  @media (max-width: 850px) {
+	.cohort-stat-strip {
+	  display: grid;
+	  grid-template-columns: 1fr 1fr;
+	}
+	.cohort-stat-block {
+	  padding: 1rem;
+	  border-bottom: 1px solid rgba(255,255,255,.07);
+	}
+	.cohort-stat-divider { display: none; }
+	.cohort-stat-num     { font-size: 1.625rem; }
+  }
+  
+  @media (max-width: 640px) {
+	.cohort-selector-inner {
+	  width: 100%;
+	  gap: .5rem;
+	  border-bottom: 1px solid var(--bd);
+	  padding-bottom: .5rem;
+	}
+	.cohort-selector-sep { display: none; }
+	.cohort-sel           { width: 100%; min-width: 0; }
+	.cohort-section .card-head {
+	  flex-direction: column;
+	  align-items: flex-start;
+	  gap: .2rem;
+	}
+	.cohort-selector          { flex-wrap: wrap; }
+  	.cohort-selector > .btn   { width: 100%; justify-content: center; }
+  }
+  
+  @media (max-width: 480px) {
+	.cohort-stat-strip  { grid-template-columns: 1fr; }
+	.cohort-stat-block  { padding: .75rem 1rem; }
+	.cohort-stat-num    { font-size: 1.5rem; }
+  }
