@@ -188,8 +188,6 @@ def _footer(story):
 
 
 def _data_table(header_labels, col_widths, data_rows, s):
-    # Header styles are applied AFTER ROWBACKGROUNDS so they are never
-    # overridden when the table breaks across pages and the header is repeated.
     header_row = [Paragraph(f"<b>{h}</b>", s["body"]) for h in header_labels]
     data = [header_row] + data_rows
     t = Table(data, colWidths=col_widths, repeatRows=1)
@@ -199,11 +197,10 @@ def _data_table(header_labels, col_widths, data_rows, s):
         ("BOTTOMPADDING",  (0, 0), (-1, -1), 4),
         ("LEFTPADDING",    (0, 0), (-1, -1), 5),
         ("RIGHTPADDING",   (0, 0), (-1, -1), 5),
-        # Body rows first
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_WHITE, COLOR_ROW_ALT]),
         ("GRID",           (0, 0), (-1, -1), 0.3, COLOR_BORDER),
         ("TEXTCOLOR",      (0, 1), (-1, -1), COLOR_TEXT),
-        # Header styles last — override ROWBACKGROUNDS for row 0 on every page
+        # Header last — overrides ROWBACKGROUNDS on every repeated page
         ("BACKGROUND",     (0, 0), (-1, 0), COLOR_ACCENT),
         ("TEXTCOLOR",      (0, 0), (-1, 0), COLOR_WHITE),
         ("FONTNAME",       (0, 0), (-1, 0), "Helvetica-Bold"),
@@ -347,7 +344,7 @@ def generate_cohort_report_pdf(students):
         ("Avg Total Clicks", f"{avg_clicks:,.0f}"),
     ]))
 
-    story.extend(_section("Top 50 Highest Risk Students"))
+    story.extend(_section("Top 50 Highest-Risk Students"))
 
     at_risk_reps = [r for r in reps if r.get("risk", 0) >= 2]
     top = sorted(
@@ -377,14 +374,113 @@ def generate_cohort_report_pdf(students):
         story.append(_data_table(
             ["Student ID", "Risk", "Score", "Sub. Rate",
              "Engagement", "Active Days", "Prev. Att.", "Withdrew"],
-            col_w,
-            data_rows,
-            s,
+            col_w, data_rows, s,
         ))
     else:
         story.append(Paragraph(
             "No high-risk or critical students found in the current dataset.", s["body"]
         ))
+
+    _footer(story)
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+def generate_model_report_pdf(model_results):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        leftMargin=MARGIN, rightMargin=MARGIN,
+        topMargin=MARGIN, bottomMargin=MARGIN,
+    )
+
+    s = _base_styles()
+    story = []
+
+    best = next((m for m in model_results if m.get("is_best")), model_results[0] if model_results else None)
+    ts   = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    story.append(_page_header(
+        "Model Performance Report",
+        f"{len(model_results)} classifier{'s' if len(model_results) != 1 else ''} evaluated — {ts}",
+    ))
+    story.append(Spacer(1, 10))
+
+    # ── Best model summary ────────────────────────────────────────────────────
+    if best:
+        story.extend(_section("Best Model"))
+        auc_meets = "Yes — meets target AUC ≥ 0.85" if best.get("auc", 0) >= 0.85 else "No — below target AUC ≥ 0.85"
+        story.append(_kv_table([
+            ("Model",            best["name"]),
+            ("Run ID",           best.get("run_id", "—")),
+            ("Trained at",       best.get("timestamp", "—")),
+            ("AUC",              f"{best.get('auc',            0):.4f}"),
+            ("CV AUC",           f"{best.get('cv_auc',         0):.4f}"),
+            ("Accuracy",         f"{best.get('accuracy',       0):.4f}"),
+            ("Precision",        f"{best.get('precision',      0):.4f}"),
+            ("Recall",           f"{best.get('recall',         0):.4f}"),
+            ("F1",               f"{best.get('f1',             0):.4f}"),
+            ("Composite Score",  f"{best.get('composite_score',0):.4f}"),
+            ("Training Time",    f"{best.get('training_time',  0):.2f}s"),
+            ("Meets AUC target", auc_meets),
+        ]))
+
+    # ── Full comparison table ─────────────────────────────────────────────────
+    story.extend(_section("Model Comparison"))
+    story.append(Paragraph(
+        "Sorted by composite score. Weights: AUC 40% · F1 30% · Recall 20% · CV-AUC 10%.",
+        s["muted"],
+    ))
+    story.append(Spacer(1, 6))
+
+    sorted_models = sorted(model_results, key=lambda m: m.get("composite_score", 0), reverse=True)
+    col_w = [
+        CONTENT_W * 0.22,
+        CONTENT_W * 0.10, CONTENT_W * 0.10,
+        CONTENT_W * 0.10, CONTENT_W * 0.10,
+        CONTENT_W * 0.10, CONTENT_W * 0.10,
+        CONTENT_W * 0.10, CONTENT_W * 0.08,
+    ]
+    data_rows = [
+        [
+            Paragraph(m["name"], s["body"]),
+            Paragraph(f"{m.get('auc',            0):.4f}", s["body"]),
+            Paragraph(f"{m.get('cv_auc',         0):.4f}" if m.get("cv_auc") else "—", s["body"]),
+            Paragraph(f"{m.get('accuracy',       0):.4f}", s["body"]),
+            Paragraph(f"{m.get('precision',      0):.4f}", s["body"]),
+            Paragraph(f"{m.get('recall',         0):.4f}", s["body"]),
+            Paragraph(f"{m.get('f1',             0):.4f}", s["body"]),
+            Paragraph(f"{m.get('composite_score',0):.4f}", s["body"]),
+            Paragraph(f"{m.get('training_time',  0):.1f}s", s["body"]),
+        ]
+        for m in sorted_models
+    ]
+    story.append(_data_table(
+        ["Model", "AUC", "CV-AUC", "Accuracy", "Precision", "Recall", "F1", "Score", "Time"],
+        col_w, data_rows, s,
+    ))
+
+    # ── Feature importance for best model ─────────────────────────────────────
+    if best and best.get("importance"):
+        story.extend(_section(f"Feature Importance — {best['name']}"))
+        story.append(Paragraph(
+            "Top features ranked by importance score from the best model.",
+            s["muted"],
+        ))
+        story.append(Spacer(1, 6))
+
+        importance = sorted(best["importance"], key=lambda x: x.get("importance", 0), reverse=True)[:15]
+        imp_col_w  = [CONTENT_W * 0.08, CONTENT_W * 0.52, CONTENT_W * 0.40]
+        imp_rows   = [
+            [
+                Paragraph(str(i + 1), s["body"]),
+                Paragraph(feat.get("feature", "—"), s["body"]),
+                Paragraph(f"{feat.get('score', 0):.4f}", s["body"]),
+            ]
+            for i, feat in enumerate(importance)
+        ]
+        story.append(_data_table(["#", "Feature", "Importance"], imp_col_w, imp_rows, s))
 
     _footer(story)
     doc.build(story)

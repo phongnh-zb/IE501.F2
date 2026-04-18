@@ -7,9 +7,16 @@
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <h1>Models</h1>
-  <p class="text-2 text-sm">Trained classifier evaluation results and feature analysis</p>
+<div class="page-header flex jc-between items-c">
+  <div>
+    <h1>Models</h1>
+    <p class="text-2 text-sm">Trained classifier evaluation results and feature analysis</p>
+  </div>
+  {% if models %}
+  <a href="/api/models/report" class="btn btn-outline btn-sm">
+    <i class="fas fa-file-pdf"></i> Download Report
+  </a>
+  {% endif %}
 </div>
 
 {% if not models %}
@@ -37,7 +44,7 @@
 
 <div class="models-row2">
 {% include 'models/_tuning.html' %}
-</div
+</div>
 {% endif %}
 {% endblock %}
 

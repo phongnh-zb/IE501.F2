@@ -5,8 +5,10 @@ from flask import Blueprint, jsonify, request, send_file
 from flask_login import current_user, login_required
 
 from webapp.services.cache import (SYSTEM_CACHE, fetch_all_data_from_hbase,
+                                   get_model_results_from_hbase,
                                    get_student_by_id, summarize_students_by_id)
 from webapp.services.pdf_export import (generate_cohort_report_pdf,
+                                        generate_model_report_pdf,
                                         generate_student_report_pdf)
 from webapp.services.recommendations import generate_smart_recommendations
 
@@ -98,6 +100,18 @@ def student_report(student_id):
     buffer = generate_student_report_pdf(student, recommendations)
     return send_file(buffer, mimetype="application/pdf", as_attachment=True,
                      download_name=pdf_filename(prefix=f"student_{student_id}_report"))
+
+
+@api_bp.route("/models/report")
+@login_required
+def models_report():
+    model_results = get_model_results_from_hbase()
+    if not model_results:
+        return jsonify({"error": "No model results — run the pipeline first"}), 404
+
+    buffer = generate_model_report_pdf(model_results)
+    return send_file(buffer, mimetype="application/pdf", as_attachment=True,
+                     download_name=pdf_filename(prefix="model_performance_report"))
 
 
 @api_bp.route("/refresh-cache", methods=["POST"])
