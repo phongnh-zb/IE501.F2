@@ -23,7 +23,6 @@ CREATE TABLE IF NOT EXISTS users (
 );
 """
 
-# Applied on every startup — silently ignored if column already exists
 _MIGRATIONS = [
     "ALTER TABLE users ADD COLUMN full_name  TEXT NOT NULL DEFAULT ''",
     "ALTER TABLE users ADD COLUMN email      TEXT NOT NULL DEFAULT ''",
@@ -88,7 +87,6 @@ def get_user_by_id(user_id):
 
 
 def get_user_by_username(username):
-    """Return (User, password_hash) or (None, None) if not found."""
     with _connect() as conn:
         row = conn.execute(
             "SELECT id, username, password_hash, role, modules, "
@@ -98,6 +96,15 @@ def get_user_by_username(username):
     if not row:
         return None, None
     return _row_to_user(row), row["password_hash"]
+
+
+def list_users():
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT id, username, role, modules, full_name, email, last_login "
+            "FROM users ORDER BY role ASC, full_name ASC"
+        ).fetchall()
+    return [_row_to_user(r) for r in rows]
 
 
 def create_user(username, password_hash, role, modules=None,
@@ -146,9 +153,38 @@ def update_user_info(user_id, full_name, email):
         )
 
 
+def update_user_role_modules(user_id, full_name, email, modules, updated_by):
+    _validate(full_name=full_name, email=email)
+    with _connect() as conn:
+        existing = conn.execute(
+            "SELECT id FROM users WHERE email = ? AND id != ?",
+            (email.strip(), user_id),
+        ).fetchone()
+        if existing:
+            raise ValueError("This email address is already in use by another account.")
+        conn.execute(
+            "UPDATE users SET full_name = ?, email = ?, modules = ?, "
+            "updated_at = ?, updated_by = ? WHERE id = ?",
+            (full_name.strip(), email.strip(), json.dumps(modules),
+             _now(), str(updated_by), user_id),
+        )
+
+
 def update_password(user_id, new_password_hash):
     with _connect() as conn:
         conn.execute(
             "UPDATE users SET password_hash = ?, updated_at = ?, updated_by = ? WHERE id = ?",
             (new_password_hash, _now(), str(user_id), user_id),
         )
+
+
+def delete_user(user_id, requesting_user_id):
+    user = get_user_by_id(user_id)
+    if not user:
+        raise ValueError("User not found.")
+    if str(user_id) == str(requesting_user_id):
+        raise ValueError("You cannot delete your own account.")
+    if user.role == "admin":
+        raise ValueError("Admin accounts cannot be deleted through the UI.")
+    with _connect() as conn:
+        conn.execute("DELETE FROM users WHERE id = ?", (user_id,))

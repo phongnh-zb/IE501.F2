@@ -10,6 +10,7 @@ from configs.config import FLASK_PORT, SECRET_KEY
 from webapp.auth.db import init_db
 from webapp.auth.manager import login_manager
 from webapp.auth.routes import auth_bp
+from webapp.routes.admin_users import admin_users_bp
 from webapp.routes.api import api_bp
 from webapp.routes.cohort import cohort_bp
 from webapp.routes.dashboard import dashboard_bp
@@ -38,6 +39,7 @@ def create_app():
     app.register_blueprint(models_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(pipeline_bp)
+    app.register_blueprint(admin_users_bp)
     app.register_blueprint(api_bp)
 
     @app.route("/favicon.ico")
