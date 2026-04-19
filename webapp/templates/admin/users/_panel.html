@@ -1,0 +1,181 @@
+<!-- ── Backdrop ─────────────────────────────────────────────────────────── -->
+<div class="users-backdrop" id="users-backdrop" onclick="Users.closePanel()"></div>
+
+<!-- ── Create / Edit / View panel ───────────────────────────────────────── -->
+<aside class="users-panel" id="users-panel" aria-hidden="true">
+  <div class="users-panel-head">
+    <div class="users-panel-head-top">
+      <div class="users-panel-title" id="users-panel-title">New Lecturer</div>
+      <button class="users-close-btn" onclick="Users.closePanel()">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+  <form id="users-form" method="POST" class="users-form-body">
+    <input type="hidden" name="user_id" id="form-user-id" />
+
+    <div class="users-field">
+      <label class="users-label">Full name <span class="users-req">*</span></label>
+      <input type="text" name="full_name" id="form-full-name"
+             class="users-input" placeholder="e.g. Nguyễn Văn A" required />
+    </div>
+
+    <div class="users-field">
+      <label class="users-label">Username <span class="users-req">*</span></label>
+      <input type="text" name="username" id="form-username"
+             class="users-input" placeholder="e.g. 244xxxxx" required />
+    </div>
+
+    <div class="users-field">
+      <label class="users-label">Email <span class="users-req">*</span></label>
+      <input type="email" name="email" id="form-email"
+             class="users-input" placeholder="e.g. 244xxxxx@uit.edu.vn" required />
+    </div>
+
+    <div class="users-field" id="form-password-group">
+      <label class="users-label">Password <span class="users-req">*</span></label>
+      <div class="users-input-wrap">
+        <input type="password" name="password" id="form-password"
+               class="users-input" placeholder="Min. 8 characters"
+               autocomplete="new-password"
+               oninput="Users.checkStrength(this.value, 'form-strength', 'form-strength-fill', 'form-strength-label')" />
+        <button type="button" class="users-eye" onclick="Users.toggleEye(this)" tabindex="-1">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>
+      <div class="prof-pw-criteria text-xs text-3">
+        Strength improves with: 8+ chars · 10+ chars · uppercase · number · symbol
+      </div>
+      <div class="users-match-bar" id="form-strength" style="display:none;">
+        <div class="users-match-track">
+          <div class="users-match-fill" id="form-strength-fill"></div>
+        </div>
+        <span class="users-match-label" id="form-strength-label"></span>
+      </div>
+    </div>
+
+    <div class="users-field" id="form-confirm-group">
+      <label class="users-label">Confirm password <span class="users-req">*</span></label>
+      <div class="users-input-wrap">
+        <input type="password" name="confirm_password" id="form-confirm"
+               class="users-input" placeholder="Repeat password"
+               autocomplete="new-password" />
+        <button type="button" class="users-eye" onclick="Users.toggleEye(this)" tabindex="-1">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>
+      <div class="users-match-bar" id="form-match-bar" style="display:none;">
+        <span class="users-match-label" id="form-match-label"></span>
+      </div>
+    </div>
+
+    <div class="users-field">
+      <label class="users-label">Module access</label>
+      <div class="users-module-checkboxes" id="form-modules">
+        {% for m in modules_available %}
+        <label class="users-check-item">
+          <input type="checkbox" name="modules" value="{{ m }}" />
+          <span class="st-module-tag">{{ m }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+  </form>
+
+  <div class="users-panel-foot">
+    <button class="btn btn-outline btn-sm" onclick="Users.closePanel()">Cancel</button>
+    <button class="btn btn-primary btn-sm" onclick="Users.submitForm()">Create</button>
+  </div>
+</aside>
+
+<!-- ── Reset password modal ──────────────────────────────────────────────── -->
+<div class="users-modal-overlay hidden" id="reset-overlay" onclick="Users.closeReset()"></div>
+<div class="users-modal hidden" id="reset-modal">
+  <div class="users-modal-head">
+    <span id="reset-title">Reset password</span>
+    <button class="users-close-btn" onclick="Users.closeReset()"><i class="fas fa-xmark"></i></button>
+  </div>
+  <form id="reset-form" method="POST" class="users-modal-body">
+    <div class="users-field">
+      <label class="users-label">New password <span class="users-req">*</span></label>
+      <div class="users-input-wrap">
+        <input type="password" name="password" id="reset-password"
+               class="users-input" placeholder="Min. 8 characters"
+               autocomplete="new-password"
+               oninput="Users.checkStrength(this.value, 'reset-strength', 'reset-strength-fill', 'reset-strength-label')" />
+        <button type="button" class="users-eye" onclick="Users.toggleEye(this)" tabindex="-1">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>
+      <div class="prof-pw-criteria text-xs text-3">
+        Strength improves with: 8+ chars · 10+ chars · uppercase · number · symbol
+      </div>
+      <div class="users-match-bar" id="reset-strength" style="display:none;">
+        <div class="users-match-track">
+          <div class="users-match-fill" id="reset-strength-fill"></div>
+        </div>
+        <span class="users-match-label" id="reset-strength-label"></span>
+      </div>
+    </div>
+    <div class="users-field">
+      <label class="users-label">Confirm password <span class="users-req">*</span></label>
+      <div class="users-input-wrap">
+        <input type="password" name="confirm_password" id="reset-confirm"
+               class="users-input" placeholder="Repeat password"
+               autocomplete="new-password" />
+        <button type="button" class="users-eye" onclick="Users.toggleEye(this)" tabindex="-1">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>
+      <div class="users-match-bar" id="reset-match-bar" style="display:none;">
+        <span class="users-match-label" id="reset-match-label"></span>
+      </div>
+    </div>
+  </form>
+  <div class="users-modal-foot">
+    <button class="btn btn-outline btn-sm" onclick="Users.closeReset()">Cancel</button>
+    <button class="btn btn-primary btn-sm" onclick="Users.submitReset()">Reset password</button>
+  </div>
+</div>
+
+<!-- ── Block confirm modal ───────────────────────────────────────────────── -->
+<div class="users-modal-overlay hidden" id="block-overlay" onclick="Users.closeBlock()"></div>
+<div class="users-modal hidden" id="block-modal">
+  <div class="users-modal-head">
+    <span>Block user</span>
+    <button class="users-close-btn" onclick="Users.closeBlock()"><i class="fas fa-xmark"></i></button>
+  </div>
+  <div class="users-modal-body">
+    <p class="text-sm">Block <strong id="block-name"></strong>? They will not be able to log in until an administrator unblocks them.</p>
+  </div>
+  <div class="users-modal-foot">
+    <button class="btn btn-outline btn-sm" onclick="Users.closeBlock()">Cancel</button>
+    <form id="block-form" method="POST" style="display:inline;">
+      <button type="submit" class="btn btn-sm users-btn-block-confirm">
+        <i class="fas fa-ban"></i> Block
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ── Delete confirm modal ──────────────────────────────────────────────── -->
+<div class="users-modal-overlay hidden" id="delete-overlay" onclick="Users.closeDelete()"></div>
+<div class="users-modal hidden" id="delete-modal">
+  <div class="users-modal-head">
+    <span>Delete user</span>
+    <button class="users-close-btn" onclick="Users.closeDelete()"><i class="fas fa-xmark"></i></button>
+  </div>
+  <div class="users-modal-body">
+    <p class="text-sm">Are you sure you want to delete <strong id="delete-name"></strong>?
+    This action cannot be undone.</p>
+  </div>
+  <div class="users-modal-foot">
+    <button class="btn btn-outline btn-sm" onclick="Users.closeDelete()">Cancel</button>
+    <form id="delete-form" method="POST" style="display:inline;">
+      <button type="submit" class="btn btn-sm users-btn-delete-confirm">
+        <i class="fas fa-trash"></i> Delete
+      </button>
+    </form>
+  </div>
+</div>

@@ -27,13 +27,12 @@
 
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
-          <div class="login-alert login-alert-{{ category }}">
-            <i class="fas fa-circle-exclamation"></i>
-            {{ message }}
-          </div>
+        <div class="login-alert login-alert-{{ category }}">
+          <i class="fas fa-{% if category == 'error' %}circle-xmark{% else %}circle-info{% endif %}"></i>
+          {{ message }}
+        </div>
         {% endfor %}
       {% endwith %}
-
       <form method="POST" action="{{ url_for('auth.login') }}" class="login-form" id="login-form">
 
         <div class="login-field">

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% set active_page = 'admin_users' %}
+{% block title %}Users{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/users.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="page-header flex jc-between items-c">
+  <div>
+    <h1>Users</h1>
+    <p class="text-2 text-sm">Manage lecturer accounts and module access</p>
+  </div>
+  <button class="btn btn-primary btn-sm" onclick="Users.openCreate()">
+    <i class="fas fa-plus"></i> New Lecturer
+  </button>
+</div>
+
+{% include 'admin/users/_table.html' %}
+{% include 'admin/users/_panel.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const MODULES_AVAILABLE = {{ modules_available | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/users.js') }}"></script>
+{% endblock %}

@@ -6,6 +6,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from webapp.auth.db import (get_user_by_id, get_user_by_username,
                             update_password, update_user_info)
+from webapp.services.cache import get_filter_options
 
 profile_bp = Blueprint("profile", __name__)
 
@@ -16,8 +17,10 @@ _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 @login_required
 def profile():
     user = get_user_by_id(current_user.id)
-    return render_template("profile/index.html", user=user)
-
+    return render_template("profile/index.html",
+        user=user,
+        modules_available=get_filter_options()["modules"]
+    )
 
 @profile_bp.route("/profile/info", methods=["POST"])
 @login_required

@@ -6,23 +6,29 @@
     <div class="prof-avatar">
       <span>{{ user.display_name[0] | upper }}</span>
     </div>
-
     <div class="prof-identity-detail">
       <div class="prof-display-name">{{ user.display_name }}</div>
       <div class="prof-username mono">@{{ user.username }}</div>
-      <span
-        class="badge {% if user.is_admin %}badge-role-admin{% else %}badge-role-lecturer{% endif %} prof-role-badge"
-      >
+      <span class="badge {% if user.is_admin %}badge-role-admin{% else %}badge-role-lecturer{% endif %} prof-role-badge">
         {{ user.role | title }}
       </span>
     </div>
   </div>
 
+  {% set all_count  = modules_available | length %}
+  {% set user_count = user.modules | length %}
+
   <div class="prof-fields">
+    <div class="prof-field-row">
+      <span class="prof-field-label">Email</span>
+      <span class="prof-field-value text-sm">{{ user.email or '—' }}</span>
+    </div>
     <div class="prof-field-row">
       <span class="prof-field-label">Module access</span>
       <span class="prof-field-value">
-        {% if user.is_admin or not user.modules %}
+        {% if user_count == 0 %}
+        <span class="text-3 text-sm">—</span>
+        {% elif user_count >= all_count %}
         <span class="prof-all-modules">All modules</span>
         {% else %}
         <span class="prof-module-list">
@@ -35,9 +41,7 @@
     </div>
     <div class="prof-field-row">
       <span class="prof-field-label">Last login</span>
-      <span class="prof-field-value mono text-sm"
-        >{{ user.last_login or 'Never' }}</span
-      >
+      <span class="prof-field-value mono text-sm">{{ user.last_login or 'Never' }}</span>
     </div>
   </div>
 </div>

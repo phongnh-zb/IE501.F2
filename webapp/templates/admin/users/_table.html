@@ -1,0 +1,91 @@
+<div class="card users-table-card">
+  <div class="users-table-wrap">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th class="text-left">User</th>
+          <th class="text-left">Email</th>
+          <th class="text-left">Role</th>
+          <th class="text-left">Module access</th>
+          <th class="text-left">Last login</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        {% set all_count  = modules_available | length %}
+        {% set user_count = u.modules | length %}
+        <tr class="users-row {% if u.is_admin %}users-row-admin{% endif %} {% if u.is_blocked %}users-row-blocked{% endif %}"
+            onclick='Users.openView({{ u.id }}, {{ u.display_name | tojson }}, {{ u.username | tojson }}, {{ u.email | tojson }}, {{ u.modules | tojson }}, {{ u.is_blocked | tojson }})'>
+          <td>
+            <div class="users-identity">
+              <div class="users-avatar">{{ u.display_name[0] | upper }}</div>
+              <div class="users-identity-info">
+                <div class="users-name">
+                  {{ u.display_name }}
+                </div>
+                <div class="users-meta mono">
+                  @{{ u.username }}
+                </div>
+                <span class="badge badge-role-{{ u.role }} users-role-in-identity">{{ u.role | title }}</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="text-sm">{{ u.email }}</span>
+          </td>
+          <td>
+            <span class="badge badge-role-{{ u.role }}">{{ u.role | title }}</span>
+          </td>
+          <td>
+            {% if user_count == 0 %}
+              <span class="text-3 text-sm">—</span>
+            {% elif user_count >= all_count %}
+              <span class="users-all-modules">All modules</span>
+            {% else %}
+              <div class="users-module-list">
+                {% for m in u.modules %}
+                <span class="st-module-tag">{{ m }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </td>
+          <td class="text-sm text-2 mono">{{ u.last_login or '—' }}</td>
+          <td class="text-right">
+            {% if not u.is_admin %}
+            <div class="users-actions" onclick="event.stopPropagation()">
+              <button class="btn btn-outline btn-xs"
+                onclick='Users.openEdit({{ u.id }}, {{ u.display_name | tojson }}, {{ u.username | tojson }}, {{ u.email | tojson }}, {{ u.modules | tojson }})'>
+                <i class="fas fa-pen"></i> Edit
+              </button>
+              <button class="btn btn-outline btn-xs"
+                onclick='Users.openResetPassword({{ u.id }}, {{ u.display_name | tojson }})'>
+                <i class="fas fa-key"></i> Reset
+              </button>
+              {% if u.is_blocked %}
+              <form method="POST" action="/admin/users/{{ u.id }}/unblock" style="display:inline;">
+                <button type="submit" class="btn btn-outline btn-xs users-btn-unblock">
+                  <i class="fas fa-lock-open"></i> Unblock
+                </button>
+              </form>
+              {% else %}
+              <button class="btn btn-outline btn-xs users-btn-block"
+                onclick='Users.confirmBlock({{ u.id }}, {{ u.display_name | tojson }})'>
+                <i class="fas fa-ban"></i> Block
+              </button>
+              {% endif %}
+              <button class="btn btn-outline btn-xs users-btn-delete"
+                onclick='Users.confirmDelete({{ u.id }}, {{ u.display_name | tojson }})'>
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </div>
+            {% else %}
+            <span class="text-xs text-3" onclick="event.stopPropagation()">View only</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
