@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% set active_page = 'features' %}
+{% block title %}Features{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/features.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Features</h1>
+  <p class="text-2 text-sm">Distribution, risk-tier comparison, and correlation across all 19 input features</p>
+</div>
+
+{% include 'features/_distribution.html' %}
+{% include 'features/_boxplot.html' %}
+{% include 'features/_correlation.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const FEATURE_GROUPS = {{ feature_groups | tojson }};
+const DEFAULT_FIELD  = {{ default_field  | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/features.js') }}"></script>
+{% endblock %}

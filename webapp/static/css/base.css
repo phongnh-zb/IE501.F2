@@ -343,6 +343,20 @@ img, svg { display: block; }
 /* ── Chart wrapper ───────────────────────────────────────────────────────── */
 .chart-wrap { width: 100%; position: relative; }
 
+/* ── Chart loading overlay ───────────────────────────────────────────────── */
+.chart-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  font-size: .8125rem;
+  color: var(--tx-3);
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 .nav-hamburger { display: none; }
 

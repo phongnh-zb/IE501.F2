@@ -201,20 +201,6 @@
 	padding: 0 0 1rem;
   }
   
-  /* ── Chart loading overlay ───────────────────────────────────────────────── */
-  .chart-loading {
-	position: absolute;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: .5rem;
-	font-size: .8125rem;
-	color: var(--tx-3);
-	pointer-events: none;
-	z-index: 1;
-  }
-  
   /* ── Responsive ──────────────────────────────────────────────────────────── */
   @media (max-width: 1024px) {
 	.cohort-row { grid-template-columns: 1fr; }
