@@ -5,9 +5,9 @@ from flask_login import current_user, login_required
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from webapp.auth.db import (block_user, create_user, delete_user,
-                            get_password_hash, get_user_by_username,
-                            list_users, unblock_user, update_password,
-                            update_user_role_modules)
+                            get_password_hash, get_user_by_email,
+                            get_user_by_username, list_users, unblock_user,
+                            update_password, update_user_role_modules)
 from webapp.auth.decorators import admin_required
 from webapp.services.cache import get_filter_options
 
@@ -60,6 +60,10 @@ def create():
     existing, _ = get_user_by_username(username)
     if existing:
         flash(f"Username '{username}' is already taken.", "error"); return redirect(url_for("admin_users.users"))
+
+    existing, _ = get_user_by_email(email)
+    if existing:
+        flash(f"Email '{email}' is already taken.", "error"); return redirect(url_for("admin_users.users"))
 
     try:
         create_user(

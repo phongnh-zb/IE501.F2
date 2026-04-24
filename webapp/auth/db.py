@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     role            TEXT    NOT NULL,
     modules         TEXT    NOT NULL DEFAULT '[]',
     full_name       TEXT    NOT NULL,
-    email           TEXT    NOT NULL,
+    email           TEXT    UNIQUE NOT NULL,
     last_login      TEXT,
     is_blocked      INTEGER NOT NULL DEFAULT 0,
     failed_attempts INTEGER NOT NULL DEFAULT 0,
@@ -101,6 +101,18 @@ def get_user_by_username(username):
             "SELECT id, username, password_hash, role, modules, "
             "full_name, email, last_login, is_blocked, failed_attempts "
             "FROM users WHERE username = ?", (username,),
+        ).fetchone()
+    if not row:
+        return None, None
+    return _row_to_user(row), row["password_hash"]
+
+
+def get_user_by_email(email):
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT id, username, password_hash, role, modules, "
+            "full_name, email, last_login, is_blocked, failed_attempts "
+            "FROM users WHERE email = ?", (email,),
         ).fetchone()
     if not row:
         return None, None

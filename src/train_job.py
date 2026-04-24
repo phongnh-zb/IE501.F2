@@ -32,7 +32,7 @@ def main():
 
     # 3 — Hyperparameter tuning for tree-based models via grid search
     print("\n>>> [TRAIN] Running hyperparameter tuning...")
-    classifiers, tuning_results = tune_classifiers(classifiers, train_data, num_folds=3)
+    classifiers, tuning_results = tune_classifiers(classifiers, train_data, num_folds=2)
 
     # 4 — Full training + evaluation on all classifiers
     results = run_evaluation(classifiers, train_data, test_data)
