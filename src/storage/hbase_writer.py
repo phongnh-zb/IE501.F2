@@ -61,6 +61,8 @@ def write_predictions(rows, connection):
         withdrew_early   = int(row["withdrew_early"])
         prev_attempts    = int(row["num_prev_attempts"])
 
+        clicks_per_day = clicks / active_days if active_days > 0 else 0.0
+
         risk_tier = _apply_risk_tier(
             score, clicks, sub_rate, avg_days_early, withdrew_early, int(row["label"])
         )
@@ -75,6 +77,7 @@ def write_predictions(rows, connection):
                 b"info:total_clicks":        str(clicks).encode(),
                 b"info:active_days":         str(active_days).encode(),
                 b"info:active_weeks":        str(active_weeks).encode(),
+                b"info:clicks_per_day":      str(round(clicks_per_day, 4)).encode(),
                 b"info:engagement_ratio":    str(engagement_ratio).encode(),
                 b"info:forum_clicks":        str(forum_clicks).encode(),
                 b"info:quiz_clicks":         str(quiz_clicks).encode(),
@@ -91,15 +94,15 @@ def write_predictions(rows, connection):
                 b"info:imd_band_encoded":    str(int(row["imd_band_encoded"])).encode(),
                 b"info:disability_encoded":  str(int(row["disability_encoded"])).encode(),
                 b"info:days_before_start":   str(float(row["days_before_start"])).encode(),
-                b"info:gender":             str(row["gender"] or "").encode(),
-                b"info:region":             str(row["region"] or "").encode(),
-                b"info:highest_education":  str(row["highest_education"] or "").encode(),
-                b"info:imd_band":           str(row["imd_band"] or "").encode(),
-                b"info:age_band":           str(row["age_band"] or "").encode(),
-                b"info:studied_credits":    str(int(row["studied_credits"] or 0)).encode(),
-                b"info:disability":         str(row["disability"] or "").encode(),
-                b"info:final_result":       str(row["final_result"] or "").encode(),
-                b"prediction:risk_tier":    str(risk_tier).encode(),
+                b"info:gender":              str(row["gender"] or "").encode(),
+                b"info:region":              str(row["region"] or "").encode(),
+                b"info:highest_education":   str(row["highest_education"] or "").encode(),
+                b"info:imd_band":            str(row["imd_band"] or "").encode(),
+                b"info:age_band":            str(row["age_band"] or "").encode(),
+                b"info:studied_credits":     str(int(row["studied_credits"] or 0)).encode(),
+                b"info:disability":          str(row["disability"] or "").encode(),
+                b"info:final_result":        str(row["final_result"] or "").encode(),
+                b"prediction:risk_tier":     str(risk_tier).encode(),
             },
         )
     batch.send()

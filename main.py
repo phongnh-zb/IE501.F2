@@ -4,6 +4,9 @@ import subprocess
 import sys
 import time
 
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
 GREEN  = '\033[92m'
 RED    = '\033[91m'
 YELLOW = '\033[93m'
@@ -84,15 +87,11 @@ def main():
         sys.exit(1)
 
     # --- STEP 1: START INFRASTRUCTURE (shell — Hadoop/HBase/Thrift) ---
-    def _start_services():
-        subprocess.run(
-            f"bash {PROJECT_ROOT}/scripts/start_services.sh",
-            shell=True, check=True, text=True,
-        )
-        if not wait_for_service('localhost', 9090, "HBase Thrift Server"):
-            raise RuntimeError("HBase Thrift Server did not become ready in time.")
+    if not run_command(f"bash {PROJECT_ROOT}/scripts/start_services.sh", "1. START SERVICES (HADOOP/HBASE)"):
+        sys.exit(1)
 
-    if not run_step(_start_services, "1. START SERVICES (HADOOP/HBASE)"):
+    if not wait_for_service('localhost', 9090, "HBase Thrift Server"):
+        print(f"{RED}Stopping program because infrastructure is not ready.{RESET}")
         sys.exit(1)
 
     # --- STEP 2: DATA INGESTION (shell — hdfs dfs -put) ---

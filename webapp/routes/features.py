@@ -9,25 +9,26 @@ features_bp = Blueprint("features", __name__)
 
 # ── Feature metadata ──────────────────────────────────────────────────────────
 FEATURES = [
-    {"field": "clicks",            "label": "Total Clicks",      "short": "Clicks",     "group": "VLE Engagement"},
-    {"field": "active_days",       "label": "Active Days",       "short": "Act.Days",   "group": "VLE Engagement"},
-    {"field": "active_weeks",      "label": "Active Weeks",      "short": "Act.Wks",    "group": "VLE Engagement"},
-    {"field": "engagement_ratio",  "label": "Engagement Ratio",  "short": "Eng.Ratio",  "group": "VLE Engagement"},
-    {"field": "forum_clicks",      "label": "Forum Clicks",      "short": "Forum",      "group": "VLE Engagement"},
-    {"field": "quiz_clicks",       "label": "Quiz Clicks",       "short": "Quiz",       "group": "VLE Engagement"},
-    {"field": "resource_clicks",   "label": "Resource Clicks",   "short": "Resource",   "group": "VLE Engagement"},
-    {"field": "score",             "label": "Avg Score",         "short": "Score",      "group": "Academic"},
-    {"field": "weighted_score",    "label": "Weighted Score",    "short": "W.Score",    "group": "Academic"},
-    {"field": "submission_rate",   "label": "Submission Rate",   "short": "Sub.Rate",   "group": "Academic"},
-    {"field": "avg_days_early",    "label": "Avg Days Early",    "short": "Days.Early", "group": "Academic"},
-    {"field": "exam_score",        "label": "Exam Score",        "short": "Exam",       "group": "Academic"},
-    {"field": "tma_score",         "label": "TMA Score",         "short": "TMA",        "group": "Academic"},
-    {"field": "cma_score",         "label": "CMA Score",         "short": "CMA",        "group": "Academic"},
-    {"field": "withdrew_early",    "label": "Withdrew Early",    "short": "Withdrew",   "group": "Registration"},
-    {"field": "days_before_start", "label": "Days Before Start", "short": "Reg.Days",   "group": "Registration"},
-    {"field": "num_prev_attempts", "label": "Prev Attempts",     "short": "Prev.Att",   "group": "Demographics"},
-    {"field": "imd_band_encoded",  "label": "IMD Band",          "short": "IMD",        "group": "Demographics"},
-    {"field": "disability_encoded","label": "Disability",        "short": "Disability", "group": "Demographics"},
+    {"field": "clicks",             "label": "Total Clicks",      "short": "Clicks",     "group": "VLE Engagement"},
+    {"field": "active_days",        "label": "Active Days",       "short": "Act.Days",   "group": "VLE Engagement"},
+    {"field": "active_weeks",       "label": "Active Weeks",      "short": "Act.Wks",    "group": "VLE Engagement"},
+    {"field": "clicks_per_day",     "label": "Clicks per Day",    "short": "Clk/Day",    "group": "VLE Engagement"},
+    {"field": "engagement_ratio",   "label": "Engagement Ratio",  "short": "Eng.Ratio",  "group": "VLE Engagement"},
+    {"field": "forum_clicks",       "label": "Forum Clicks",      "short": "Forum",      "group": "VLE Engagement"},
+    {"field": "quiz_clicks",        "label": "Quiz Clicks",       "short": "Quiz",       "group": "VLE Engagement"},
+    {"field": "resource_clicks",    "label": "Resource Clicks",   "short": "Resource",   "group": "VLE Engagement"},
+    {"field": "score",              "label": "Avg Score",         "short": "Score",      "group": "Academic"},
+    {"field": "weighted_score",     "label": "Weighted Score",    "short": "W.Score",    "group": "Academic"},
+    {"field": "submission_rate",    "label": "Submission Rate",   "short": "Sub.Rate",   "group": "Academic"},
+    {"field": "avg_days_early",     "label": "Avg Days Early",    "short": "Days.Early", "group": "Academic"},
+    {"field": "exam_score",         "label": "Exam Score",        "short": "Exam",       "group": "Academic"},
+    {"field": "tma_score",          "label": "TMA Score",         "short": "TMA",        "group": "Academic"},
+    {"field": "cma_score",          "label": "CMA Score",         "short": "CMA",        "group": "Academic"},
+    {"field": "withdrew_early",     "label": "Withdrew Early",    "short": "Withdrew",   "group": "Registration"},
+    {"field": "days_before_start",  "label": "Days Before Start", "short": "Reg.Days",   "group": "Registration"},
+    {"field": "num_prev_attempts",  "label": "Prev Attempts",     "short": "Prev.Att",   "group": "Demographics"},
+    {"field": "imd_band_encoded",   "label": "IMD Band",          "short": "IMD",        "group": "Demographics"},
+    {"field": "disability_encoded", "label": "Disability",        "short": "Disability", "group": "Demographics"},
 ]
 
 _FIELD_META   = {f["field"]: f for f in FEATURES}
@@ -37,6 +38,7 @@ _MODEL_TO_CACHE = {
     "total_clicks":       "clicks",
     "active_days":        "active_days",
     "active_weeks":       "active_weeks",
+    "clicks_per_day":     "clicks_per_day",
     "engagement_ratio":   "engagement_ratio",
     "forum_clicks":       "forum_clicks",
     "quiz_clicks":        "quiz_clicks",
@@ -179,7 +181,7 @@ def features_distribution():
     })
 
 
-# ── API: box plot quartiles ───────────────────────────────────────────────────
+# ── API: box plot quartiles for top features ──────────────────────────────────
 
 @features_bp.route("/api/features/boxplot")
 @login_required
@@ -188,7 +190,8 @@ def features_boxplot():
         return jsonify({"error": "Data not ready"}), 503
 
     model_results = get_model_results_from_hbase()
-    best = next((m for m in model_results if m.get("is_best")), model_results[0] if model_results else None)
+    best = next((m for m in model_results if m.get("is_best")),
+                model_results[0] if model_results else None)
 
     top_fields = []
     if best and best.get("importance"):
@@ -259,10 +262,8 @@ def features_correlation():
         row = []
         for j in range(n):
             if i == j:
-                # Null diagonal — self-correlation adds no information
                 row.append(None)
             elif j < i:
-                # Null lower triangle — show upper triangle only
                 row.append(None)
             else:
                 row.append(_pearson(vectors[fields[i]], vectors[fields[j]]))
