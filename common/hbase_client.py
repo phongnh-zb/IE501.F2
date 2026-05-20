@@ -4,12 +4,9 @@ import happybase
 
 from configs import config
 
-DEFAULT_TIMEOUT = 10_000   # ms — point reads and model result queries
-SCAN_TIMEOUT    = 60_000   # ms — full-table scans (student cache sync)
-
 
 @contextmanager
-def hbase_connection(timeout=DEFAULT_TIMEOUT):
+def hbase_connection(timeout=config.DEFAULT_TIMEOUT):
     connection = None
     try:
         connection = happybase.Connection(

@@ -36,79 +36,89 @@ def _apply_risk_tier(
     return RISK_SAFE
 
 
-def write_predictions(rows, connection):
-    table = connection.table(config.TABLE_NAME)
+def _write_partition(rows):
+    import happybase
 
-    print(f">>> [HBASE] Writing {len(rows)} rows...")
-    start_time = time.time()
+    connection = happybase.Connection(
+        host=config.HBASE_HOST,
+        port=config.HBASE_PORT,
+        timeout=config.DEFAULT_TIMEOUT,
+    )
+    connection.open()
+    try:
+        table = connection.table(config.TABLE_NAME)
+        batch = table.batch(batch_size=1000)
+        count = 0
 
-    batch = table.batch(batch_size=1000)
-    for row in rows:
-        clicks           = float(row["total_clicks"])
-        active_days      = int(row["active_days"])
-        active_weeks     = int(row["active_weeks"])
-        engagement_ratio = float(row["engagement_ratio"])
-        forum_clicks     = float(row["forum_clicks"])
-        quiz_clicks      = float(row["quiz_clicks"])
-        resource_clicks  = float(row["resource_clicks"])
-        score            = float(row["avg_score"])
-        w_score          = float(row["weighted_avg_score"])
-        sub_rate         = float(row["submission_rate"])
-        avg_days_early   = float(row["avg_days_early"])
-        exam_score       = float(row["exam_score"])
-        tma_score        = float(row["tma_score"])
-        cma_score        = float(row["cma_score"])
-        withdrew_early   = int(row["withdrew_early"])
-        prev_attempts    = int(row["num_prev_attempts"])
+        for row in rows:
+            clicks           = float(row["total_clicks"])
+            active_days      = int(row["active_days"])
+            active_weeks     = int(row["active_weeks"])
+            engagement_ratio = float(row["engagement_ratio"])
+            forum_clicks     = float(row["forum_clicks"])
+            quiz_clicks      = float(row["quiz_clicks"])
+            resource_clicks  = float(row["resource_clicks"])
+            score            = float(row["avg_score"])
+            w_score          = float(row["weighted_avg_score"])
+            sub_rate         = float(row["submission_rate"])
+            avg_days_early   = float(row["avg_days_early"])
+            exam_score       = float(row["exam_score"])
+            tma_score        = float(row["tma_score"])
+            cma_score        = float(row["cma_score"])
+            withdrew_early   = int(row["withdrew_early"])
+            prev_attempts    = int(row["num_prev_attempts"])
 
-        clicks_per_day = clicks / active_days if active_days > 0 else 0.0
+            # Derived — not a Spark column, computed per row during write
+            clicks_per_day = clicks / active_days if active_days > 0 else 0.0
 
-        risk_tier = _apply_risk_tier(
-            score, clicks, sub_rate, avg_days_early, withdrew_early, int(row["label"])
-        )
+            risk_tier = _apply_risk_tier(
+                score, clicks, sub_rate, avg_days_early, withdrew_early, int(row["label"])
+            )
 
-        row_key = f"{row['id_student']}|{row['code_module']}|{row['code_presentation']}"
+            row_key = f"{row['id_student']}|{row['code_module']}|{row['code_presentation']}"
 
-        batch.put(
-            row_key.encode(),
-            {
-                b"info:code_module":         str(row["code_module"]).encode(),
-                b"info:code_presentation":   str(row["code_presentation"]).encode(),
-                b"info:total_clicks":        str(clicks).encode(),
-                b"info:active_days":         str(active_days).encode(),
-                b"info:active_weeks":        str(active_weeks).encode(),
-                b"info:clicks_per_day":      str(round(clicks_per_day, 4)).encode(),
-                b"info:engagement_ratio":    str(engagement_ratio).encode(),
-                b"info:forum_clicks":        str(forum_clicks).encode(),
-                b"info:quiz_clicks":         str(quiz_clicks).encode(),
-                b"info:resource_clicks":     str(resource_clicks).encode(),
-                b"info:avg_score":           str(score).encode(),
-                b"info:weighted_avg_score":  str(w_score).encode(),
-                b"info:submission_rate":     str(sub_rate).encode(),
-                b"info:avg_days_early":      str(avg_days_early).encode(),
-                b"info:exam_score":          str(exam_score).encode(),
-                b"info:tma_score":           str(tma_score).encode(),
-                b"info:cma_score":           str(cma_score).encode(),
-                b"info:withdrew_early":      str(withdrew_early).encode(),
-                b"info:num_prev_attempts":   str(prev_attempts).encode(),
-                b"info:imd_band_encoded":    str(int(row["imd_band_encoded"])).encode(),
-                b"info:disability_encoded":  str(int(row["disability_encoded"])).encode(),
-                b"info:days_before_start":   str(float(row["days_before_start"])).encode(),
-                b"info:gender":              str(row["gender"] or "").encode(),
-                b"info:region":              str(row["region"] or "").encode(),
-                b"info:highest_education":   str(row["highest_education"] or "").encode(),
-                b"info:imd_band":            str(row["imd_band"] or "").encode(),
-                b"info:age_band":            str(row["age_band"] or "").encode(),
-                b"info:studied_credits":     str(int(row["studied_credits"] or 0)).encode(),
-                b"info:disability":          str(row["disability"] or "").encode(),
-                b"info:final_result":        str(row["final_result"] or "").encode(),
-                b"prediction:risk_tier":     str(risk_tier).encode(),
-            },
-        )
-    batch.send()
+            batch.put(
+                row_key.encode(),
+                {
+                    b"info:code_module":         str(row["code_module"]).encode(),
+                    b"info:code_presentation":   str(row["code_presentation"]).encode(),
+                    b"info:total_clicks":        str(clicks).encode(),
+                    b"info:active_days":         str(active_days).encode(),
+                    b"info:active_weeks":        str(active_weeks).encode(),
+                    b"info:clicks_per_day":      str(round(clicks_per_day, 4)).encode(),
+                    b"info:engagement_ratio":    str(engagement_ratio).encode(),
+                    b"info:forum_clicks":        str(forum_clicks).encode(),
+                    b"info:quiz_clicks":         str(quiz_clicks).encode(),
+                    b"info:resource_clicks":     str(resource_clicks).encode(),
+                    b"info:avg_score":           str(score).encode(),
+                    b"info:weighted_avg_score":  str(w_score).encode(),
+                    b"info:submission_rate":     str(sub_rate).encode(),
+                    b"info:avg_days_early":      str(avg_days_early).encode(),
+                    b"info:exam_score":          str(exam_score).encode(),
+                    b"info:tma_score":           str(tma_score).encode(),
+                    b"info:cma_score":           str(cma_score).encode(),
+                    b"info:withdrew_early":      str(withdrew_early).encode(),
+                    b"info:num_prev_attempts":   str(prev_attempts).encode(),
+                    b"info:imd_band_encoded":    str(int(row["imd_band_encoded"])).encode(),
+                    b"info:disability_encoded":  str(int(row["disability_encoded"])).encode(),
+                    b"info:days_before_start":   str(float(row["days_before_start"])).encode(),
+                    b"info:gender":              str(row["gender"] or "").encode(),
+                    b"info:region":              str(row["region"] or "").encode(),
+                    b"info:highest_education":   str(row["highest_education"] or "").encode(),
+                    b"info:imd_band":            str(row["imd_band"] or "").encode(),
+                    b"info:age_band":            str(row["age_band"] or "").encode(),
+                    b"info:studied_credits":     str(int(row["studied_credits"] or 0)).encode(),
+                    b"info:disability":          str(row["disability"] or "").encode(),
+                    b"info:final_result":        str(row["final_result"] or "").encode(),
+                    b"prediction:risk_tier":     str(risk_tier).encode(),
+                },
+            )
+            count += 1
 
-    duration = time.time() - start_time
-    print(f">>> [HBASE] Done in {duration:.2f}s.")
+        batch.send()
+        print(f">>> [HBASE] Partition wrote {count} rows.")
+    finally:
+        connection.close()
 
 
 def main():
@@ -118,8 +128,10 @@ def main():
     print(f">>> [HBASE] Reading processed data from: {config.HDFS_OUTPUT_PATH}")
     try:
         df = spark.read.parquet(config.HDFS_OUTPUT_PATH)
-        print(f">>> [INFO] {df.count()} rows found.")
-        all_rows = df.select(
+        total = df.count()
+        print(f">>> [INFO] {total} rows found.")
+
+        selected = df.select(
             "id_student",
             "code_module", "code_presentation",
             "total_clicks", "active_days", "active_weeks", "engagement_ratio",
@@ -132,15 +144,25 @@ def main():
             "imd_band", "age_band", "studied_credits",
             "disability", "final_result",
             "label",
-        ).collect()
+        )
+
+        # Truncate on the driver before parallel writes —
+        # foreachPartition runs concurrently so truncation must not be inside it
+        print(">>> [HBASE] Connecting via Thrift...")
+        with hbase_connection() as conn:
+            truncate_table(conn, config.TABLE_NAME)
+            ensure_table(conn, config.TABLE_NAME, ["info", "prediction"])
+
+        # Write each partition directly to HBase — driver never holds all rows
+        print(f">>> [HBASE] Writing {total} rows via foreachPartition...")
+        start_time = time.time()
+
+        selected.foreachPartition(_write_partition)
+
+        duration = time.time() - start_time
+        print(f">>> [HBASE] Done in {duration:.2f}s.")
     except Exception as e:
-        print(f">>> ERROR: Cannot read HDFS data — {e}")
+        print(f">>> ERROR: Cannot write to HBase — {e}")
         raise e
     finally:
         spark.stop()
-
-    print(">>> [HBASE] Connecting via Thrift...")
-    with hbase_connection() as conn:
-        truncate_table(conn, config.TABLE_NAME)
-        ensure_table(conn, config.TABLE_NAME, ["info", "prediction"])
-        write_predictions(all_rows, conn)

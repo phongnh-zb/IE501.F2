@@ -22,7 +22,8 @@ HBASE_PORT          = 9090
 TABLE_NAME          = "student_predictions"
 MODEL_RESULTS_TABLE = "model_evaluations"
 CACHE_INTERVAL      = 600
-
+DEFAULT_TIMEOUT     = 10_000
+SCAN_TIMEOUT        = 60_000
 FLASK_PORT  = 5001
 SECRET_KEY  = os.environ.get("SECRET_KEY", "dev-key-change-before-production")
 DB_PATH     = os.path.join(os.path.dirname(__file__), '..', 'data', 'auth', 'users.db')

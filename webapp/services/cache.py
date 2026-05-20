@@ -4,8 +4,9 @@ import math
 import threading
 import time
 
-from common.hbase_client import SCAN_TIMEOUT, hbase_connection
-from configs.config import CACHE_INTERVAL, MODEL_RESULTS_TABLE, TABLE_NAME
+from common.hbase_client import hbase_connection
+from configs.config import (CACHE_INTERVAL, MODEL_RESULTS_TABLE, SCAN_TIMEOUT,
+                            TABLE_NAME)
 
 logger = logging.getLogger(__name__)
 

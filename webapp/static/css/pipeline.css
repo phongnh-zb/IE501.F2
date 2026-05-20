@@ -250,6 +250,12 @@
 	user-select: text;
 	-webkit-user-select: text;
   }
+
+  .pipe-docker-cmds {
+	display: flex;
+    flex-direction: column;
+    gap: .875rem;
+  }
   
   /* ── Responsive ──────────────────────────────────────────────────────────── */
   @media (max-width: 768px) {

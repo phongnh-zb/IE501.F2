@@ -55,6 +55,9 @@ let _state = {
 let _activeId = null;
 let _searchTimer = null;
 
+let _globalWorstTier = new Map();
+let _globalStudentWithdrew = new Map();
+
 /* ── RiskFilter module ───────────────────────────────────────────────────── */
 
 const RiskFilter = (() => {
@@ -149,31 +152,44 @@ const RiskFilter = (() => {
 
 /* ── Rendering ───────────────────────────────────────────────────────────── */
 
+function _buildGlobalWorstTier() {
+  _globalWorstTier.clear();
+  _globalStudentWithdrew.clear();
+  for (const s of _all) {
+    // Worst tier
+    const current = _globalWorstTier.get(s.id) ?? -1;
+    if ((s.risk ?? 0) > current) _globalWorstTier.set(s.id, s.risk ?? 0);
+
+    // Withdrew flag — true if at least one enrollment has withdrew_early=1
+    if (s.withdrew_early === 1) {
+      _globalStudentWithdrew.set(s.id, true);
+    } else if (!_globalStudentWithdrew.has(s.id)) {
+      _globalStudentWithdrew.set(s.id, false);
+    }
+  }
+}
+
 function _fmt(n) {
   return Number(n).toLocaleString();
 }
 
 /** Worst risk tier per student id; tier chips and totals match unique learners. */
 function _summaryByStudent(rows) {
-  const worst = new Map();
-  for (const s of rows) {
-    const id = s.id;
-    if (!id) continue;
-    const r = s.risk ?? 0;
-    const prev = worst.get(id);
-    if (prev === undefined || r > prev) worst.set(id, r);
-  }
+  const counted = new Set();
   let safe = 0,
     watch = 0,
     high = 0,
     critical = 0;
-  for (const r of worst.values()) {
+  for (const s of rows) {
+    if (counted.has(s.id)) continue;
+    counted.add(s.id);
+    const r = _globalWorstTier.get(s.id) ?? s.risk ?? 0;
     if (r === 0) safe++;
     else if (r === 1) watch++;
     else if (r === 2) high++;
     else if (r === 3) critical++;
   }
-  return { unique: worst.size, tiers: { safe, watch, high, critical } };
+  return { unique: counted.size, tiers: { safe, watch, high, critical } };
 }
 
 function _avgEngagementByStudent(rows) {
@@ -382,14 +398,19 @@ function _updateClearBtn() {
 
 function _applyFiltersAndSort() {
   let data = _all;
-  if (_state.risk.length)
-    data = data.filter((s) => _state.risk.includes(s.risk));
+
+  // Non-risk filters applied first
   if (_state.module) data = data.filter((s) => s.code_module === _state.module);
   if (_state.presentation)
     data = data.filter((s) => s.code_presentation === _state.presentation);
   if (_state.withdrew !== "") {
-    const w = +_state.withdrew;
-    data = data.filter((s) => s.withdrew_early === w);
+    const wantWithdrew = _state.withdrew === "1";
+    const matchingIds = new Set(
+      [..._globalStudentWithdrew.entries()]
+        .filter(([, withdrew]) => withdrew === wantWithdrew)
+        .map(([id]) => id),
+    );
+    data = data.filter((s) => matchingIds.has(s.id));
   }
   if (_state.search) {
     const q = _state.search.toLowerCase();
@@ -399,6 +420,17 @@ function _applyFiltersAndSort() {
         (s.code_module || "").toLowerCase().includes(q) ||
         (s.code_presentation || "").toLowerCase().includes(q),
     );
+  }
+
+  // Risk filter last — worst tier computed within the already-filtered set
+  // so it matches the summary chip semantics exactly
+  if (_state.risk.length) {
+    const matchingIds = new Set(
+      [..._globalWorstTier.entries()]
+        .filter(([, worst]) => _state.risk.includes(worst))
+        .map(([id]) => id),
+    );
+    data = data.filter((s) => matchingIds.has(s.id));
   }
 
   const rev = _state.order === "desc";
@@ -827,6 +859,7 @@ const Students = (() => {
       const res = await fetch("/api/students");
       const json = await res.json();
       _all = json.students || [];
+      _buildGlobalWorstTier();
       const note = document.getElementById("st-last-updated");
       if (note && json.last_updated)
         note.textContent = "Updated " + json.last_updated;
